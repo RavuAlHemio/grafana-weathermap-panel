@@ -1,0 +1,35 @@
+{
+  "name": "grafana-weathermap-panel",
+  "version": "0.0.1",
+  "description": "Weathermap panel for Grafana",
+  "main": "index.js",
+  "scripts": {
+    "build": "grunt",
+    "test": "echo \\\"Error: no test specified\\\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RavuAlHemio/grafana-weathermap-panel.git"
+  },
+  "keywords": [
+    "Weathermap"
+  ],
+  "author": "Ondřej Hošek",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/RavuAlHemio/grafana-weathermap-panel/issues"
+  },
+  "devDependencies": {
+    "grafana-sdk-mocks": "github:grafana/grafana-sdk-mocks",
+    "grunt": "~1.0.0",
+    "grunt-contrib-clean": "^1.1.0",
+    "grunt-contrib-copy": "^1.0.0",
+    "grunt-contrib-watch": "^1.1.0",
+    "grunt-ts": "^6.0.0-beta.19",
+    "load-grunt-tasks": "^4.0.0"
+  },
+  "dependencies": {
+    "typescript": "^2.8.3"
+  },
+  "homepage": "https://github.com/RavuAlHemio/grafana-weathermap-panel"
+}

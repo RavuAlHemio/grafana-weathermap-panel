@@ -1,0 +1,26 @@
+{
+  "name": "Weathermap",
+  "id": "ravualhemio-weathermap-panel",
+  "type": "panel",
+  "info": {
+    "version": "0.0.1",
+    "author": {
+      "name": "Ond\u0159ej Ho\u0161ek",
+      "url": "https://github.com/RavuAlHemio/grafana-weathermap-panel"
+    },
+    "links": [
+      {
+        "name": "GitHub",
+        "url": "https://github.com/RavuAlHemio/grafana-weathermap-panel"
+      }
+    ],
+    "logos": {
+      "small": "img/logo.png",
+      "large": "img/logo.png"
+    },
+    "dependencies": {
+      "grafanaVersion": "4.x.x",
+      "plugins": []
+    }
+  }
+}

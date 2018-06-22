@@ -1,0 +1,101 @@
+<div class="gf-form-group">
+    <h5>Canvas</h5>
+    <div class="gf-form-inline">
+        <div class="gf-form">
+            <label class="gf-form-label">Width</label>
+        </div>
+        <div class="gf-form width-10">
+            <input type="number" ng-model="ctrl.panel.canvasSize.width" ng-blur="ctrl.refresh()" class="gf-form-input width-10">
+        </div>
+        <div class="gf-form">
+            <label class="gf-form-label">Height</label>
+        </div>
+        <div class="gf-form width-10">
+            <input type="number" ng-model="ctrl.panel.canvasSize.height" ng-blur="ctrl.refresh()" class="gf-form-input width-10">
+        </div>
+    </div>
+</div>
+
+<div class="gf-form-group">
+    <h5>Nodes</h5>
+    <div class="gf-form-inline" ng-repeat="wmNode in ctrl.panel.weathermapNodes">
+        <div class="gf-form">
+            <label class="gf-form-label">Label<tip>Node label to display on the weathermap</tip></label>
+        </div>
+        <div class="gf-form width-15">
+            <input type="text" ng-model="wmNode.label" ng-blur="ctrl.refresh()" class="gf-form-input width-15">
+        </div>
+        <div class="gf-form">
+            <label class="gf-form-label">X</label>
+        </div>
+        <div class="gf-form width-5">
+            <input type="number" ng-model="wmNode.x" ng-blur="ctrl.refresh()" class="gf-form-input width-5">
+        </div>
+        <div class="gf-form">
+            <label class="gf-form-label">Y</label>
+        </div>
+        <div class="gf-form width-5">
+            <input type="number" ng-model="wmNode.y" ng-blur="ctrl.refresh()" class="gf-form-input width-5">
+        </div>
+        <div class="gf-form">
+            <label class="gf-form-label">W</label>
+        </div>
+        <div class="gf-form width-5">
+            <input type="number" ng-model="wmNode.width" ng-blur="ctrl.refresh()" class="gf-form-input width-5">
+        </div>
+        <div class="gf-form">
+            <label class="gf-form-label">H</label>
+        </div>
+        <div class="gf-form width-5">
+            <input type="number" ng-model="wmNode.height" ng-blur="ctrl.refresh()" class="gf-form-input width-5">
+        </div>
+        <div class="gf-form">
+            <label class="gf-form-label">Metric<tip>Legend name of the metric to use to color the node's background</tip></label>
+        </div>
+        <div class="gf-form width-15">
+            <input type="text" ng-model="wmNode.metricName" ng-blur="ctrl.refresh()" class="gf-form-input width-15">
+        </div>
+        <div class="gf-form">
+            <i class="fa fa-trash pointer" ng-click="ctrl.removeWeathermapNode(wmNode)"></i>
+        </div>
+    </div>
+    <button class="btn btn-inverse" ng-click="ctrl.addWeathermapNode()">
+        <i class="fa fa-plus"></i>&nbsp;Add node
+    </button>
+</div>
+
+<div class="gf-form-group">
+    <h5>Edges</h5>
+    <div class="gf-form-inline" ng-repeat="wmEdge in ctrl.panel.weathermapEdges">
+        <div class="gf-form">
+            <label class="gf-form-label">Node 1<tip>Node label of the first node of the edge</tip></label>
+        </div>
+        <div class="gf-form width-15">
+            <input type="text" ng-model="wmEdge.node1" ng-blur="ctrl.refresh()" class="gf-form-input width-15">
+        </div>
+        <div class="gf-form">
+            <label class="gf-form-label">Node 2<tip>Node label of the second node of the edge</tip></label>
+        </div>
+        <div class="gf-form width-15">
+            <input type="text" ng-model="wmEdge.node2" ng-blur="ctrl.refresh()" class="gf-form-input width-15">
+        </div>
+        <div class="gf-form">
+            <label class="gf-form-label">Metric<tip>Legend name of the metric to use to color the edge</tip></label>
+        </div>
+        <div class="gf-form width-15">
+            <input type="text" ng-model="wmEdge.metricName" ng-blur="ctrl.refresh()" class="gf-form-input width-15">
+        </div>
+        <div class="gf-form">
+            <label class="gf-form-label">Metric 2<tip>Legend name of the metric to use to color the second half of the edge (optional)</tip></label>
+        </div>
+        <div class="gf-form width-15">
+            <input type="text" ng-model="wmEdge.metric2Name" ng-blur="ctrl.refresh()" class="gf-form-input width-15">
+        </div>
+        <div class="gf-form">
+            <i class="fa fa-trash pointer" ng-click="ctrl.removeWeathermapEdge(wmEdge)"></i>
+        </div>
+    </div>
+    <button class="btn btn-inverse" ng-click="ctrl.addWeathermapEdge()">
+        <i class="fa fa-plus"></i>&nbsp;Add edge
+    </button>
+</div>
