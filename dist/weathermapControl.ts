@@ -5,7 +5,7 @@ import { editorPath } from './properties';
 import _ from 'lodash';
 import TimeSeries from 'app/core/time_series2';
 
-const panelDefaults = {
+const panelDefaults: PanelSettings = {
     // data
     weathermapNodes: [],
     weathermapEdges: [],
@@ -19,13 +19,22 @@ const panelDefaults = {
     },
     showNumbers: false,
     valueName: 'max',
-    nullPointMode: 'connected'
+    nullPointMode: 'connected',
+    strokeWidth: 1,
+    gradient: {
+        type: 'steps',
+        stops: []
+    }
 };
+
+const emergencyColor = "pink";
 
 export class WeathermapCtrl extends MetricsPanelCtrl {
     static templateUrl: string;
-    currentValues: object;
+    currentValues: {[key: string]: number;};
     currentSeries: object;
+
+    panel: PanelSettings;
 
     constructor($scope, $injector) {
         super($scope, $injector);
@@ -86,12 +95,41 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
         this.refresh();
     }
 
+    addGradientStop(stop?) {
+        this.panel.gradient.stops.push(stop || {});
+    }
+    onGradientStopStrokeColorChange(stopIndex) {
+        return (color: string) => {
+            this.panel.gradient.stops[stopIndex].strokeColor = color;
+            this.refresh();
+        };
+    }
+    onGradientStopFillColorChange(stopIndex) {
+        return (color: string) => {
+            this.panel.gradient.stops[stopIndex].fillColor = color;
+            this.refresh();
+        };
+    }
+    removeGradientStop(stop) {
+        this.panel.gradient.stops = _.without(this.panel.gradient.stops, stop);
+        this.refresh();
+    }
+
     link(scope, elems, attrs, ctrl) {
         this.events.on('render', () => this.renderThat(elems[0], ctrl));
     }
 
     renderThat(topElem: HTMLElement, ctrl) {
         const svgNamespace = "http://www.w3.org/2000/svg";
+
+        // sort gradient stops
+        let sortedStops = this.panel.gradient.stops
+            .slice()
+            .sort((l, r) => l.position - r.position);
+        let sortedGradient = {
+            type: this.panel.gradient.type,
+            stops: sortedStops
+        };
 
         // find weathermap div
         let elem = topElem.querySelector('div.weathermap');
@@ -123,10 +161,10 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
             let rect: SVGRectElement = document.createElementNS(svgNamespace, 'rect');
             nodeGroup.appendChild(rect);
 
-            rect.setAttribute('x', node.x);
-            rect.setAttribute('y', node.y);
-            rect.setAttribute('width', node.width);
-            rect.setAttribute('height', node.height);
+            rect.setAttribute('x', `${node.x}`);
+            rect.setAttribute('y', `${node.y}`);
+            rect.setAttribute('width', `${node.width}`);
+            rect.setAttribute('height', `${node.height}`);
             rect.style.strokeWidth = "1px";
             rect.style.stroke = "gray";
 
@@ -147,7 +185,7 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
             } else if (node.metricName in this.currentValues) {
                 // color node by metric
                 let currentValue = this.currentValues[node.metricName];
-                rect.style.fill = WeathermapCtrl.colorForValue(currentValue);
+                rect.style.fill = WeathermapCtrl.colorForValue(sortedGradient, 'fillColor', currentValue);
             } else {
                 // no data
                 rect.style.fill = "black";
@@ -179,6 +217,7 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
                 thereLine.setAttribute('y1', `${n1cy}`);
                 thereLine.setAttribute('x2', `${midx}`);
                 thereLine.setAttribute('y2', `${midy}`);
+                thereLine.style.strokeWidth = `${this.panel.strokeWidth}`;
 
                 let backLine: SVGLineElement = document.createElementNS(svgNamespace, 'line');
                 edgeGroup.appendChild(backLine);
@@ -186,14 +225,15 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
                 backLine.setAttribute('y1', `${midy}`);
                 backLine.setAttribute('x2', `${n2cx}`);
                 backLine.setAttribute('y2', `${n2cy}`);
+                backLine.style.strokeWidth = `${this.panel.strokeWidth}`;
 
                 if (edge.metricName in this.currentValues) {
                     let currentValue = this.currentValues[edge.metricName];
-                    thereLine.style.stroke = WeathermapCtrl.colorForValue(currentValue);
+                    thereLine.style.stroke = WeathermapCtrl.colorForValue(sortedGradient, 'strokeColor', currentValue);
                 }
                 if (edge.metric2Name in this.currentValues) {
                     let currentValue = this.currentValues[edge.metric2Name];
-                    backLine.style.stroke = WeathermapCtrl.colorForValue(currentValue);
+                    backLine.style.stroke = WeathermapCtrl.colorForValue(sortedGradient, 'strokeColor', currentValue);
                 }
 
                 if (ctrl.panel.showNumbers) {
@@ -223,10 +263,11 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
                 edgeLine.setAttribute('y1', `${n1cy}`);
                 edgeLine.setAttribute('x2', `${n2cx}`);
                 edgeLine.setAttribute('y2', `${n2cy}`);
+                edgeLine.style.strokeWidth = `${this.panel.strokeWidth}`;
 
                 if (edge.metricName in this.currentValues) {
                     let currentValue = this.currentValues[edge.metricName];
-                    edgeLine.style.stroke = WeathermapCtrl.colorForValue(currentValue);
+                    edgeLine.style.stroke = WeathermapCtrl.colorForValue(sortedGradient, 'strokeColor', currentValue);
                 }
 
                 if (ctrl.panel.showNumbers) {
@@ -243,47 +284,76 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
         }
     }
 
-    static colorForValue(value: number): string {
-        // FIXME: make this configurable
-        let r = 0.0, g = 0.0, b = 0.0;
-        if (value <= 5.0) {
-            r = 0.55;
-            g = 0.0;
-            b = 1.0;
-        } else if (value <= 10.0) {
-            r = WeathermapCtrl.interpolate(value, 5.0, 10.0, 0.55, 0.00);
-            g = WeathermapCtrl.interpolate(value, 5.0, 10.0, 0.00, 0.00);
-            b = WeathermapCtrl.interpolate(value, 5.0, 10.0, 1.00, 1.00);
-        } else if (value <= 15.0) {
-            r = WeathermapCtrl.interpolate(value, 10.0, 15.0, 0.00, 0.00);
-            g = WeathermapCtrl.interpolate(value, 10.0, 15.0, 0.00, 0.50);
-            b = WeathermapCtrl.interpolate(value, 10.0, 15.0, 1.00, 1.00);
-        } else if (value <= 25.0) {
-            r = WeathermapCtrl.interpolate(value, 15.0, 25.0, 0.00, 0.00);
-            g = WeathermapCtrl.interpolate(value, 15.0, 25.0, 0.50, 1.00);
-            b = WeathermapCtrl.interpolate(value, 15.0, 25.0, 1.00, 0.00);
-        } else if (value <= 50.0) {
-            r = WeathermapCtrl.interpolate(value, 25.0, 50.0, 0.00, 1.00);
-            g = WeathermapCtrl.interpolate(value, 25.0, 50.0, 1.00, 1.00);
-            b = WeathermapCtrl.interpolate(value, 25.0, 50.0, 0.00, 0.00);
-        } else if (value <= 75.0) {
-            r = WeathermapCtrl.interpolate(value, 50.0, 75.0, 1.00, 1.00);
-            g = WeathermapCtrl.interpolate(value, 50.0, 75.0, 1.00, 0.50);
-            b = WeathermapCtrl.interpolate(value, 50.0, 75.0, 0.00, 0.00);
-        } else if (value <= 100.0) {
-            r = WeathermapCtrl.interpolate(value, 75.0, 100.0, 1.00, 1.00);
-            g = WeathermapCtrl.interpolate(value, 75.0, 100.0, 0.50, 0.00);
-            b = WeathermapCtrl.interpolate(value, 75.0, 100.0, 0.00, 0.00);
-        } else {
-            r = 1.0;
-            g = 0.0;
-            b = 0.0;
+    static colorForValue(gradient: Gradient, colorType: keyof GradientStop, value: number): string {
+        if (gradient.type == 'linear') {
+            return WeathermapCtrl.linearColorForValue(gradient.stops, colorType, value);
+        } else if (gradient.type == 'steps') {
+            return WeathermapCtrl.stepColorForValue(gradient.stops, colorType, value);
         }
-
-        return `rgb(${Math.floor(r*255)}, ${Math.floor(g*255)}, ${Math.floor(b*255)})`;
+        return emergencyColor;
     }
 
-    static interpolate(value: number, sourceMin: number, sourceMax: number, targetMin: number, targetMax: number): number {
+    static linearColorForValue(stops: GradientStop[], colorType: keyof GradientStop, value: number): string {
+        if (stops.length == 0) {
+            return emergencyColor;
+        }
+
+        let lastStop = stops[stops.length-1];
+        let r, g, b;
+        if (value < stops[0].position) {
+            return `${stops[0][colorType]}`;
+        } else if (value >= lastStop.position) {
+            return `${lastStop[colorType]}`;
+        } else {
+            for (let i = 0; i < stops.length-1; ++i) {
+                if (value >= stops[i].position && value < stops[i+1].position) {
+                    // found!
+
+                    let posFrom = stops[i].position;
+                    let rFrom = Number.parseInt(`${stops[i][colorType]}`.substr(1, 2), 16);
+                    let gFrom = Number.parseInt(`${stops[i][colorType]}`.substr(3, 2), 16);
+                    let bFrom = Number.parseInt(`${stops[i][colorType]}`.substr(5, 2), 16);
+
+                    let posTo = stops[i+1].position;
+                    let rTo = Number.parseInt(`${stops[i+1][colorType]}`.substr(1, 2), 16);
+                    let gTo = Number.parseInt(`${stops[i+1][colorType]}`.substr(3, 2), 16);
+                    let bTo = Number.parseInt(`${stops[i+1][colorType]}`.substr(5, 2), 16);
+
+                    r = this.lerp(value, posFrom, posTo, rFrom, rTo);
+                    g = this.lerp(value, posFrom, posTo, gFrom, gTo);
+                    b = this.lerp(value, posFrom, posTo, bFrom, bTo);
+
+                    break;
+                }
+            }
+        }
+
+        return `rgb(${Math.floor(r)}, ${Math.floor(g)}, ${Math.floor(b)})`;
+    }
+
+    static stepColorForValue(stops: GradientStop[], colorType: keyof GradientStop, value: number): string {
+        if (stops.length == 0) {
+            return emergencyColor;
+        }
+
+        let lastStop = stops[stops.length-1];
+        let r, g, b;
+        if (value < stops[0].position) {
+            return `${stops[0][colorType]}`;
+        } else if (value >= lastStop.position) {
+            return `${lastStop[colorType]}`;
+        } else {
+            for (let i = 0; i < stops.length-1; ++i) {
+                if (value >= stops[i].position && value < stops[i+1].position) {
+                    return `${stops[i][colorType]}`;
+                }
+            }
+        }
+
+        return emergencyColor;
+    }
+
+    static lerp(value: number, sourceMin: number, sourceMax: number, targetMin: number, targetMax: number): number {
         if (targetMin == targetMax) {
             return targetMin;
         }
@@ -298,6 +368,46 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
         let terp = (value - sourceMin) / (sourceMax - sourceMin);
         return targetMin + terp * (targetMax - targetMin);
     }
+}
+
+
+interface GradientStop {
+    position: number;
+    strokeColor: string;
+    fillColor: string;
+}
+
+interface Gradient {
+    type: "steps"|"linear";
+    stops: GradientStop[];
+}
+
+interface WeathermapNode {
+    label: string;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    metricName: string|null;
+}
+
+interface WeathermapEdge {
+    node1: string;
+    node2: string;
+    metricName: string;
+    metric2Name: string|null;
+}
+
+interface PanelSettings {
+    weathermapEdges: WeathermapEdge[];
+    weathermapNodes: WeathermapNode[];
+    canvasSize: { width: number; height: number; };
+    textOffsets: { left: number; bottom: number; };
+    showNumbers: boolean;
+    valueName: 'max'|'min'|'avg'|'current'|'total';
+    nullPointMode: 'connected'|'null'|'null as zero';
+    strokeWidth: number;
+    gradient: Gradient;
 }
 
 WeathermapCtrl.templateUrl = 'module.html';

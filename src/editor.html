@@ -1,68 +1,96 @@
 <div class="gf-form-group">
     <h5>Canvas</h5>
     <div class="gf-form-inline">
-        <div class="gf-form">
+        <div class="gf-form width-10">
             <label class="gf-form-label">Width</label>
+            <input type="number" ng-model="ctrl.panel.canvasSize.width" ng-blur="ctrl.refresh()" class="gf-form-input">
         </div>
         <div class="gf-form width-10">
-            <input type="number" ng-model="ctrl.panel.canvasSize.width" ng-blur="ctrl.refresh()" class="gf-form-input width-10">
-        </div>
-        <div class="gf-form">
             <label class="gf-form-label">Height</label>
-        </div>
-        <div class="gf-form width-10">
-            <input type="number" ng-model="ctrl.panel.canvasSize.height" ng-blur="ctrl.refresh()" class="gf-form-input width-10">
+            <input type="number" ng-model="ctrl.panel.canvasSize.height" ng-blur="ctrl.refresh()" class="gf-form-input">
         </div>
     </div>
-    <gf-form-switch class="gf-form" label="Show Numbers" label-class="width-11" checked="ctrl.panel.showNumbers" on-change="ctrl.refresh()"></gf-form-switch>
     <div class="gf-form-inline">
-        <div class="gf-form">
+        <gf-form-switch class="gf-form" label="Show Numbers" label-class="width-8" checked="ctrl.panel.showNumbers" on-change="ctrl.refresh()"></gf-form-switch>
+        <div class="gf-form width-10">
             <label class="gf-form-label">Value</label>
+            <div class="gf-form-select-wrapper">
+                <select class="gf-form-input" ng-model="ctrl.panel.valueName" ng-options="v for v in ['min','max','avg', 'current', 'total']" ng-change="ctrl.refresh()"></select>
+            </div>
         </div>
-        <div class="gf-form-select-wrapper max-width-10">
-            <select class="gf-form-input" ng-model="ctrl.panel.valueName" ng-options="v for v in ['min','max','avg', 'current', 'total']" ng-change="ctrl.refresh()"></select>
+    </div>
+    <div class="gf-form-inline">
+        <div class="gf-form width-14">
+            <label class="gf-form-label">Stroke width</label>
+            <input type="number" ng-model="ctrl.panel.strokeWidth" ng-blur="ctrl.refresh()" class="gf-form-input">
         </div>
     </div>
 </div>
 
 <div class="gf-form-group">
+    <h5>Gradient</h5>
+
+    <div class="gf-form-inline">
+        <div class="gf-form">
+            <label class="gf-form-label">Type</label>
+            <div class="gf-form-select-wrapper max-width-10">
+                <select class="gf-form-input" ng-model="ctrl.panel.gradient.type" ng-options="v for v in ['steps','linear']" ng-change="ctrl.refresh()"></select>
+            </div>
+        </div>
+    </div>
+
+    <div class="gf-form-inline" ng-repeat="stop in ctrl.panel.gradient.stops track by $index">
+        <div class="gf-form width-10">
+            <label class="gf-form-label">Position</label>
+            <input type="number" ng-model="stop.position" ng-blur="ctrl.refresh()" class="gf-form-input">
+        </div>
+        <div class="gf-form width-5">
+            <label class="gf-form-label">
+                Stroke
+                <color-picker color="stop.strokeColor" onChange="ctrl.onGradientStopStrokeColorChange($index)"></color-picker>
+            </label>
+        </div>
+        <div class="gf-form width-5">
+            <label class="gf-form-label">
+                Fill
+                <color-picker color="stop.fillColor" onChange="ctrl.onGradientStopFillColorChange($index)"></color-picker>
+            </label>
+        </div>
+        <div class="gf-form">
+            <i class="fa fa-trash pointer" ng-click="ctrl.removeGradientStop(stop)"></i>
+        </div>
+    </div>
+    <button class="btn btn-inverse" ng-click="ctrl.addGradientStop()">
+        <i class="fa fa-plus"></i>&nbsp;Add node
+    </button>
+</div>
+
+<div class="gf-form-group">
     <h5>Nodes</h5>
     <div class="gf-form-inline" ng-repeat="wmNode in ctrl.panel.weathermapNodes">
-        <div class="gf-form">
+        <div class="gf-form width-15">
             <label class="gf-form-label">Label<tip>Node label to display on the weathermap</tip></label>
+            <input type="text" ng-model="wmNode.label" ng-blur="ctrl.refresh()" class="gf-form-input">
         </div>
-        <div class="gf-form width-15">
-            <input type="text" ng-model="wmNode.label" ng-blur="ctrl.refresh()" class="gf-form-input width-15">
-        </div>
-        <div class="gf-form">
+        <div class="gf-form width-7">
             <label class="gf-form-label">X</label>
+            <input type="number" ng-model="wmNode.x" ng-blur="ctrl.refresh()" class="gf-form-input">
         </div>
-        <div class="gf-form width-5">
-            <input type="number" ng-model="wmNode.x" ng-blur="ctrl.refresh()" class="gf-form-input width-5">
-        </div>
-        <div class="gf-form">
+        <div class="gf-form width-7">
             <label class="gf-form-label">Y</label>
+            <input type="number" ng-model="wmNode.y" ng-blur="ctrl.refresh()" class="gf-form-input">
         </div>
-        <div class="gf-form width-5">
-            <input type="number" ng-model="wmNode.y" ng-blur="ctrl.refresh()" class="gf-form-input width-5">
-        </div>
-        <div class="gf-form">
+        <div class="gf-form width-7">
             <label class="gf-form-label">W</label>
+            <input type="number" ng-model="wmNode.width" ng-blur="ctrl.refresh()" class="gf-form-input">
         </div>
-        <div class="gf-form width-5">
-            <input type="number" ng-model="wmNode.width" ng-blur="ctrl.refresh()" class="gf-form-input width-5">
-        </div>
-        <div class="gf-form">
+        <div class="gf-form width-7">
             <label class="gf-form-label">H</label>
+            <input type="number" ng-model="wmNode.height" ng-blur="ctrl.refresh()" class="gf-form-input">
         </div>
-        <div class="gf-form width-5">
-            <input type="number" ng-model="wmNode.height" ng-blur="ctrl.refresh()" class="gf-form-input width-5">
-        </div>
-        <div class="gf-form">
+        <div class="gf-form width-20">
             <label class="gf-form-label">Metric<tip>Legend name of the metric to use to color the node's background</tip></label>
-        </div>
-        <div class="gf-form width-15">
-            <input type="text" ng-model="wmNode.metricName" ng-blur="ctrl.refresh()" class="gf-form-input width-15">
+            <input type="text" ng-model="wmNode.metricName" ng-blur="ctrl.refresh()" class="gf-form-input">
         </div>
         <div class="gf-form">
             <i class="fa fa-trash pointer" ng-click="ctrl.removeWeathermapNode(wmNode)"></i>
@@ -76,29 +104,21 @@
 <div class="gf-form-group">
     <h5>Edges</h5>
     <div class="gf-form-inline" ng-repeat="wmEdge in ctrl.panel.weathermapEdges">
-        <div class="gf-form">
+        <div class="gf-form width-15">
             <label class="gf-form-label">Node 1<tip>Node label of the first node of the edge</tip></label>
+            <input type="text" ng-model="wmEdge.node1" ng-blur="ctrl.refresh()" class="gf-form-input">
         </div>
         <div class="gf-form width-15">
-            <input type="text" ng-model="wmEdge.node1" ng-blur="ctrl.refresh()" class="gf-form-input width-15">
-        </div>
-        <div class="gf-form">
             <label class="gf-form-label">Node 2<tip>Node label of the second node of the edge</tip></label>
+            <input type="text" ng-model="wmEdge.node2" ng-blur="ctrl.refresh()" class="gf-form-input">
         </div>
-        <div class="gf-form width-15">
-            <input type="text" ng-model="wmEdge.node2" ng-blur="ctrl.refresh()" class="gf-form-input width-15">
-        </div>
-        <div class="gf-form">
+        <div class="gf-form width-20">
             <label class="gf-form-label">Metric<tip>Legend name of the metric to use to color the edge</tip></label>
+            <input type="text" ng-model="wmEdge.metricName" ng-blur="ctrl.refresh()" class="gf-form-input">
         </div>
-        <div class="gf-form width-15">
-            <input type="text" ng-model="wmEdge.metricName" ng-blur="ctrl.refresh()" class="gf-form-input width-15">
-        </div>
-        <div class="gf-form">
+        <div class="gf-form width-20">
             <label class="gf-form-label">Metric 2<tip>Legend name of the metric to use to color the second half of the edge (optional)</tip></label>
-        </div>
-        <div class="gf-form width-15">
-            <input type="text" ng-model="wmEdge.metric2Name" ng-blur="ctrl.refresh()" class="gf-form-input width-15">
+            <input type="text" ng-model="wmEdge.metric2Name" ng-blur="ctrl.refresh()" class="gf-form-input">
         </div>
         <div class="gf-form">
             <i class="fa fa-trash pointer" ng-click="ctrl.removeWeathermapEdge(wmEdge)"></i>

@@ -10,7 +10,7 @@ System.register(["app/plugins/sdk", "./properties", "lodash", "app/core/time_ser
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var sdk_1, properties_1, lodash_1, time_series2_1, panelDefaults, WeathermapCtrl;
+    var sdk_1, properties_1, lodash_1, time_series2_1, panelDefaults, emergencyColor, WeathermapCtrl;
     var __moduleName = context_1 && context_1.id;
     return {
         setters: [
@@ -41,8 +41,14 @@ System.register(["app/plugins/sdk", "./properties", "lodash", "app/core/time_ser
                 },
                 showNumbers: false,
                 valueName: 'max',
-                nullPointMode: 'connected'
+                nullPointMode: 'connected',
+                strokeWidth: 1,
+                gradient: {
+                    type: 'steps',
+                    stops: []
+                }
             };
+            emergencyColor = "pink";
             WeathermapCtrl = (function (_super) {
                 __extends(WeathermapCtrl, _super);
                 function WeathermapCtrl($scope, $injector) {
@@ -95,12 +101,40 @@ System.register(["app/plugins/sdk", "./properties", "lodash", "app/core/time_ser
                     this.panel.weathermapEdges = lodash_1.default.without(this.panel.weathermapEdges, edge);
                     this.refresh();
                 };
+                WeathermapCtrl.prototype.addGradientStop = function (stop) {
+                    this.panel.gradient.stops.push(stop || {});
+                };
+                WeathermapCtrl.prototype.onGradientStopStrokeColorChange = function (stopIndex) {
+                    var _this = this;
+                    return function (color) {
+                        _this.panel.gradient.stops[stopIndex].strokeColor = color;
+                        _this.refresh();
+                    };
+                };
+                WeathermapCtrl.prototype.onGradientStopFillColorChange = function (stopIndex) {
+                    var _this = this;
+                    return function (color) {
+                        _this.panel.gradient.stops[stopIndex].fillColor = color;
+                        _this.refresh();
+                    };
+                };
+                WeathermapCtrl.prototype.removeGradientStop = function (stop) {
+                    this.panel.gradient.stops = lodash_1.default.without(this.panel.gradient.stops, stop);
+                    this.refresh();
+                };
                 WeathermapCtrl.prototype.link = function (scope, elems, attrs, ctrl) {
                     var _this = this;
                     this.events.on('render', function () { return _this.renderThat(elems[0], ctrl); });
                 };
                 WeathermapCtrl.prototype.renderThat = function (topElem, ctrl) {
                     var svgNamespace = "http://www.w3.org/2000/svg";
+                    var sortedStops = this.panel.gradient.stops
+                        .slice()
+                        .sort(function (l, r) { return l.position - r.position; });
+                    var sortedGradient = {
+                        type: this.panel.gradient.type,
+                        stops: sortedStops
+                    };
                     var elem = topElem.querySelector('div.weathermap');
                     while (elem.lastChild) {
                         elem.removeChild(elem.lastChild);
@@ -121,10 +155,10 @@ System.register(["app/plugins/sdk", "./properties", "lodash", "app/core/time_ser
                         nodeLabelToNode[node.label] = node;
                         var rect = document.createElementNS(svgNamespace, 'rect');
                         nodeGroup.appendChild(rect);
-                        rect.setAttribute('x', node.x);
-                        rect.setAttribute('y', node.y);
-                        rect.setAttribute('width', node.width);
-                        rect.setAttribute('height', node.height);
+                        rect.setAttribute('x', "" + node.x);
+                        rect.setAttribute('y', "" + node.y);
+                        rect.setAttribute('width', "" + node.width);
+                        rect.setAttribute('height', "" + node.height);
                         rect.style.strokeWidth = "1px";
                         rect.style.stroke = "gray";
                         var text = document.createElementNS(svgNamespace, 'text');
@@ -143,7 +177,7 @@ System.register(["app/plugins/sdk", "./properties", "lodash", "app/core/time_ser
                         }
                         else if (node.metricName in this.currentValues) {
                             var currentValue = this.currentValues[node.metricName];
-                            rect.style.fill = WeathermapCtrl.colorForValue(currentValue);
+                            rect.style.fill = WeathermapCtrl.colorForValue(sortedGradient, 'fillColor', currentValue);
                         }
                         else {
                             rect.style.fill = "black";
@@ -169,19 +203,21 @@ System.register(["app/plugins/sdk", "./properties", "lodash", "app/core/time_ser
                             thereLine.setAttribute('y1', "" + n1cy);
                             thereLine.setAttribute('x2', "" + midx);
                             thereLine.setAttribute('y2', "" + midy);
+                            thereLine.style.strokeWidth = "" + this.panel.strokeWidth;
                             var backLine = document.createElementNS(svgNamespace, 'line');
                             edgeGroup.appendChild(backLine);
                             backLine.setAttribute('x1', "" + midx);
                             backLine.setAttribute('y1', "" + midy);
                             backLine.setAttribute('x2', "" + n2cx);
                             backLine.setAttribute('y2', "" + n2cy);
+                            backLine.style.strokeWidth = "" + this.panel.strokeWidth;
                             if (edge.metricName in this.currentValues) {
                                 var currentValue = this.currentValues[edge.metricName];
-                                thereLine.style.stroke = WeathermapCtrl.colorForValue(currentValue);
+                                thereLine.style.stroke = WeathermapCtrl.colorForValue(sortedGradient, 'strokeColor', currentValue);
                             }
                             if (edge.metric2Name in this.currentValues) {
                                 var currentValue = this.currentValues[edge.metric2Name];
-                                backLine.style.stroke = WeathermapCtrl.colorForValue(currentValue);
+                                backLine.style.stroke = WeathermapCtrl.colorForValue(sortedGradient, 'strokeColor', currentValue);
                             }
                             if (ctrl.panel.showNumbers) {
                                 var quax = (n1cx + midx) / 2;
@@ -209,9 +245,10 @@ System.register(["app/plugins/sdk", "./properties", "lodash", "app/core/time_ser
                             edgeLine.setAttribute('y1', "" + n1cy);
                             edgeLine.setAttribute('x2', "" + n2cx);
                             edgeLine.setAttribute('y2', "" + n2cy);
+                            edgeLine.style.strokeWidth = "" + this.panel.strokeWidth;
                             if (edge.metricName in this.currentValues) {
                                 var currentValue = this.currentValues[edge.metricName];
-                                edgeLine.style.stroke = WeathermapCtrl.colorForValue(currentValue);
+                                edgeLine.style.stroke = WeathermapCtrl.colorForValue(sortedGradient, 'strokeColor', currentValue);
                             }
                             if (ctrl.panel.showNumbers) {
                                 var midx = (n1cx + n2cx) / 2;
@@ -226,51 +263,69 @@ System.register(["app/plugins/sdk", "./properties", "lodash", "app/core/time_ser
                         }
                     }
                 };
-                WeathermapCtrl.colorForValue = function (value) {
-                    var r = 0.0, g = 0.0, b = 0.0;
-                    if (value <= 5.0) {
-                        r = 0.55;
-                        g = 0.0;
-                        b = 1.0;
+                WeathermapCtrl.colorForValue = function (gradient, colorType, value) {
+                    if (gradient.type == 'linear') {
+                        return WeathermapCtrl.linearColorForValue(gradient.stops, colorType, value);
                     }
-                    else if (value <= 10.0) {
-                        r = WeathermapCtrl.interpolate(value, 5.0, 10.0, 0.55, 0.00);
-                        g = WeathermapCtrl.interpolate(value, 5.0, 10.0, 0.00, 0.00);
-                        b = WeathermapCtrl.interpolate(value, 5.0, 10.0, 1.00, 1.00);
+                    else if (gradient.type == 'steps') {
+                        return WeathermapCtrl.stepColorForValue(gradient.stops, colorType, value);
                     }
-                    else if (value <= 15.0) {
-                        r = WeathermapCtrl.interpolate(value, 10.0, 15.0, 0.00, 0.00);
-                        g = WeathermapCtrl.interpolate(value, 10.0, 15.0, 0.00, 0.50);
-                        b = WeathermapCtrl.interpolate(value, 10.0, 15.0, 1.00, 1.00);
+                    return emergencyColor;
+                };
+                WeathermapCtrl.linearColorForValue = function (stops, colorType, value) {
+                    if (stops.length == 0) {
+                        return emergencyColor;
                     }
-                    else if (value <= 25.0) {
-                        r = WeathermapCtrl.interpolate(value, 15.0, 25.0, 0.00, 0.00);
-                        g = WeathermapCtrl.interpolate(value, 15.0, 25.0, 0.50, 1.00);
-                        b = WeathermapCtrl.interpolate(value, 15.0, 25.0, 1.00, 0.00);
+                    var lastStop = stops[stops.length - 1];
+                    var r, g, b;
+                    if (value < stops[0].position) {
+                        return "" + stops[0][colorType];
                     }
-                    else if (value <= 50.0) {
-                        r = WeathermapCtrl.interpolate(value, 25.0, 50.0, 0.00, 1.00);
-                        g = WeathermapCtrl.interpolate(value, 25.0, 50.0, 1.00, 1.00);
-                        b = WeathermapCtrl.interpolate(value, 25.0, 50.0, 0.00, 0.00);
-                    }
-                    else if (value <= 75.0) {
-                        r = WeathermapCtrl.interpolate(value, 50.0, 75.0, 1.00, 1.00);
-                        g = WeathermapCtrl.interpolate(value, 50.0, 75.0, 1.00, 0.50);
-                        b = WeathermapCtrl.interpolate(value, 50.0, 75.0, 0.00, 0.00);
-                    }
-                    else if (value <= 100.0) {
-                        r = WeathermapCtrl.interpolate(value, 75.0, 100.0, 1.00, 1.00);
-                        g = WeathermapCtrl.interpolate(value, 75.0, 100.0, 0.50, 0.00);
-                        b = WeathermapCtrl.interpolate(value, 75.0, 100.0, 0.00, 0.00);
+                    else if (value >= lastStop.position) {
+                        return "" + lastStop[colorType];
                     }
                     else {
-                        r = 1.0;
-                        g = 0.0;
-                        b = 0.0;
+                        for (var i = 0; i < stops.length - 1; ++i) {
+                            if (value >= stops[i].position && value < stops[i + 1].position) {
+                                var posFrom = stops[i].position;
+                                var rFrom = Number.parseInt(("" + stops[i][colorType]).substr(1, 2), 16);
+                                var gFrom = Number.parseInt(("" + stops[i][colorType]).substr(3, 2), 16);
+                                var bFrom = Number.parseInt(("" + stops[i][colorType]).substr(5, 2), 16);
+                                var posTo = stops[i + 1].position;
+                                var rTo = Number.parseInt(("" + stops[i + 1][colorType]).substr(1, 2), 16);
+                                var gTo = Number.parseInt(("" + stops[i + 1][colorType]).substr(3, 2), 16);
+                                var bTo = Number.parseInt(("" + stops[i + 1][colorType]).substr(5, 2), 16);
+                                r = this.lerp(value, posFrom, posTo, rFrom, rTo);
+                                g = this.lerp(value, posFrom, posTo, gFrom, gTo);
+                                b = this.lerp(value, posFrom, posTo, bFrom, bTo);
+                                break;
+                            }
+                        }
                     }
-                    return "rgb(" + Math.floor(r * 255) + ", " + Math.floor(g * 255) + ", " + Math.floor(b * 255) + ")";
+                    return "rgb(" + Math.floor(r) + ", " + Math.floor(g) + ", " + Math.floor(b) + ")";
                 };
-                WeathermapCtrl.interpolate = function (value, sourceMin, sourceMax, targetMin, targetMax) {
+                WeathermapCtrl.stepColorForValue = function (stops, colorType, value) {
+                    if (stops.length == 0) {
+                        return emergencyColor;
+                    }
+                    var lastStop = stops[stops.length - 1];
+                    var r, g, b;
+                    if (value < stops[0].position) {
+                        return "" + stops[0][colorType];
+                    }
+                    else if (value >= lastStop.position) {
+                        return "" + lastStop[colorType];
+                    }
+                    else {
+                        for (var i = 0; i < stops.length - 1; ++i) {
+                            if (value >= stops[i].position && value < stops[i + 1].position) {
+                                return "" + stops[i][colorType];
+                            }
+                        }
+                    }
+                    return emergencyColor;
+                };
+                WeathermapCtrl.lerp = function (value, sourceMin, sourceMax, targetMin, targetMax) {
                     if (targetMin == targetMax) {
                         return targetMin;
                     }
