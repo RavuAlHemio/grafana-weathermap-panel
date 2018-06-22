@@ -15,7 +15,8 @@ const panelDefaults = {
     textOffsets: {
         left: 5,
         bottom: 5
-    }
+    },
+    showNumbers: false
 };
 
 export class WeathermapCtrl extends MetricsPanelCtrl {
@@ -119,7 +120,12 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
 
             text.setAttribute('x', `${(+node.x) + (+ctrl.panel.textOffsets.left)}`);
             text.setAttribute('y', `${(+node.y) + (+node.height) - ctrl.panel.textOffsets.bottom}`);
-            text.textContent = node.label;
+            if (ctrl.panel.showNumbers) {
+                let value = (node.metricName in this.currentValues) ? this.currentValues[node.metricName] : '?';
+                text.textContent = `${node.label} (${value})`;
+            } else {
+                text.textContent = node.label;
+            }
 
             if (!node.metricName) {
                 rect.style.fill = "white";
@@ -174,6 +180,27 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
                     let currentValue = this.currentValues[edge.metric2Name];
                     backLine.style.stroke = WeathermapCtrl.colorForValue(currentValue);
                 }
+
+                if (ctrl.panel.showNumbers) {
+                    let quax = (n1cx + midx) / 2;
+                    let quay = (n1cy + midy) / 2;
+                    let tqax = (midx + n2cx) / 2;
+                    let tqay = (midy + n2cy) / 2;
+
+                    let valueString = (edge.metricName in this.currentValues) ? this.currentValues[edge.metricName].toFixed(2) : '?';
+                    let text1 = document.createElementNS(svgNamespace, 'text');
+                    edgeGroup.appendChild(text1);
+                    text1.setAttribute('x', `${quax}`);
+                    text1.setAttribute('y', `${quay}`);
+                    text1.textContent = valueString;
+
+                    let value2String = (edge.metric2Name in this.currentValues) ? this.currentValues[edge.metric2Name].toFixed(2) : '?';
+                    let text2 = document.createElementNS(svgNamespace, 'text');
+                    edgeGroup.appendChild(text2);
+                    text2.setAttribute('x', `${tqax}`);
+                    text2.setAttribute('y', `${tqay}`);
+                    text2.textContent = value2String;
+                }
             } else {
                 let edgeLine: SVGLineElement = document.createElementNS(svgNamespace, 'line');
                 edgeGroup.appendChild(edgeLine);
@@ -185,6 +212,17 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
                 if (edge.metricName in this.currentValues) {
                     let currentValue = this.currentValues[edge.metricName];
                     edgeLine.style.stroke = WeathermapCtrl.colorForValue(currentValue);
+                }
+
+                if (ctrl.panel.showNumbers) {
+                    let midx = (n1cx + n2cx) / 2;
+                    let midy = (n1cy + n2cy) / 2;
+                    let valueString = (edge.metricName in this.currentValues) ? this.currentValues[edge.metricName].toFixed(2) : '?';
+                    let text = document.createElementNS(svgNamespace, 'text');
+                    edgeGroup.appendChild(text);
+                    text.setAttribute('x', `${midx}`);
+                    text.setAttribute('y', `${midy}`);
+                    text.textContent = valueString;
                 }
             }
         }

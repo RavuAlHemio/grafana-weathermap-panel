@@ -35,7 +35,8 @@ System.register(["app/plugins/sdk", "./properties", "lodash"], function (exports
                 textOffsets: {
                     left: 5,
                     bottom: 5
-                }
+                },
+                showNumbers: false
             };
             WeathermapCtrl = (function (_super) {
                 __extends(WeathermapCtrl, _super);
@@ -115,7 +116,13 @@ System.register(["app/plugins/sdk", "./properties", "lodash"], function (exports
                         nodeGroup.appendChild(text);
                         text.setAttribute('x', "" + ((+node.x) + (+ctrl.panel.textOffsets.left)));
                         text.setAttribute('y', "" + ((+node.y) + (+node.height) - ctrl.panel.textOffsets.bottom));
-                        text.textContent = node.label;
+                        if (ctrl.panel.showNumbers) {
+                            var value = (node.metricName in this.currentValues) ? this.currentValues[node.metricName] : '?';
+                            text.textContent = node.label + " (" + value + ")";
+                        }
+                        else {
+                            text.textContent = node.label;
+                        }
                         if (!node.metricName) {
                             rect.style.fill = "white";
                         }
@@ -161,6 +168,24 @@ System.register(["app/plugins/sdk", "./properties", "lodash"], function (exports
                                 var currentValue = this.currentValues[edge.metric2Name];
                                 backLine.style.stroke = WeathermapCtrl.colorForValue(currentValue);
                             }
+                            if (ctrl.panel.showNumbers) {
+                                var quax = (n1cx + midx) / 2;
+                                var quay = (n1cy + midy) / 2;
+                                var tqax = (midx + n2cx) / 2;
+                                var tqay = (midy + n2cy) / 2;
+                                var valueString = (edge.metricName in this.currentValues) ? this.currentValues[edge.metricName].toFixed(2) : '?';
+                                var text1 = document.createElementNS(svgNamespace, 'text');
+                                edgeGroup.appendChild(text1);
+                                text1.setAttribute('x', "" + quax);
+                                text1.setAttribute('y', "" + quay);
+                                text1.textContent = valueString;
+                                var value2String = (edge.metric2Name in this.currentValues) ? this.currentValues[edge.metric2Name].toFixed(2) : '?';
+                                var text2 = document.createElementNS(svgNamespace, 'text');
+                                edgeGroup.appendChild(text2);
+                                text2.setAttribute('x', "" + tqax);
+                                text2.setAttribute('y', "" + tqay);
+                                text2.textContent = value2String;
+                            }
                         }
                         else {
                             var edgeLine = document.createElementNS(svgNamespace, 'line');
@@ -172,6 +197,16 @@ System.register(["app/plugins/sdk", "./properties", "lodash"], function (exports
                             if (edge.metricName in this.currentValues) {
                                 var currentValue = this.currentValues[edge.metricName];
                                 edgeLine.style.stroke = WeathermapCtrl.colorForValue(currentValue);
+                            }
+                            if (ctrl.panel.showNumbers) {
+                                var midx = (n1cx + n2cx) / 2;
+                                var midy = (n1cy + n2cy) / 2;
+                                var valueString = (edge.metricName in this.currentValues) ? this.currentValues[edge.metricName].toFixed(2) : '?';
+                                var text = document.createElementNS(svgNamespace, 'text');
+                                edgeGroup.appendChild(text);
+                                text.setAttribute('x', "" + midx);
+                                text.setAttribute('y', "" + midy);
+                                text.textContent = valueString;
                             }
                         }
                     }
