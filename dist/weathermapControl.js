@@ -1,4 +1,4 @@
-System.register(["app/plugins/sdk", "./properties", "lodash"], function (exports_1, context_1) {
+System.register(["app/plugins/sdk", "./properties", "lodash", "app/core/time_series2"], function (exports_1, context_1) {
     "use strict";
     var __extends = (this && this.__extends) || (function () {
         var extendStatics = Object.setPrototypeOf ||
@@ -10,7 +10,7 @@ System.register(["app/plugins/sdk", "./properties", "lodash"], function (exports
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var sdk_1, properties_1, lodash_1, panelDefaults, WeathermapCtrl;
+    var sdk_1, properties_1, lodash_1, time_series2_1, panelDefaults, WeathermapCtrl;
     var __moduleName = context_1 && context_1.id;
     return {
         setters: [
@@ -22,6 +22,9 @@ System.register(["app/plugins/sdk", "./properties", "lodash"], function (exports
             },
             function (lodash_1_1) {
                 lodash_1 = lodash_1_1;
+            },
+            function (time_series2_1_1) {
+                time_series2_1 = time_series2_1_1;
             }
         ],
         execute: function () {
@@ -36,7 +39,9 @@ System.register(["app/plugins/sdk", "./properties", "lodash"], function (exports
                     left: 5,
                     bottom: 5
                 },
-                showNumbers: false
+                showNumbers: false,
+                valueName: 'max',
+                nullPointMode: 'connected'
             };
             WeathermapCtrl = (function (_super) {
                 __extends(WeathermapCtrl, _super);
@@ -53,15 +58,25 @@ System.register(["app/plugins/sdk", "./properties", "lodash"], function (exports
                     this.addEditorTab('Options', properties_1.editorPath, 2);
                 };
                 WeathermapCtrl.prototype.onDataReceived = function (dataList) {
-                    var finalValues = {};
-                    for (var _i = 0, dataList_1 = dataList; _i < dataList_1.length; _i++) {
-                        var series = dataList_1[_i];
-                        var dataPointCount = series.datapoints.length;
-                        var value = series.datapoints[dataPointCount - 1][0];
-                        finalValues[series.target] = value;
-                    }
-                    this.currentValues = finalValues;
+                    this.currentSeries = dataList.map(this.seriesHandler.bind(this));
+                    this.currentValues = this.parseSeries(this.currentSeries);
                     this.render();
+                };
+                WeathermapCtrl.prototype.seriesHandler = function (seriesData) {
+                    var series = new time_series2_1.default({
+                        datapoints: seriesData.datapoints,
+                        alias: seriesData.target
+                    });
+                    series.getFlotPairs(this.panel.nullPointMode);
+                    return series;
+                };
+                WeathermapCtrl.prototype.parseSeries = function (series) {
+                    var targetToValue = {};
+                    for (var _i = 0, series_1 = series; _i < series_1.length; _i++) {
+                        var ser = series_1[_i];
+                        targetToValue[ser.alias] = ser.stats[this.panel.valueName];
+                    }
+                    return targetToValue;
                 };
                 WeathermapCtrl.prototype.onDataSnapshotLoad = function (snapshotData) {
                     this.onDataReceived(snapshotData);

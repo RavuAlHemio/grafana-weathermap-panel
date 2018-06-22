@@ -3,6 +3,7 @@
 import { MetricsPanelCtrl } from 'app/plugins/sdk';
 import { editorPath } from './properties';
 import _ from 'lodash';
+import TimeSeries from 'app/core/time_series2';
 
 const panelDefaults = {
     // data
@@ -16,12 +17,15 @@ const panelDefaults = {
         left: 5,
         bottom: 5
     },
-    showNumbers: false
+    showNumbers: false,
+    valueName: 'max',
+    nullPointMode: 'connected'
 };
 
 export class WeathermapCtrl extends MetricsPanelCtrl {
     static templateUrl: string;
     currentValues: object;
+    currentSeries: object;
 
     constructor($scope, $injector) {
         super($scope, $injector);
@@ -39,16 +43,27 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
     }
 
     onDataReceived(dataList) {
-        // always take the freshest value
-        let finalValues = {};
-        for (let series of dataList) {
-            let dataPointCount = series.datapoints.length;
-            let value = series.datapoints[dataPointCount - 1][0];
-            finalValues[series.target] = value;
-        }
-        this.currentValues = finalValues;
+        this.currentSeries = dataList.map(this.seriesHandler.bind(this));
+        this.currentValues = this.parseSeries(this.currentSeries);
 
         this.render();
+    }
+
+    seriesHandler(seriesData) {
+        let series = new TimeSeries({
+            datapoints: seriesData.datapoints,
+            alias: seriesData.target
+        });
+        series.getFlotPairs(this.panel.nullPointMode);
+        return series;
+    }
+
+    parseSeries(series) {
+        let targetToValue = {};
+        for (let ser of series) {
+            targetToValue[ser.alias] = ser.stats[this.panel.valueName];
+        }
+        return targetToValue;
     }
 
     onDataSnapshotLoad(snapshotData) {

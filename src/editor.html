@@ -15,6 +15,14 @@
         </div>
     </div>
     <gf-form-switch class="gf-form" label="Show Numbers" label-class="width-11" checked="ctrl.panel.showNumbers" on-change="ctrl.refresh()"></gf-form-switch>
+    <div class="gf-form-inline">
+        <div class="gf-form">
+            <label class="gf-form-label">Value</label>
+        </div>
+        <div class="gf-form-select-wrapper max-width-10">
+            <select class="gf-form-input" ng-model="ctrl.panel.valueName" ng-options="v for v in ['min','max','avg', 'current', 'total']" ng-change="ctrl.refresh()"></select>
+        </div>
+    </div>
 </div>
 
 <div class="gf-form-group">
