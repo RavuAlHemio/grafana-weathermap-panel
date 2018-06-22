@@ -19,7 +19,7 @@ module.exports = function (grunt) {
             dist_statics: {
                 expand: true,
                 flatten: true,
-                src: ['src/plugin.json', 'src/**/*.html'],
+                src: ['src/plugin.json', 'src/**/*.html', 'src/**/*.svg'],
                 dest: 'dist/'
             }
         },

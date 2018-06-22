@@ -5,5 +5,3 @@ Warning: extremely basic
 Warning: offers almost no customization options
 
 Warning: setup is very, very manual
-
-Warning: no icon

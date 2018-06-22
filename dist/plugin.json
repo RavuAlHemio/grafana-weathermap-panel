@@ -15,8 +15,8 @@
       }
     ],
     "logos": {
-      "small": "img/logo.png",
-      "large": "img/logo.png"
+      "small": "weathermap-icon.svg",
+      "large": "weathermap-icon.svg"
     },
     "dependencies": {
       "grafanaVersion": "4.x.x",
