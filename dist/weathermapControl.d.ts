@@ -27,6 +27,7 @@ export declare class WeathermapCtrl extends MetricsPanelCtrl {
     static linearColorForValue(stops: GradientStop[], colorType: keyof GradientStop, value: number): string;
     static stepColorForValue(stops: GradientStop[], colorType: keyof GradientStop, value: number): string;
     static lerp(value: number, sourceMin: number, sourceMax: number, targetMin: number, targetMax: number): number;
+    drawLegend(gradient: Gradient, colorType: keyof GradientStop, container: SVGElement): void;
 }
 interface GradientStop {
     position: number;

@@ -28,6 +28,7 @@ const panelDefaults: PanelSettings = {
 };
 
 const emergencyColor = "pink";
+const svgNamespace = "http://www.w3.org/2000/svg";
 
 export class WeathermapCtrl extends MetricsPanelCtrl {
     static templateUrl: string;
@@ -120,8 +121,6 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
     }
 
     renderThat(topElem: HTMLElement, ctrl) {
-        const svgNamespace = "http://www.w3.org/2000/svg";
-
         // sort gradient stops
         let sortedStops = this.panel.gradient.stops
             .slice()
@@ -144,6 +143,11 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
         svg.style.width = `${this.panel.canvasSize.width}px`;
         svg.style.height = `${this.panel.canvasSize.height}px`;
         elem.appendChild(svg);
+
+        let legendGroup = document.createElementNS(svgNamespace, 'g');
+        legendGroup.classList.add('legend');
+        legendGroup.setAttribute('transform', 'scale(5) translate(0 100) rotate(-90)');
+        svg.appendChild(legendGroup);
 
         let edgeGroup = document.createElementNS(svgNamespace, 'g');
         edgeGroup.classList.add('edges');
@@ -282,6 +286,19 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
                 }
             }
         }
+
+        // populate legend
+        let strokeLegendGroup = document.createElementNS(svgNamespace, 'g');
+        strokeLegendGroup.classList.add('stroke-legend');
+        legendGroup.appendChild(strokeLegendGroup);
+
+        let fillLegendGroup = document.createElementNS(svgNamespace, 'g');
+        fillLegendGroup.classList.add('fill-legend');
+        fillLegendGroup.setAttribute('transform', 'translate(0 5)');
+        legendGroup.appendChild(fillLegendGroup);
+
+        this.drawLegend(sortedGradient, 'strokeColor', strokeLegendGroup);
+        this.drawLegend(sortedGradient, 'fillColor', fillLegendGroup);
     }
 
     static colorForValue(gradient: Gradient, colorType: keyof GradientStop, value: number): string {
@@ -337,7 +354,6 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
         }
 
         let lastStop = stops[stops.length-1];
-        let r, g, b;
         if (value < stops[0].position) {
             return `${stops[0][colorType]}`;
         } else if (value >= lastStop.position) {
@@ -367,6 +383,52 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
 
         let terp = (value - sourceMin) / (sourceMax - sourceMin);
         return targetMin + terp * (targetMax - targetMin);
+    }
+
+    drawLegend(gradient: Gradient, colorType: keyof GradientStop, container: SVGElement): void {
+        const legendWidth = 100;
+        const legendHeight = 5;
+        // (let the container apply any transformations)
+
+        if (gradient.type == 'linear') {
+            let legendGradientName = `WeathermapLegendGradient-${colorType}`;
+
+            let svgGrad = document.createElementNS(svgNamespace, "linearGradient");
+            container.appendChild(svgGrad);
+            svgGrad.id = legendGradientName;
+            
+            for (let stop of gradient.stops) {
+                let svgStop = document.createElementNS(svgNamespace, "stop");
+                svgGrad.appendChild(svgStop);
+                svgStop.setAttribute('offset', `${stop.position}%`);
+                svgStop.setAttribute('stop-color', `${stop[colorType]}`);
+            }
+
+            let svgRect = document.createElementNS(svgNamespace, "rect");
+            container.appendChild(svgRect);
+            svgRect.setAttribute('x', '0');
+            svgRect.setAttribute('y', '0');
+            svgRect.setAttribute('width', `${legendWidth}`);
+            svgRect.setAttribute('height', `${legendHeight}`);
+            svgRect.style.fill = `url(#${legendGradientName})`;
+        } else if (gradient.type == 'steps') {
+            for (let i = 1; i < gradient.stops.length; ++i) {
+                let rect = document.createElementNS(svgNamespace, "rect");
+                container.appendChild(rect);
+                rect.setAttribute('x', `${gradient.stops[i-1].position}`);
+                rect.setAttribute('y', '0');
+                rect.setAttribute('width', `${gradient.stops[i].position - gradient.stops[i-1].position}`);
+                rect.setAttribute('height', `${legendHeight}`);
+                rect.style.fill = `${gradient.stops[i-1][colorType]}`;
+            }
+            let rect = document.createElementNS(svgNamespace, "rect");
+            container.appendChild(rect);
+            rect.setAttribute('x', `${gradient.stops[gradient.stops.length-1].position}`);
+            rect.setAttribute('y', '0');
+            rect.setAttribute('width', `${100 - gradient.stops[gradient.stops.length-1].position}`);
+            rect.setAttribute('height', `${legendHeight}`);
+            rect.style.fill = `${gradient.stops[gradient.stops.length-1][colorType]}`;
+        }
     }
 }
 

@@ -10,7 +10,7 @@ System.register(["app/plugins/sdk", "./properties", "lodash", "app/core/time_ser
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var sdk_1, properties_1, lodash_1, time_series2_1, panelDefaults, emergencyColor, WeathermapCtrl;
+    var sdk_1, properties_1, lodash_1, time_series2_1, panelDefaults, emergencyColor, svgNamespace, WeathermapCtrl;
     var __moduleName = context_1 && context_1.id;
     return {
         setters: [
@@ -49,6 +49,7 @@ System.register(["app/plugins/sdk", "./properties", "lodash", "app/core/time_ser
                 }
             };
             emergencyColor = "pink";
+            svgNamespace = "http://www.w3.org/2000/svg";
             WeathermapCtrl = (function (_super) {
                 __extends(WeathermapCtrl, _super);
                 function WeathermapCtrl($scope, $injector) {
@@ -127,7 +128,6 @@ System.register(["app/plugins/sdk", "./properties", "lodash", "app/core/time_ser
                     this.events.on('render', function () { return _this.renderThat(elems[0], ctrl); });
                 };
                 WeathermapCtrl.prototype.renderThat = function (topElem, ctrl) {
-                    var svgNamespace = "http://www.w3.org/2000/svg";
                     var sortedStops = this.panel.gradient.stops
                         .slice()
                         .sort(function (l, r) { return l.position - r.position; });
@@ -143,6 +143,10 @@ System.register(["app/plugins/sdk", "./properties", "lodash", "app/core/time_ser
                     svg.style.width = this.panel.canvasSize.width + "px";
                     svg.style.height = this.panel.canvasSize.height + "px";
                     elem.appendChild(svg);
+                    var legendGroup = document.createElementNS(svgNamespace, 'g');
+                    legendGroup.classList.add('legend');
+                    legendGroup.setAttribute('transform', 'scale(5) translate(0 100) rotate(-90)');
+                    svg.appendChild(legendGroup);
                     var edgeGroup = document.createElementNS(svgNamespace, 'g');
                     edgeGroup.classList.add('edges');
                     svg.appendChild(edgeGroup);
@@ -262,6 +266,15 @@ System.register(["app/plugins/sdk", "./properties", "lodash", "app/core/time_ser
                             }
                         }
                     }
+                    var strokeLegendGroup = document.createElementNS(svgNamespace, 'g');
+                    strokeLegendGroup.classList.add('stroke-legend');
+                    legendGroup.appendChild(strokeLegendGroup);
+                    var fillLegendGroup = document.createElementNS(svgNamespace, 'g');
+                    fillLegendGroup.classList.add('fill-legend');
+                    fillLegendGroup.setAttribute('transform', 'translate(0 5)');
+                    legendGroup.appendChild(fillLegendGroup);
+                    this.drawLegend(sortedGradient, 'strokeColor', strokeLegendGroup);
+                    this.drawLegend(sortedGradient, 'fillColor', fillLegendGroup);
                 };
                 WeathermapCtrl.colorForValue = function (gradient, colorType, value) {
                     if (gradient.type == 'linear') {
@@ -309,7 +322,6 @@ System.register(["app/plugins/sdk", "./properties", "lodash", "app/core/time_ser
                         return emergencyColor;
                     }
                     var lastStop = stops[stops.length - 1];
-                    var r, g, b;
                     if (value < stops[0].position) {
                         return "" + stops[0][colorType];
                     }
@@ -337,6 +349,48 @@ System.register(["app/plugins/sdk", "./properties", "lodash", "app/core/time_ser
                     }
                     var terp = (value - sourceMin) / (sourceMax - sourceMin);
                     return targetMin + terp * (targetMax - targetMin);
+                };
+                WeathermapCtrl.prototype.drawLegend = function (gradient, colorType, container) {
+                    var legendWidth = 100;
+                    var legendHeight = 5;
+                    if (gradient.type == 'linear') {
+                        var legendGradientName = "WeathermapLegendGradient-" + colorType;
+                        var svgGrad = document.createElementNS(svgNamespace, "linearGradient");
+                        container.appendChild(svgGrad);
+                        svgGrad.id = legendGradientName;
+                        for (var _i = 0, _a = gradient.stops; _i < _a.length; _i++) {
+                            var stop_1 = _a[_i];
+                            var svgStop = document.createElementNS(svgNamespace, "stop");
+                            svgGrad.appendChild(svgStop);
+                            svgStop.setAttribute('offset', stop_1.position + "%");
+                            svgStop.setAttribute('stop-color', "" + stop_1[colorType]);
+                        }
+                        var svgRect = document.createElementNS(svgNamespace, "rect");
+                        container.appendChild(svgRect);
+                        svgRect.setAttribute('x', '0');
+                        svgRect.setAttribute('y', '0');
+                        svgRect.setAttribute('width', "" + legendWidth);
+                        svgRect.setAttribute('height', "" + legendHeight);
+                        svgRect.style.fill = "url(#" + legendGradientName + ")";
+                    }
+                    else if (gradient.type == 'steps') {
+                        for (var i = 1; i < gradient.stops.length; ++i) {
+                            var rect_1 = document.createElementNS(svgNamespace, "rect");
+                            container.appendChild(rect_1);
+                            rect_1.setAttribute('x', "" + gradient.stops[i - 1].position);
+                            rect_1.setAttribute('y', '0');
+                            rect_1.setAttribute('width', "" + (gradient.stops[i].position - gradient.stops[i - 1].position));
+                            rect_1.setAttribute('height', "" + legendHeight);
+                            rect_1.style.fill = "" + gradient.stops[i - 1][colorType];
+                        }
+                        var rect = document.createElementNS(svgNamespace, "rect");
+                        container.appendChild(rect);
+                        rect.setAttribute('x', "" + gradient.stops[gradient.stops.length - 1].position);
+                        rect.setAttribute('y', '0');
+                        rect.setAttribute('width', "" + (100 - gradient.stops[gradient.stops.length - 1].position));
+                        rect.setAttribute('height', "" + legendHeight);
+                        rect.style.fill = "" + gradient.stops[gradient.stops.length - 1][colorType];
+                    }
                 };
                 return WeathermapCtrl;
             }(sdk_1.MetricsPanelCtrl));
