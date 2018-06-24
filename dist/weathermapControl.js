@@ -167,8 +167,10 @@ System.register(["app/plugins/sdk", "./properties", "./gradients", "./legend", "
                     for (var _i = 0, _a = this.panel.weathermapNodes; _i < _a.length; _i++) {
                         var node = _a[_i];
                         nodeLabelToNode[node.label] = node;
+                        var singleNodeGroup = document.createElementNS(properties_1.svgNamespace, 'g');
+                        nodeGroup.appendChild(singleNodeGroup);
                         var rect = document.createElementNS(properties_1.svgNamespace, 'rect');
-                        nodeGroup.appendChild(rect);
+                        singleNodeGroup.appendChild(rect);
                         rect.setAttribute('x', "" + node.x);
                         rect.setAttribute('y', "" + node.y);
                         rect.setAttribute('width', "" + node.width);
@@ -176,7 +178,7 @@ System.register(["app/plugins/sdk", "./properties", "./gradients", "./legend", "
                         rect.style.strokeWidth = "1px";
                         rect.style.stroke = "gray";
                         var text = document.createElementNS(properties_1.svgNamespace, 'text');
-                        nodeGroup.appendChild(text);
+                        singleNodeGroup.appendChild(text);
                         text.setAttribute('x', "" + ((+node.x) + (+ctrl.panel.textOffsets.left)));
                         text.setAttribute('y', "" + ((+node.y) + (+node.height) - ctrl.panel.textOffsets.bottom));
                         if (ctrl.panel.showNumbers) {

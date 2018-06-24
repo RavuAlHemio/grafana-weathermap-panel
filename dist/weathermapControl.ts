@@ -150,15 +150,15 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
         svg.style.height = `${this.panel.canvasSize.height}px`;
         elem.appendChild(svg);
 
-        let legendGroup = document.createElementNS(svgNamespace, 'g');
+        let legendGroup: SVGGElement = document.createElementNS(svgNamespace, 'g');
         legendGroup.classList.add('legend');
         svg.appendChild(legendGroup);
 
-        let edgeGroup = document.createElementNS(svgNamespace, 'g');
+        let edgeGroup: SVGGElement = document.createElementNS(svgNamespace, 'g');
         edgeGroup.classList.add('edges');
         svg.appendChild(edgeGroup);
 
-        let nodeGroup = document.createElementNS(svgNamespace, 'g');
+        let nodeGroup: SVGGElement = document.createElementNS(svgNamespace, 'g');
         nodeGroup.classList.add('nodes');
         svg.appendChild(nodeGroup);
 
@@ -167,8 +167,11 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
         for (let node of this.panel.weathermapNodes) {
             nodeLabelToNode[node.label] = node;
 
+            let singleNodeGroup: SVGGElement = document.createElementNS(svgNamespace, 'g');
+            nodeGroup.appendChild(singleNodeGroup);
+
             let rect: SVGRectElement = document.createElementNS(svgNamespace, 'rect');
-            nodeGroup.appendChild(rect);
+            singleNodeGroup.appendChild(rect);
 
             rect.setAttribute('x', `${node.x}`);
             rect.setAttribute('y', `${node.y}`);
@@ -178,7 +181,7 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
             rect.style.stroke = "gray";
 
             let text: SVGTextElement = document.createElementNS(svgNamespace, 'text');
-            nodeGroup.appendChild(text);
+            singleNodeGroup.appendChild(text);
 
             text.setAttribute('x', `${(+node.x) + (+ctrl.panel.textOffsets.left)}`);
             text.setAttribute('y', `${(+node.y) + (+node.height) - ctrl.panel.textOffsets.bottom}`);
