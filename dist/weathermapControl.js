@@ -193,12 +193,14 @@ System.register(["app/plugins/sdk", "./properties", "./gradients", "./legend", "
                     var nodeGroup = document.createElementNS(properties_1.svgNamespace, 'g');
                     nodeGroup.classList.add('nodes');
                     svg.appendChild(nodeGroup);
+                    var nodeLinkUriBase = WeathermapCtrl.resolveLink(this.panel.link.node);
+                    var edgeLinkUriBase = WeathermapCtrl.resolveLink(this.panel.link.edge);
                     var nodeLabelToNode = {};
                     for (var _i = 0, _a = this.panel.weathermapNodes; _i < _a.length; _i++) {
                         var node = _a[_i];
                         nodeLabelToNode[node.label] = node;
                         var singleNodeGroup = document.createElementNS(properties_1.svgNamespace, 'g');
-                        nodeGroup.appendChild(singleNodeGroup);
+                        WeathermapCtrl.maybeWrapIntoLink(nodeGroup, singleNodeGroup, nodeLinkUriBase, node.linkParams);
                         var rect = document.createElementNS(properties_1.svgNamespace, 'rect');
                         singleNodeGroup.appendChild(rect);
                         rect.setAttribute('x', "" + node.x);
@@ -236,6 +238,8 @@ System.register(["app/plugins/sdk", "./properties", "./gradients", "./legend", "
                         if (!node1 || !node2) {
                             continue;
                         }
+                        var singleEdgeGroup = document.createElementNS(properties_1.svgNamespace, 'g');
+                        WeathermapCtrl.maybeWrapIntoLink(edgeGroup, singleEdgeGroup, edgeLinkUriBase, edge.linkParams);
                         var n1cx = (+node1.x) + ((+node1.width) / 2);
                         var n1cy = (+node1.y) + ((+node1.height) / 2);
                         var n2cx = (+node2.x) + ((+node2.width) / 2);
@@ -244,14 +248,14 @@ System.register(["app/plugins/sdk", "./properties", "./gradients", "./legend", "
                             var midx = (n1cx + n2cx) / 2;
                             var midy = (n1cy + n2cy) / 2;
                             var thereLine = document.createElementNS(properties_1.svgNamespace, 'line');
-                            edgeGroup.appendChild(thereLine);
+                            singleEdgeGroup.appendChild(thereLine);
                             thereLine.setAttribute('x1', "" + n1cx);
                             thereLine.setAttribute('y1', "" + n1cy);
                             thereLine.setAttribute('x2', "" + midx);
                             thereLine.setAttribute('y2', "" + midy);
                             thereLine.style.strokeWidth = "" + this.panel.strokeWidth;
                             var backLine = document.createElementNS(properties_1.svgNamespace, 'line');
-                            edgeGroup.appendChild(backLine);
+                            singleEdgeGroup.appendChild(backLine);
                             backLine.setAttribute('x1', "" + midx);
                             backLine.setAttribute('y1', "" + midy);
                             backLine.setAttribute('x2', "" + n2cx);
@@ -272,13 +276,13 @@ System.register(["app/plugins/sdk", "./properties", "./gradients", "./legend", "
                                 var tqay = (midy + n2cy) / 2;
                                 var valueString = (edge.metricName in this.currentValues) ? this.currentValues[edge.metricName].toFixed(2) : '?';
                                 var text1 = document.createElementNS(properties_1.svgNamespace, 'text');
-                                edgeGroup.appendChild(text1);
+                                singleEdgeGroup.appendChild(text1);
                                 text1.setAttribute('x', "" + quax);
                                 text1.setAttribute('y', "" + quay);
                                 text1.textContent = valueString;
                                 var value2String = (edge.metric2Name in this.currentValues) ? this.currentValues[edge.metric2Name].toFixed(2) : '?';
                                 var text2 = document.createElementNS(properties_1.svgNamespace, 'text');
-                                edgeGroup.appendChild(text2);
+                                singleEdgeGroup.appendChild(text2);
                                 text2.setAttribute('x', "" + tqax);
                                 text2.setAttribute('y', "" + tqay);
                                 text2.textContent = value2String;
@@ -286,7 +290,7 @@ System.register(["app/plugins/sdk", "./properties", "./gradients", "./legend", "
                         }
                         else {
                             var edgeLine = document.createElementNS(properties_1.svgNamespace, 'line');
-                            edgeGroup.appendChild(edgeLine);
+                            singleEdgeGroup.appendChild(edgeLine);
                             edgeLine.setAttribute('x1', "" + n1cx);
                             edgeLine.setAttribute('y1', "" + n1cy);
                             edgeLine.setAttribute('x2', "" + n2cx);
@@ -301,7 +305,7 @@ System.register(["app/plugins/sdk", "./properties", "./gradients", "./legend", "
                                 var midy = (n1cy + n2cy) / 2;
                                 var valueString = (edge.metricName in this.currentValues) ? this.currentValues[edge.metricName].toFixed(2) : '?';
                                 var text = document.createElementNS(properties_1.svgNamespace, 'text');
-                                edgeGroup.appendChild(text);
+                                singleEdgeGroup.appendChild(text);
                                 text.setAttribute('x', "" + midx);
                                 text.setAttribute('y', "" + midy);
                                 text.textContent = valueString;
@@ -309,6 +313,33 @@ System.register(["app/plugins/sdk", "./properties", "./gradients", "./legend", "
                         }
                     }
                     legend_1.placeLegend(this.panel.legend, sortedGradient, legendGroup);
+                };
+                WeathermapCtrl.resolveLink = function (objLink) {
+                    if (objLink.type == 'absolute' && objLink.absoluteUri) {
+                        return objLink.absoluteUri;
+                    }
+                    else if (objLink.type == 'dashboard' && objLink.dashUri) {
+                        return "/dashboard/" + objLink.dashUri;
+                    }
+                    return null;
+                };
+                WeathermapCtrl.maybeWrapIntoLink = function (upperGroup, singleObjectGroup, linkUriBase, objLinkParams) {
+                    if (linkUriBase) {
+                        var objLinkUri = linkUriBase;
+                        if (objLinkParams) {
+                            objLinkUri += (objLinkUri.indexOf('?') === -1)
+                                ? '?'
+                                : '&';
+                            objLinkUri += objLinkParams;
+                        }
+                        var aElement = document.createElementNS(properties_1.svgNamespace, 'a');
+                        upperGroup.appendChild(aElement);
+                        aElement.setAttributeNS(properties_1.xlinkNamespace, 'href', objLinkUri);
+                        aElement.appendChild(singleObjectGroup);
+                    }
+                    else {
+                        upperGroup.appendChild(singleObjectGroup);
+                    }
                 };
                 return WeathermapCtrl;
             }(sdk_1.MetricsPanelCtrl));

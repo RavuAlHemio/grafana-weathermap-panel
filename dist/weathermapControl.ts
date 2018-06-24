@@ -1,7 +1,7 @@
 ///<reference path="../node_modules/grafana-sdk-mocks/app/headers/common.d.ts" />
 
 import { MetricsPanelCtrl } from 'app/plugins/sdk';
-import { editorPath, svgNamespace } from './properties';
+import { editorPath, svgNamespace, xlinkNamespace } from './properties';
 import { colorForValue, Gradient } from './gradients';
 import { placeLegend, LegendSettings } from './legend';
 import _ from 'lodash';
@@ -195,13 +195,17 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
         nodeGroup.classList.add('nodes');
         svg.appendChild(nodeGroup);
 
+        // resolve links
+        let nodeLinkUriBase: string|null = WeathermapCtrl.resolveLink(this.panel.link.node);
+        let edgeLinkUriBase: string|null = WeathermapCtrl.resolveLink(this.panel.link.edge);
+
         // place nodes
         let nodeLabelToNode = {};
         for (let node of this.panel.weathermapNodes) {
             nodeLabelToNode[node.label] = node;
 
             let singleNodeGroup: SVGGElement = document.createElementNS(svgNamespace, 'g');
-            nodeGroup.appendChild(singleNodeGroup);
+            WeathermapCtrl.maybeWrapIntoLink(nodeGroup, singleNodeGroup, nodeLinkUriBase, node.linkParams);
 
             let rect: SVGRectElement = document.createElementNS(svgNamespace, 'rect');
             singleNodeGroup.appendChild(rect);
@@ -246,6 +250,9 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
                 continue;
             }
 
+            let singleEdgeGroup: SVGGElement = document.createElementNS(svgNamespace, 'g');
+            WeathermapCtrl.maybeWrapIntoLink(edgeGroup, singleEdgeGroup, edgeLinkUriBase, edge.linkParams);
+
             let n1cx = (+node1.x) + ((+node1.width) / 2);
             let n1cy = (+node1.y) + ((+node1.height) / 2);
             let n2cx = (+node2.x) + ((+node2.width) / 2);
@@ -257,7 +264,7 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
                 let midy = (n1cy + n2cy) / 2;
 
                 let thereLine: SVGLineElement = document.createElementNS(svgNamespace, 'line');
-                edgeGroup.appendChild(thereLine);
+                singleEdgeGroup.appendChild(thereLine);
                 thereLine.setAttribute('x1', `${n1cx}`);
                 thereLine.setAttribute('y1', `${n1cy}`);
                 thereLine.setAttribute('x2', `${midx}`);
@@ -265,7 +272,7 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
                 thereLine.style.strokeWidth = `${this.panel.strokeWidth}`;
 
                 let backLine: SVGLineElement = document.createElementNS(svgNamespace, 'line');
-                edgeGroup.appendChild(backLine);
+                singleEdgeGroup.appendChild(backLine);
                 backLine.setAttribute('x1', `${midx}`);
                 backLine.setAttribute('y1', `${midy}`);
                 backLine.setAttribute('x2', `${n2cx}`);
@@ -289,21 +296,21 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
 
                     let valueString = (edge.metricName in this.currentValues) ? this.currentValues[edge.metricName].toFixed(2) : '?';
                     let text1 = document.createElementNS(svgNamespace, 'text');
-                    edgeGroup.appendChild(text1);
+                    singleEdgeGroup.appendChild(text1);
                     text1.setAttribute('x', `${quax}`);
                     text1.setAttribute('y', `${quay}`);
                     text1.textContent = valueString;
 
                     let value2String = (edge.metric2Name in this.currentValues) ? this.currentValues[edge.metric2Name].toFixed(2) : '?';
                     let text2 = document.createElementNS(svgNamespace, 'text');
-                    edgeGroup.appendChild(text2);
+                    singleEdgeGroup.appendChild(text2);
                     text2.setAttribute('x', `${tqax}`);
                     text2.setAttribute('y', `${tqay}`);
                     text2.textContent = value2String;
                 }
             } else {
                 let edgeLine: SVGLineElement = document.createElementNS(svgNamespace, 'line');
-                edgeGroup.appendChild(edgeLine);
+                singleEdgeGroup.appendChild(edgeLine);
                 edgeLine.setAttribute('x1', `${n1cx}`);
                 edgeLine.setAttribute('y1', `${n1cy}`);
                 edgeLine.setAttribute('x2', `${n2cx}`);
@@ -320,7 +327,7 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
                     let midy = (n1cy + n2cy) / 2;
                     let valueString = (edge.metricName in this.currentValues) ? this.currentValues[edge.metricName].toFixed(2) : '?';
                     let text = document.createElementNS(svgNamespace, 'text');
-                    edgeGroup.appendChild(text);
+                    singleEdgeGroup.appendChild(text);
                     text.setAttribute('x', `${midx}`);
                     text.setAttribute('y', `${midy}`);
                     text.textContent = valueString;
@@ -330,6 +337,35 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
 
         // legend
         placeLegend(this.panel.legend, sortedGradient, legendGroup);
+    }
+
+    static resolveLink(objLink: ObjectLinkSettings): string|null {
+        if (objLink.type == 'absolute' && objLink.absoluteUri) {
+            return objLink.absoluteUri;
+        } else if (objLink.type == 'dashboard' && objLink.dashUri) {
+            return `/dashboard/${objLink.dashUri}`;
+        }
+        return null;
+    }
+
+    static maybeWrapIntoLink(upperGroup: SVGGElement, singleObjectGroup: SVGGElement, linkUriBase: string|null, objLinkParams: string|null): void {
+        if (linkUriBase) {
+            let objLinkUri = linkUriBase;
+            if (objLinkParams) {
+                objLinkUri += (objLinkUri.indexOf('?') === -1)
+                    ? '?'
+                    : '&';
+                    objLinkUri += objLinkParams;
+            }
+
+            let aElement: SVGAElement = document.createElementNS(svgNamespace, 'a');
+            upperGroup.appendChild(aElement);
+            aElement.setAttributeNS(xlinkNamespace, 'href', objLinkUri);
+
+            aElement.appendChild(singleObjectGroup);
+        } else {
+            upperGroup.appendChild(singleObjectGroup);
+        }
     }
 }
 
