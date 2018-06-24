@@ -3,13 +3,15 @@ import { MetricsPanelCtrl } from 'app/plugins/sdk';
 import { Gradient } from './gradients';
 import { LegendSettings } from './legend';
 export declare class WeathermapCtrl extends MetricsPanelCtrl {
+    private backendSrv;
     static templateUrl: string;
     currentValues: {
         [key: string]: number;
     };
     currentSeries: object;
     panel: PanelSettings;
-    constructor($scope: any, $injector: any);
+    searchDashboards: (queryStr: string, callback: (matches: string[]) => any) => void;
+    constructor($scope: any, $injector: any, backendSrv: any);
     onInitEditMode(): void;
     onDataReceived(dataList: any): void;
     seriesHandler(seriesData: any): any;
@@ -23,6 +25,7 @@ export declare class WeathermapCtrl extends MetricsPanelCtrl {
     onGradientStopStrokeColorChange(stopIndex: any): (color: string) => void;
     onGradientStopFillColorChange(stopIndex: any): (color: string) => void;
     removeGradientStop(stop: any): void;
+    dashboardChanged(link: ObjectLinkSettings): void;
     link(scope: any, elems: any, attrs: any, ctrl: any): void;
     renderThat(topElem: HTMLElement, ctrl: any): void;
 }
@@ -33,12 +36,24 @@ interface WeathermapNode {
     width: number;
     height: number;
     metricName: string | null;
+    linkParams: string;
 }
 interface WeathermapEdge {
     node1: string;
     node2: string;
     metricName: string;
     metric2Name: string | null;
+    linkParams: string;
+}
+interface LinkSettings {
+    node: ObjectLinkSettings;
+    edge: ObjectLinkSettings;
+}
+interface ObjectLinkSettings {
+    type: 'none' | 'dashboard' | 'absolute';
+    dashboard: string | null;
+    dashUri: string | null;
+    absoluteUri: string | null;
 }
 interface PanelSettings {
     weathermapEdges: WeathermapEdge[];
@@ -57,5 +72,6 @@ interface PanelSettings {
     strokeWidth: number;
     gradient: Gradient;
     legend: LegendSettings;
+    link: LinkSettings;
 }
 export {};

@@ -59,17 +59,38 @@ System.register(["app/plugins/sdk", "./properties", "./gradients", "./legend", "
                     y: 0,
                     length: 100,
                     width: 5
+                },
+                link: {
+                    node: {
+                        type: 'none',
+                        absoluteUri: null,
+                        dashboard: null,
+                        dashUri: null
+                    },
+                    edge: {
+                        type: 'none',
+                        absoluteUri: null,
+                        dashboard: null,
+                        dashUri: null
+                    }
                 }
             };
             WeathermapCtrl = (function (_super) {
                 __extends(WeathermapCtrl, _super);
-                function WeathermapCtrl($scope, $injector) {
+                function WeathermapCtrl($scope, $injector, backendSrv) {
                     var _this = _super.call(this, $scope, $injector) || this;
+                    _this.backendSrv = backendSrv;
                     lodash_1.default.defaultsDeep(_this.panel, panelDefaults);
                     _this.currentValues = {};
                     _this.events.on('init-edit-mode', _this.onInitEditMode.bind(_this));
                     _this.events.on('data-received', _this.onDataReceived.bind(_this));
                     _this.events.on('data-snapshot-load', _this.onDataSnapshotLoad.bind(_this));
+                    _this.searchDashboards = function (queryStr, callback) {
+                        backendSrv.search({ query: queryStr }).then(function (hits) {
+                            var dashboards = lodash_1.default.map(hits, function (dash) { return dash.title; });
+                            callback(dashboards);
+                        });
+                    };
                     return _this;
                 }
                 WeathermapCtrl.prototype.onInitEditMode = function () {
@@ -134,6 +155,15 @@ System.register(["app/plugins/sdk", "./properties", "./gradients", "./legend", "
                     this.panel.gradient.stops = lodash_1.default.without(this.panel.gradient.stops, stop);
                     this.refresh();
                 };
+                WeathermapCtrl.prototype.dashboardChanged = function (link) {
+                    this.backendSrv.search({ query: link.dashboard }).then(function (hits) {
+                        var dashboard = lodash_1.default.find(hits, { title: link.dashboard });
+                        if (dashboard) {
+                            link.dashUri = dashboard.uri;
+                        }
+                    });
+                };
+                ;
                 WeathermapCtrl.prototype.link = function (scope, elems, attrs, ctrl) {
                     var _this = this;
                     this.events.on('render', function () { return _this.renderThat(elems[0], ctrl); });

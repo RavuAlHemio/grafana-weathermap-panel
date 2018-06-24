@@ -33,6 +33,20 @@ const panelDefaults: PanelSettings = {
         y: 0,
         length: 100,
         width: 5
+    },
+    link: {
+        node: {
+            type: 'none',
+            absoluteUri: null,
+            dashboard: null,
+            dashUri: null
+        },
+        edge: {
+            type: 'none',
+            absoluteUri: null,
+            dashboard: null,
+            dashUri: null
+        }
     }
 };
 
@@ -43,7 +57,10 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
 
     panel: PanelSettings;
 
-    constructor($scope, $injector) {
+    searchDashboards: (queryStr: string, callback: (matches: string[]) => any) => void;
+
+    /** @ngInject **/
+    constructor($scope, $injector, private backendSrv) {
         super($scope, $injector);
         _.defaultsDeep(this.panel, panelDefaults);
 
@@ -52,6 +69,13 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
         this.events.on('init-edit-mode', this.onInitEditMode.bind(this));
         this.events.on('data-received', this.onDataReceived.bind(this));
         this.events.on('data-snapshot-load', this.onDataSnapshotLoad.bind(this));
+
+        this.searchDashboards = function (queryStr: string, callback: (matches: string[]) => any): void {
+            backendSrv.search({query: queryStr}).then(hits => {
+                let dashboards = _.map(hits, dash => dash.title);
+                callback(dashboards);
+            });
+        };
     }
 
     onInitEditMode() {
@@ -86,41 +110,50 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
         this.onDataReceived(snapshotData);
     }
 
-    addWeathermapNode(node?) {
+    addWeathermapNode(node?): void {
         this.panel.weathermapNodes.push(node || {});
     }
-    removeWeathermapNode(node) {
+    removeWeathermapNode(node): void {
         this.panel.weathermapNodes = _.without(this.panel.weathermapNodes, node);
         this.refresh();
     }
 
-    addWeathermapEdge(edge?) {
+    addWeathermapEdge(edge?): void {
         this.panel.weathermapEdges.push(edge || {});
     }
-    removeWeathermapEdge(edge) {
+    removeWeathermapEdge(edge): void {
         this.panel.weathermapEdges = _.without(this.panel.weathermapEdges, edge);
         this.refresh();
     }
 
-    addGradientStop(stop?) {
+    addGradientStop(stop?): void {
         this.panel.gradient.stops.push(stop || {});
     }
-    onGradientStopStrokeColorChange(stopIndex) {
+    onGradientStopStrokeColorChange(stopIndex): (color: string) => void {
         return (color: string) => {
             this.panel.gradient.stops[stopIndex].strokeColor = color;
             this.refresh();
         };
     }
-    onGradientStopFillColorChange(stopIndex) {
+    onGradientStopFillColorChange(stopIndex): (color: string) => void {
         return (color: string) => {
             this.panel.gradient.stops[stopIndex].fillColor = color;
             this.refresh();
         };
     }
-    removeGradientStop(stop) {
+    removeGradientStop(stop): void {
         this.panel.gradient.stops = _.without(this.panel.gradient.stops, stop);
         this.refresh();
     }
+
+    dashboardChanged(link: ObjectLinkSettings): void {
+        this.backendSrv.search({query: link.dashboard}).then((hits) => {
+            let dashboard = _.find(hits, {title: link.dashboard});
+            if (dashboard) {
+                link.dashUri = dashboard.uri;
+            }
+        });
+    };
 
     link(scope, elems, attrs, ctrl) {
         this.events.on('render', () => this.renderThat(elems[0], ctrl));
@@ -308,6 +341,7 @@ interface WeathermapNode {
     width: number;
     height: number;
     metricName: string|null;
+    linkParams: string;
 }
 
 interface WeathermapEdge {
@@ -315,6 +349,19 @@ interface WeathermapEdge {
     node2: string;
     metricName: string;
     metric2Name: string|null;
+    linkParams: string;
+}
+
+interface LinkSettings {
+    node: ObjectLinkSettings;
+    edge: ObjectLinkSettings;
+}
+
+interface ObjectLinkSettings {
+    type: 'none'|'dashboard'|'absolute';
+    dashboard: string|null;
+    dashUri: string|null;
+    absoluteUri: string|null;
 }
 
 interface PanelSettings {
@@ -328,6 +375,7 @@ interface PanelSettings {
     strokeWidth: number;
     gradient: Gradient;
     legend: LegendSettings;
+    link: LinkSettings;
 }
 
 WeathermapCtrl.templateUrl = 'module.html';
