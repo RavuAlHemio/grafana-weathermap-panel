@@ -2,6 +2,6 @@
 
 Warning: extremely basic
 
-Warning: offers almost no customization options
+Warning: offers very few customization options
 
 Warning: setup is very, very manual

@@ -1,5 +1,7 @@
 /// <reference path="../node_modules/grafana-sdk-mocks/app/headers/common.d.ts" />
 import { MetricsPanelCtrl } from 'app/plugins/sdk';
+import { Gradient } from './gradients';
+import { LegendSettings } from './legend';
 export declare class WeathermapCtrl extends MetricsPanelCtrl {
     static templateUrl: string;
     currentValues: {
@@ -23,20 +25,6 @@ export declare class WeathermapCtrl extends MetricsPanelCtrl {
     removeGradientStop(stop: any): void;
     link(scope: any, elems: any, attrs: any, ctrl: any): void;
     renderThat(topElem: HTMLElement, ctrl: any): void;
-    static colorForValue(gradient: Gradient, colorType: keyof GradientStop, value: number): string;
-    static linearColorForValue(stops: GradientStop[], colorType: keyof GradientStop, value: number): string;
-    static stepColorForValue(stops: GradientStop[], colorType: keyof GradientStop, value: number): string;
-    static lerp(value: number, sourceMin: number, sourceMax: number, targetMin: number, targetMax: number): number;
-    drawLegend(gradient: Gradient, colorType: keyof GradientStop, container: SVGElement): void;
-}
-interface GradientStop {
-    position: number;
-    strokeColor: string;
-    fillColor: string;
-}
-interface Gradient {
-    type: "steps" | "linear";
-    stops: GradientStop[];
 }
 interface WeathermapNode {
     label: string;
@@ -68,5 +56,6 @@ interface PanelSettings {
     nullPointMode: 'connected' | 'null' | 'null as zero';
     strokeWidth: number;
     gradient: Gradient;
+    legend: LegendSettings;
 }
 export {};

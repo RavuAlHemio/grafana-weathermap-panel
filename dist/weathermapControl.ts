@@ -1,7 +1,9 @@
 ///<reference path="../node_modules/grafana-sdk-mocks/app/headers/common.d.ts" />
 
 import { MetricsPanelCtrl } from 'app/plugins/sdk';
-import { editorPath } from './properties';
+import { editorPath, svgNamespace } from './properties';
+import { colorForValue, Gradient } from './gradients';
+import { placeLegend, LegendSettings } from './legend';
 import _ from 'lodash';
 import TimeSeries from 'app/core/time_series2';
 
@@ -24,11 +26,15 @@ const panelDefaults: PanelSettings = {
     gradient: {
         type: 'steps',
         stops: []
+    },
+    legend: {
+        type: '',
+        x: 0,
+        y: 0,
+        length: 100,
+        width: 5
     }
 };
-
-const emergencyColor = "pink";
-const svgNamespace = "http://www.w3.org/2000/svg";
 
 export class WeathermapCtrl extends MetricsPanelCtrl {
     static templateUrl: string;
@@ -146,7 +152,6 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
 
         let legendGroup = document.createElementNS(svgNamespace, 'g');
         legendGroup.classList.add('legend');
-        legendGroup.setAttribute('transform', 'scale(5) translate(0 100) rotate(-90)');
         svg.appendChild(legendGroup);
 
         let edgeGroup = document.createElementNS(svgNamespace, 'g');
@@ -189,7 +194,7 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
             } else if (node.metricName in this.currentValues) {
                 // color node by metric
                 let currentValue = this.currentValues[node.metricName];
-                rect.style.fill = WeathermapCtrl.colorForValue(sortedGradient, 'fillColor', currentValue);
+                rect.style.fill = colorForValue(sortedGradient, 'fillColor', currentValue);
             } else {
                 // no data
                 rect.style.fill = "black";
@@ -233,11 +238,11 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
 
                 if (edge.metricName in this.currentValues) {
                     let currentValue = this.currentValues[edge.metricName];
-                    thereLine.style.stroke = WeathermapCtrl.colorForValue(sortedGradient, 'strokeColor', currentValue);
+                    thereLine.style.stroke = colorForValue(sortedGradient, 'strokeColor', currentValue);
                 }
                 if (edge.metric2Name in this.currentValues) {
                     let currentValue = this.currentValues[edge.metric2Name];
-                    backLine.style.stroke = WeathermapCtrl.colorForValue(sortedGradient, 'strokeColor', currentValue);
+                    backLine.style.stroke = colorForValue(sortedGradient, 'strokeColor', currentValue);
                 }
 
                 if (ctrl.panel.showNumbers) {
@@ -271,7 +276,7 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
 
                 if (edge.metricName in this.currentValues) {
                     let currentValue = this.currentValues[edge.metricName];
-                    edgeLine.style.stroke = WeathermapCtrl.colorForValue(sortedGradient, 'strokeColor', currentValue);
+                    edgeLine.style.stroke = colorForValue(sortedGradient, 'strokeColor', currentValue);
                 }
 
                 if (ctrl.panel.showNumbers) {
@@ -287,162 +292,11 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
             }
         }
 
-        // populate legend
-        let strokeLegendGroup = document.createElementNS(svgNamespace, 'g');
-        strokeLegendGroup.classList.add('stroke-legend');
-        legendGroup.appendChild(strokeLegendGroup);
-
-        let fillLegendGroup = document.createElementNS(svgNamespace, 'g');
-        fillLegendGroup.classList.add('fill-legend');
-        fillLegendGroup.setAttribute('transform', 'translate(0 5)');
-        legendGroup.appendChild(fillLegendGroup);
-
-        this.drawLegend(sortedGradient, 'strokeColor', strokeLegendGroup);
-        this.drawLegend(sortedGradient, 'fillColor', fillLegendGroup);
-    }
-
-    static colorForValue(gradient: Gradient, colorType: keyof GradientStop, value: number): string {
-        if (gradient.type == 'linear') {
-            return WeathermapCtrl.linearColorForValue(gradient.stops, colorType, value);
-        } else if (gradient.type == 'steps') {
-            return WeathermapCtrl.stepColorForValue(gradient.stops, colorType, value);
-        }
-        return emergencyColor;
-    }
-
-    static linearColorForValue(stops: GradientStop[], colorType: keyof GradientStop, value: number): string {
-        if (stops.length == 0) {
-            return emergencyColor;
-        }
-
-        let lastStop = stops[stops.length-1];
-        let r, g, b;
-        if (value < stops[0].position) {
-            return `${stops[0][colorType]}`;
-        } else if (value >= lastStop.position) {
-            return `${lastStop[colorType]}`;
-        } else {
-            for (let i = 0; i < stops.length-1; ++i) {
-                if (value >= stops[i].position && value < stops[i+1].position) {
-                    // found!
-
-                    let posFrom = stops[i].position;
-                    let rFrom = Number.parseInt(`${stops[i][colorType]}`.substr(1, 2), 16);
-                    let gFrom = Number.parseInt(`${stops[i][colorType]}`.substr(3, 2), 16);
-                    let bFrom = Number.parseInt(`${stops[i][colorType]}`.substr(5, 2), 16);
-
-                    let posTo = stops[i+1].position;
-                    let rTo = Number.parseInt(`${stops[i+1][colorType]}`.substr(1, 2), 16);
-                    let gTo = Number.parseInt(`${stops[i+1][colorType]}`.substr(3, 2), 16);
-                    let bTo = Number.parseInt(`${stops[i+1][colorType]}`.substr(5, 2), 16);
-
-                    r = this.lerp(value, posFrom, posTo, rFrom, rTo);
-                    g = this.lerp(value, posFrom, posTo, gFrom, gTo);
-                    b = this.lerp(value, posFrom, posTo, bFrom, bTo);
-
-                    break;
-                }
-            }
-        }
-
-        return `rgb(${Math.floor(r)}, ${Math.floor(g)}, ${Math.floor(b)})`;
-    }
-
-    static stepColorForValue(stops: GradientStop[], colorType: keyof GradientStop, value: number): string {
-        if (stops.length == 0) {
-            return emergencyColor;
-        }
-
-        let lastStop = stops[stops.length-1];
-        if (value < stops[0].position) {
-            return `${stops[0][colorType]}`;
-        } else if (value >= lastStop.position) {
-            return `${lastStop[colorType]}`;
-        } else {
-            for (let i = 0; i < stops.length-1; ++i) {
-                if (value >= stops[i].position && value < stops[i+1].position) {
-                    return `${stops[i][colorType]}`;
-                }
-            }
-        }
-
-        return emergencyColor;
-    }
-
-    static lerp(value: number, sourceMin: number, sourceMax: number, targetMin: number, targetMax: number): number {
-        if (targetMin == targetMax) {
-            return targetMin;
-        }
-
-        if (value < sourceMin) {
-            value = sourceMin;
-        }
-        if (value > sourceMax) {
-            value = sourceMax;
-        }
-
-        let terp = (value - sourceMin) / (sourceMax - sourceMin);
-        return targetMin + terp * (targetMax - targetMin);
-    }
-
-    drawLegend(gradient: Gradient, colorType: keyof GradientStop, container: SVGElement): void {
-        const legendWidth = 100;
-        const legendHeight = 5;
-        // (let the container apply any transformations)
-
-        if (gradient.type == 'linear') {
-            let legendGradientName = `WeathermapLegendGradient-${colorType}`;
-
-            let svgGrad = document.createElementNS(svgNamespace, "linearGradient");
-            container.appendChild(svgGrad);
-            svgGrad.id = legendGradientName;
-            
-            for (let stop of gradient.stops) {
-                let svgStop = document.createElementNS(svgNamespace, "stop");
-                svgGrad.appendChild(svgStop);
-                svgStop.setAttribute('offset', `${stop.position}%`);
-                svgStop.setAttribute('stop-color', `${stop[colorType]}`);
-            }
-
-            let svgRect = document.createElementNS(svgNamespace, "rect");
-            container.appendChild(svgRect);
-            svgRect.setAttribute('x', '0');
-            svgRect.setAttribute('y', '0');
-            svgRect.setAttribute('width', `${legendWidth}`);
-            svgRect.setAttribute('height', `${legendHeight}`);
-            svgRect.style.fill = `url(#${legendGradientName})`;
-        } else if (gradient.type == 'steps') {
-            for (let i = 1; i < gradient.stops.length; ++i) {
-                let rect = document.createElementNS(svgNamespace, "rect");
-                container.appendChild(rect);
-                rect.setAttribute('x', `${gradient.stops[i-1].position}`);
-                rect.setAttribute('y', '0');
-                rect.setAttribute('width', `${gradient.stops[i].position - gradient.stops[i-1].position}`);
-                rect.setAttribute('height', `${legendHeight}`);
-                rect.style.fill = `${gradient.stops[i-1][colorType]}`;
-            }
-            let rect = document.createElementNS(svgNamespace, "rect");
-            container.appendChild(rect);
-            rect.setAttribute('x', `${gradient.stops[gradient.stops.length-1].position}`);
-            rect.setAttribute('y', '0');
-            rect.setAttribute('width', `${100 - gradient.stops[gradient.stops.length-1].position}`);
-            rect.setAttribute('height', `${legendHeight}`);
-            rect.style.fill = `${gradient.stops[gradient.stops.length-1][colorType]}`;
-        }
+        // legend
+        placeLegend(this.panel.legend, sortedGradient, legendGroup);
     }
 }
 
-
-interface GradientStop {
-    position: number;
-    strokeColor: string;
-    fillColor: string;
-}
-
-interface Gradient {
-    type: "steps"|"linear";
-    stops: GradientStop[];
-}
 
 interface WeathermapNode {
     label: string;
@@ -470,6 +324,7 @@ interface PanelSettings {
     nullPointMode: 'connected'|'null'|'null as zero';
     strokeWidth: number;
     gradient: Gradient;
+    legend: LegendSettings;
 }
 
 WeathermapCtrl.templateUrl = 'module.html';

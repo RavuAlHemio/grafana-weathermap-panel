@@ -28,6 +28,38 @@
 </div>
 
 <div class="gf-form-group">
+    <h5>Legend</h5>
+
+    <div class="gf-form-inline">
+        <div class="gf-form">
+            <label class="gf-form-label">Type</label>
+            <div class="gf-form-select-wrapper max-width-15">
+                <select class="gf-form-input" ng-model="ctrl.panel.legend.type" ng-options="pair.k as pair.v for pair in [{k:'', v:'none'}, {k:'hn', v:'horizontal, no label'}, {k:'ha', v:'horizontal, labels above'}, {k:'hb', v:'horizontal, labels below'}, {k:'vn', v:'vertical, no label'}, {k:'vl', v:'vertical, labels on the left'}, {k:'vr', v:'vertical, labels on the right'}]" ng-change="ctrl.refresh()"></select>
+            </div>
+        </div>
+    </div>
+
+    <div class="gf-form-inline">
+        <div class="gf-form width-10">
+            <label class="gf-form-label">X</label>
+            <input type="number" ng-model="ctrl.panel.legend.x" ng-blur="ctrl.refresh()" class="gf-form-input">
+        </div>
+        <div class="gf-form width-10">
+            <label class="gf-form-label">Y</label>
+            <input type="number" ng-model="ctrl.panel.legend.y" ng-blur="ctrl.refresh()" class="gf-form-input">
+        </div>
+        <div class="gf-form width-10">
+            <label class="gf-form-label">Length</label>
+            <input type="number" ng-model="ctrl.panel.legend.length" ng-blur="ctrl.refresh()" class="gf-form-input">
+        </div>
+        <div class="gf-form width-10">
+            <label class="gf-form-label">Width</label>
+            <input type="number" ng-model="ctrl.panel.legend.width" ng-blur="ctrl.refresh()" class="gf-form-input">
+        </div>
+    </div>
+</div>
+
+<div class="gf-form-group">
     <h5>Gradient</h5>
 
     <div class="gf-form-inline">
@@ -61,7 +93,7 @@
         </div>
     </div>
     <button class="btn btn-inverse" ng-click="ctrl.addGradientStop()">
-        <i class="fa fa-plus"></i>&nbsp;Add node
+        <i class="fa fa-plus"></i>&nbsp;Add stop
     </button>
 </div>
 
