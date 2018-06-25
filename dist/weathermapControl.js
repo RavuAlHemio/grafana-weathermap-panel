@@ -226,7 +226,7 @@ System.register(["app/plugins/sdk", "./properties", "./geometry", "./gradients",
                             text.textContent = node.label;
                         }
                         if (!node.metricName) {
-                            rect.style.fill = "gray";
+                            rect.style.fill = "silver";
                             rect.style.strokeDasharray = this.panel.unmeasuredDashArray;
                         }
                         else if (node.metricName in this.currentValues) {

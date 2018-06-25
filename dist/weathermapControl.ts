@@ -233,7 +233,7 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
             }
 
             if (!node.metricName) {
-                rect.style.fill = "gray";
+                rect.style.fill = "silver";
                 rect.style.strokeDasharray = this.panel.unmeasuredDashArray;
             } else if (node.metricName in this.currentValues) {
                 // color node by metric
