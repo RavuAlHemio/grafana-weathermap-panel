@@ -77,7 +77,8 @@ System.register(["app/plugins/sdk", "./properties", "./geometry", "./gradients",
                         dashUri: null
                     }
                 },
-                noValueDashArray: '4 4'
+                noValueDashArray: '4 4',
+                unmeasuredDashArray: '4 2'
             };
             WeathermapCtrl = (function (_super) {
                 __extends(WeathermapCtrl, _super);
@@ -225,14 +226,17 @@ System.register(["app/plugins/sdk", "./properties", "./geometry", "./gradients",
                             text.textContent = node.label;
                         }
                         if (!node.metricName) {
-                            rect.style.fill = "white";
+                            rect.style.fill = "gray";
+                            rect.style.strokeDasharray = this.panel.unmeasuredDashArray;
                         }
                         else if (node.metricName in this.currentValues) {
                             var currentValue = this.currentValues[node.metricName];
                             rect.style.fill = gradients_1.colorForValue(sortedGradient, 'fillColor', currentValue);
                         }
                         else {
+                            text.style.fill = "white";
                             rect.style.fill = "black";
+                            rect.style.strokeDasharray = this.panel.noValueDashArray;
                         }
                     }
                     for (var _b = 0, _c = this.panel.weathermapEdges; _b < _c.length; _b++) {

@@ -78,5 +78,6 @@ interface PanelSettings {
     legend: LegendSettings;
     link: LinkSettings;
     noValueDashArray: string;
+    unmeasuredDashArray: string;
 }
 export {};

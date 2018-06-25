@@ -49,7 +49,8 @@ const panelDefaults: PanelSettings = {
             dashUri: null
         }
     },
-    noValueDashArray: '4 4'
+    noValueDashArray: '4 4',
+    unmeasuredDashArray: '4 2'
 };
 
 export class WeathermapCtrl extends MetricsPanelCtrl {
@@ -232,14 +233,17 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
             }
 
             if (!node.metricName) {
-                rect.style.fill = "white";
+                rect.style.fill = "gray";
+                rect.style.strokeDasharray = this.panel.unmeasuredDashArray;
             } else if (node.metricName in this.currentValues) {
                 // color node by metric
                 let currentValue = this.currentValues[node.metricName];
                 rect.style.fill = colorForValue(sortedGradient, 'fillColor', currentValue);
             } else {
                 // no data
+                text.style.fill = "white";
                 rect.style.fill = "black";
+                rect.style.strokeDasharray = this.panel.noValueDashArray;
             }
         }
 
@@ -465,6 +469,7 @@ interface PanelSettings {
     legend: LegendSettings;
     link: LinkSettings;
     noValueDashArray: string;
+    unmeasuredDashArray: string;
 }
 
 WeathermapCtrl.templateUrl = 'module.html';
