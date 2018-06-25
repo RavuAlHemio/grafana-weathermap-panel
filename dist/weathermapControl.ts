@@ -271,6 +271,10 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
                 thereLine.setAttribute('y2', `${midy}`);
                 thereLine.style.strokeWidth = `${this.panel.strokeWidth}`;
 
+                let thereTitle: SVGTitleElement = document.createElementNS(svgNamespace, 'title');
+                thereLine.appendChild(thereTitle);
+                thereTitle.textContent = `${edge.node1} \u2192 ${edge.node2}`;
+
                 let backLine: SVGLineElement = document.createElementNS(svgNamespace, 'line');
                 singleEdgeGroup.appendChild(backLine);
                 backLine.setAttribute('x1', `${midx}`);
@@ -278,6 +282,10 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
                 backLine.setAttribute('x2', `${n2cx}`);
                 backLine.setAttribute('y2', `${n2cy}`);
                 backLine.style.strokeWidth = `${this.panel.strokeWidth}`;
+
+                let backTitle: SVGTitleElement = document.createElementNS(svgNamespace, 'title');
+                backLine.appendChild(backTitle);
+                backTitle.textContent = `${edge.node2} \u2192 ${edge.node1}`;
 
                 if (edge.metricName in this.currentValues) {
                     let currentValue = this.currentValues[edge.metricName];
@@ -316,6 +324,10 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
                 edgeLine.setAttribute('x2', `${n2cx}`);
                 edgeLine.setAttribute('y2', `${n2cy}`);
                 edgeLine.style.strokeWidth = `${this.panel.strokeWidth}`;
+
+                let edgeTitle: SVGTitleElement = document.createElementNS(svgNamespace, 'title');
+                edgeLine.appendChild(edgeTitle);
+                edgeTitle.textContent = `${edge.node2} \u2194 ${edge.node1}`;
 
                 if (edge.metricName in this.currentValues) {
                     let currentValue = this.currentValues[edge.metricName];

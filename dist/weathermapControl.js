@@ -254,6 +254,9 @@ System.register(["app/plugins/sdk", "./properties", "./gradients", "./legend", "
                             thereLine.setAttribute('x2', "" + midx);
                             thereLine.setAttribute('y2', "" + midy);
                             thereLine.style.strokeWidth = "" + this.panel.strokeWidth;
+                            var thereTitle = document.createElementNS(properties_1.svgNamespace, 'title');
+                            thereLine.appendChild(thereTitle);
+                            thereTitle.textContent = edge.node1 + " \u2192 " + edge.node2;
                             var backLine = document.createElementNS(properties_1.svgNamespace, 'line');
                             singleEdgeGroup.appendChild(backLine);
                             backLine.setAttribute('x1', "" + midx);
@@ -261,6 +264,9 @@ System.register(["app/plugins/sdk", "./properties", "./gradients", "./legend", "
                             backLine.setAttribute('x2', "" + n2cx);
                             backLine.setAttribute('y2', "" + n2cy);
                             backLine.style.strokeWidth = "" + this.panel.strokeWidth;
+                            var backTitle = document.createElementNS(properties_1.svgNamespace, 'title');
+                            backLine.appendChild(backTitle);
+                            backTitle.textContent = edge.node2 + " \u2192 " + edge.node1;
                             if (edge.metricName in this.currentValues) {
                                 var currentValue = this.currentValues[edge.metricName];
                                 thereLine.style.stroke = gradients_1.colorForValue(sortedGradient, 'strokeColor', currentValue);
@@ -296,6 +302,9 @@ System.register(["app/plugins/sdk", "./properties", "./gradients", "./legend", "
                             edgeLine.setAttribute('x2', "" + n2cx);
                             edgeLine.setAttribute('y2', "" + n2cy);
                             edgeLine.style.strokeWidth = "" + this.panel.strokeWidth;
+                            var edgeTitle = document.createElementNS(properties_1.svgNamespace, 'title');
+                            edgeLine.appendChild(edgeTitle);
+                            edgeTitle.textContent = edge.node2 + " \u2194 " + edge.node1;
                             if (edge.metricName in this.currentValues) {
                                 var currentValue = this.currentValues[edge.metricName];
                                 edgeLine.style.stroke = gradients_1.colorForValue(sortedGradient, 'strokeColor', currentValue);
