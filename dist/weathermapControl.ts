@@ -397,7 +397,24 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
         if (objLink.type == 'absolute' && objLink.absoluteUri) {
             return objLink.absoluteUri;
         } else if (objLink.type == 'dashboard' && objLink.dashUri) {
-            return `/dashboard/${objLink.dashUri}`;
+            let url = new URL(window.location.href);
+            let params = [];
+
+            let fromParam = url.searchParams.get('from');
+            if (fromParam) {
+                params.push(`from=${escape(fromParam)}`);
+            }
+
+            let toParam = url.searchParams.get('to');
+            if (toParam) {
+                params.push(`to=${escape(toParam)}`);
+            }
+
+            let paramSuffix = '';
+            if (params.length > 0) {
+                paramSuffix = '?' + params.join('&');
+            }
+            return `/dashboard/${objLink.dashUri}${paramSuffix}`;
         }
         return null;
     }
@@ -409,6 +426,7 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
                 objLinkUri += (objLinkUri.indexOf('?') === -1)
                     ? '?'
                     : '&';
+                
                 objLinkUri += objLinkParams;
             }
 

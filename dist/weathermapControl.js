@@ -363,7 +363,21 @@ System.register(["app/plugins/sdk", "./properties", "./geometry", "./gradients",
                         return objLink.absoluteUri;
                     }
                     else if (objLink.type == 'dashboard' && objLink.dashUri) {
-                        return "/dashboard/" + objLink.dashUri;
+                        var url = new URL(window.location.href);
+                        var params = [];
+                        var fromParam = url.searchParams.get('from');
+                        if (fromParam) {
+                            params.push("from=" + escape(fromParam));
+                        }
+                        var toParam = url.searchParams.get('to');
+                        if (toParam) {
+                            params.push("to=" + escape(toParam));
+                        }
+                        var paramSuffix = '';
+                        if (params.length > 0) {
+                            paramSuffix = '?' + params.join('&');
+                        }
+                        return "/dashboard/" + objLink.dashUri + paramSuffix;
                     }
                     return null;
                 };
