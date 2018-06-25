@@ -2,7 +2,7 @@
 
 import { MetricsPanelCtrl } from 'app/plugins/sdk';
 import { editorPath, svgNamespace, xlinkNamespace } from './properties';
-import { deg2rad, halveCubicBezier, midpoint, normalizeAngle, Point2D, polarToCartesian } from './geometry';
+import { deg2rad, halveCubicBezier, midpoint, normalizeAngle, Point2D, polarToCartesian, rad2deg } from './geometry';
 import { colorForValue, Gradient } from './gradients';
 import { placeLegend, LegendSettings } from './legend';
 import _ from 'lodash';
@@ -267,18 +267,22 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
             let control1: Point2D|null = null;
             let control2: Point2D|null = null;
             if (edge.bendDirection && edge.bendMagnitude) {
-                let n1N2Angle = Math.atan2(node2.y - node1.y, node2.x - node1.x);
+                let n1N2Angle = Math.atan2(n1Center.y - n2Center.y, n2Center.x - n1Center.x);
+                let n2N1Angle = Math.atan2(n2Center.y - n1Center.y, n1Center.x - n2Center.x);
+
                 let n1N2BendAngle = normalizeAngle(n1N2Angle + deg2rad(edge.bendDirection));
+                let n2N1BendAngle = normalizeAngle(n2N1Angle - deg2rad(edge.bendDirection));
 
                 let control1Offset: Point2D = polarToCartesian(n1N2BendAngle, edge.bendMagnitude);
+                let control2Offset: Point2D = polarToCartesian(n2N1BendAngle, edge.bendMagnitude);
 
                 control1 = {
-                    x: (+node1.x) + control1Offset.x,
-                    y: (+node1.y) + control1Offset.y
+                    x: (+n1Center.x) + control1Offset.x,
+                    y: (+n1Center.y) - control1Offset.y
                 };
                 control2 = {
-                    x: (+node2.x) - control1Offset.x,
-                    y: (+node2.y) - control1Offset.y
+                    x: (+n2Center.x) + control2Offset.x,
+                    y: (+n2Center.y) - control2Offset.y
                 };
             }
 

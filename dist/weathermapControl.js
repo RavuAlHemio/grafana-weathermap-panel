@@ -254,16 +254,19 @@ System.register(["app/plugins/sdk", "./properties", "./geometry", "./gradients",
                         var control1 = null;
                         var control2 = null;
                         if (edge.bendDirection && edge.bendMagnitude) {
-                            var n1N2Angle = Math.atan2(node2.y - node1.y, node2.x - node1.x);
+                            var n1N2Angle = Math.atan2(n1Center.y - n2Center.y, n2Center.x - n1Center.x);
+                            var n2N1Angle = Math.atan2(n2Center.y - n1Center.y, n1Center.x - n2Center.x);
                             var n1N2BendAngle = geometry_1.normalizeAngle(n1N2Angle + geometry_1.deg2rad(edge.bendDirection));
+                            var n2N1BendAngle = geometry_1.normalizeAngle(n2N1Angle - geometry_1.deg2rad(edge.bendDirection));
                             var control1Offset = geometry_1.polarToCartesian(n1N2BendAngle, edge.bendMagnitude);
+                            var control2Offset = geometry_1.polarToCartesian(n2N1BendAngle, edge.bendMagnitude);
                             control1 = {
-                                x: (+node1.x) + control1Offset.x,
-                                y: (+node1.y) + control1Offset.y
+                                x: (+n1Center.x) + control1Offset.x,
+                                y: (+n1Center.y) - control1Offset.y
                             };
                             control2 = {
-                                x: (+node2.x) - control1Offset.x,
-                                y: (+node2.y) - control1Offset.y
+                                x: (+n2Center.x) + control2Offset.x,
+                                y: (+n2Center.y) - control2Offset.y
                             };
                         }
                         if (edge.metric2Name) {

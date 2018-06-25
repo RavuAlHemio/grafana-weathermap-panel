@@ -59,6 +59,10 @@ export function deg2rad(angleDegrees: number): number {
     return angleDegrees * Math.PI / 180;
 }
 
+export function rad2deg(angleRadians: number): number {
+    return angleRadians * 180 / Math.PI;
+}
+
 export interface Point2D {
     x: number;
     y: number;

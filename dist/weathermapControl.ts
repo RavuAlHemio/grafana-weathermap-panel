@@ -2,7 +2,7 @@
 
 import { MetricsPanelCtrl } from 'app/plugins/sdk';
 import { editorPath, svgNamespace, xlinkNamespace } from './properties';
-import { deg2rad, halveCubicBezier, midpoint, normalizeAngle, Point2D, polarToCartesian } from './geometry';
+import { deg2rad, halveCubicBezier, midpoint, normalizeAngle, Point2D, polarToCartesian, rad2deg } from './geometry';
 import { colorForValue, Gradient } from './gradients';
 import { placeLegend, LegendSettings } from './legend';
 import _ from 'lodash';
@@ -267,18 +267,22 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
             let control1: Point2D|null = null;
             let control2: Point2D|null = null;
             if (edge.bendDirection && edge.bendMagnitude) {
-                let n1N2Angle = Math.atan2(node2.y - node1.y, node2.x - node1.x);
+                let n1N2Angle = Math.atan2(n1Center.y - n2Center.y, n2Center.x - n1Center.x);
+                let n2N1Angle = Math.atan2(n2Center.y - n1Center.y, n1Center.x - n2Center.x);
+
                 let n1N2BendAngle = normalizeAngle(n1N2Angle + deg2rad(edge.bendDirection));
+                let n2N1BendAngle = normalizeAngle(n2N1Angle - deg2rad(edge.bendDirection));
 
                 let control1Offset: Point2D = polarToCartesian(n1N2BendAngle, edge.bendMagnitude);
+                let control2Offset: Point2D = polarToCartesian(n2N1BendAngle, edge.bendMagnitude);
 
                 control1 = {
-                    x: (+node1.x) + control1Offset.x,
-                    y: (+node1.y) + control1Offset.y
+                    x: (+n1Center.x) + control1Offset.x,
+                    y: (+n1Center.y) - control1Offset.y
                 };
                 control2 = {
-                    x: (+node2.x) - control1Offset.x,
-                    y: (+node2.y) - control1Offset.y
+                    x: (+n2Center.x) + control2Offset.x,
+                    y: (+n2Center.y) - control2Offset.y
                 };
             }
 
@@ -286,15 +290,6 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
                 // two metrics are twice the fun
                 let [_point1, point1COut, point2CIn, point2, point2COut, point3CIn, _point2] = halveCubicBezier(n1Center, control1, control2, n2Center);
 
-                /*
-                let thereLine: SVGLineElement = document.createElementNS(svgNamespace, 'line');
-                singleEdgeGroup.appendChild(thereLine);
-                thereLine.setAttribute('x1', `${n1cx}`);
-                thereLine.setAttribute('y1', `${n1cy}`);
-                thereLine.setAttribute('x2', `${midx}`);
-                thereLine.setAttribute('y2', `${midy}`);
-                thereLine.style.strokeWidth = `${this.panel.strokeWidth}`;
-                */
                 let therePath: SVGPathElement = document.createElementNS(svgNamespace, 'path');
                 singleEdgeGroup.appendChild(therePath);
                 therePath.setAttribute('d',
@@ -305,19 +300,9 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
                 therePath.style.fill = 'none';
 
                 let thereTitle: SVGTitleElement = document.createElementNS(svgNamespace, 'title');
-                //thereLine.appendChild(thereTitle);
                 therePath.appendChild(thereTitle);
                 thereTitle.textContent = `${edge.node1} \u2192 ${edge.node2}`;
 
-                /*
-                let backLine: SVGLineElement = document.createElementNS(svgNamespace, 'line');
-                singleEdgeGroup.appendChild(backLine);
-                backLine.setAttribute('x1', `${midx}`);
-                backLine.setAttribute('y1', `${midy}`);
-                backLine.setAttribute('x2', `${n2cx}`);
-                backLine.setAttribute('y2', `${n2cy}`);
-                backLine.style.strokeWidth = `${this.panel.strokeWidth}`;
-                */
                 let backPath: SVGPathElement = document.createElementNS(svgNamespace, 'path');
                 singleEdgeGroup.appendChild(backPath);
                 backPath.setAttribute('d',
@@ -328,18 +313,15 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
                 backPath.style.fill = 'none';
 
                 let backTitle: SVGTitleElement = document.createElementNS(svgNamespace, 'title');
-                //backLine.appendChild(backTitle);
                 backPath.appendChild(backTitle);
                 backTitle.textContent = `${edge.node2} \u2192 ${edge.node1}`;
 
                 if (edge.metricName in this.currentValues) {
                     let currentValue = this.currentValues[edge.metricName];
-                    //thereLine.style.stroke = colorForValue(sortedGradient, 'strokeColor', currentValue);
                     therePath.style.stroke = colorForValue(sortedGradient, 'strokeColor', currentValue);
                 }
                 if (edge.metric2Name in this.currentValues) {
                     let currentValue = this.currentValues[edge.metric2Name];
-                    //backLine.style.stroke = colorForValue(sortedGradient, 'strokeColor', currentValue);
                     backPath.style.stroke = colorForValue(sortedGradient, 'strokeColor', currentValue);
                 }
 
@@ -362,15 +344,6 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
                     text2.textContent = value2String;
                 }
             } else {
-                /*
-                let edgeLine: SVGLineElement = document.createElementNS(svgNamespace, 'line');
-                singleEdgeGroup.appendChild(edgeLine);
-                edgeLine.setAttribute('x1', `${n1cx}`);
-                edgeLine.setAttribute('y1', `${n1cy}`);
-                edgeLine.setAttribute('x2', `${n2cx}`);
-                edgeLine.setAttribute('y2', `${n2cy}`);
-                edgeLine.style.strokeWidth = `${this.panel.strokeWidth}`;
-                */
                 let edgePath: SVGPathElement = document.createElementNS(svgNamespace, 'path');
                 singleEdgeGroup.appendChild(edgePath);
                 edgePath.setAttribute('d',
@@ -381,13 +354,11 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
                 edgePath.style.fill = 'none';
 
                 let edgeTitle: SVGTitleElement = document.createElementNS(svgNamespace, 'title');
-                //edgeLine.appendChild(edgeTitle);
                 edgePath.appendChild(edgeTitle);
                 edgeTitle.textContent = `${edge.node2} \u2194 ${edge.node1}`;
 
                 if (edge.metricName in this.currentValues) {
                     let currentValue = this.currentValues[edge.metricName];
-                    //edgeLine.style.stroke = colorForValue(sortedGradient, 'strokeColor', currentValue);
                     edgePath.style.stroke = colorForValue(sortedGradient, 'strokeColor', currentValue);
                 }
 

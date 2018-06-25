@@ -55,6 +55,10 @@ System.register([], function (exports_1, context_1) {
         return angleDegrees * Math.PI / 180;
     }
     exports_1("deg2rad", deg2rad);
+    function rad2deg(angleRadians) {
+        return angleRadians * 180 / Math.PI;
+    }
+    exports_1("rad2deg", rad2deg);
     return {
         setters: [],
         execute: function () {
