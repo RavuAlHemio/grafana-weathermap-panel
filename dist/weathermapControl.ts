@@ -267,6 +267,7 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
             let control1: Point2D|null = null;
             let control2: Point2D|null = null;
             if (edge.bendDirection && edge.bendMagnitude) {
+                // warning: screen coordinates (flipped Y axis)!
                 let n1N2Angle = Math.atan2(n1Center.y - n2Center.y, n2Center.x - n1Center.x);
                 let n2N1Angle = Math.atan2(n2Center.y - n1Center.y, n1Center.x - n2Center.x);
 
