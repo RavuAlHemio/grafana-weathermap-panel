@@ -43,6 +43,8 @@ interface WeathermapNode {
 interface WeathermapEdge {
     node1: string;
     node2: string;
+    bendDirection: number;
+    bendMagnitude: number;
     metricName: string;
     metric2Name: string | null;
     linkParams: string;

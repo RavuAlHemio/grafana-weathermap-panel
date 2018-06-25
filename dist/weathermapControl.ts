@@ -2,6 +2,7 @@
 
 import { MetricsPanelCtrl } from 'app/plugins/sdk';
 import { editorPath, svgNamespace, xlinkNamespace } from './properties';
+import { deg2rad, halveCubicBezier, midpoint, normalizeAngle, Point2D, polarToCartesian } from './geometry';
 import { colorForValue, Gradient } from './gradients';
 import { placeLegend, LegendSettings } from './legend';
 import _ from 'lodash';
@@ -253,16 +254,39 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
             let singleEdgeGroup: SVGGElement = document.createElementNS(svgNamespace, 'g');
             WeathermapCtrl.maybeWrapIntoLink(edgeGroup, singleEdgeGroup, edgeLinkUriBase, edge.linkParams);
 
-            let n1cx = (+node1.x) + ((+node1.width) / 2);
-            let n1cy = (+node1.y) + ((+node1.height) / 2);
-            let n2cx = (+node2.x) + ((+node2.width) / 2);
-            let n2cy = (+node2.y) + ((+node2.height) / 2);
+            let n1Center: Point2D = {
+                x: (+node1.x) + ((+node1.width) / 2),
+                y: (+node1.y) + ((+node1.height) / 2)
+            };
+            let n2Center: Point2D = {
+                x: (+node2.x) + ((+node2.width) / 2),
+                y: (+node2.y) + ((+node2.height) / 2)
+            };
+
+            // calculate bend (control points)
+            let control1: Point2D|null = null;
+            let control2: Point2D|null = null;
+            if (edge.bendDirection && edge.bendMagnitude) {
+                let n1N2Angle = Math.atan2(node2.y - node1.y, node2.x - node1.x);
+                let n1N2BendAngle = normalizeAngle(n1N2Angle + deg2rad(edge.bendDirection));
+
+                let control1Offset: Point2D = polarToCartesian(n1N2BendAngle, edge.bendMagnitude);
+
+                control1 = {
+                    x: (+node1.x) + control1Offset.x,
+                    y: (+node1.y) + control1Offset.y
+                };
+                control2 = {
+                    x: (+node2.x) - control1Offset.x,
+                    y: (+node2.y) - control1Offset.y
+                };
+            }
 
             if (edge.metric2Name) {
                 // two metrics are twice the fun
-                let midx = (n1cx + n2cx) / 2;
-                let midy = (n1cy + n2cy) / 2;
+                let [_point1, point1COut, point2CIn, point2, point2COut, point3CIn, _point2] = halveCubicBezier(n1Center, control1, control2, n2Center);
 
+                /*
                 let thereLine: SVGLineElement = document.createElementNS(svgNamespace, 'line');
                 singleEdgeGroup.appendChild(thereLine);
                 thereLine.setAttribute('x1', `${n1cx}`);
@@ -270,11 +294,22 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
                 thereLine.setAttribute('x2', `${midx}`);
                 thereLine.setAttribute('y2', `${midy}`);
                 thereLine.style.strokeWidth = `${this.panel.strokeWidth}`;
+                */
+                let therePath: SVGPathElement = document.createElementNS(svgNamespace, 'path');
+                singleEdgeGroup.appendChild(therePath);
+                therePath.setAttribute('d',
+                    `M ${n1Center.x},${n1Center.y} ` +
+                    `C ${point1COut.x},${point1COut.y},${point2CIn.x},${point2CIn.y},${point2.x},${point2.y}`
+                );
+                therePath.style.strokeWidth = `${this.panel.strokeWidth}`;
+                therePath.style.fill = 'none';
 
                 let thereTitle: SVGTitleElement = document.createElementNS(svgNamespace, 'title');
-                thereLine.appendChild(thereTitle);
+                //thereLine.appendChild(thereTitle);
+                therePath.appendChild(thereTitle);
                 thereTitle.textContent = `${edge.node1} \u2192 ${edge.node2}`;
 
+                /*
                 let backLine: SVGLineElement = document.createElementNS(svgNamespace, 'line');
                 singleEdgeGroup.appendChild(backLine);
                 backLine.setAttribute('x1', `${midx}`);
@@ -282,41 +317,52 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
                 backLine.setAttribute('x2', `${n2cx}`);
                 backLine.setAttribute('y2', `${n2cy}`);
                 backLine.style.strokeWidth = `${this.panel.strokeWidth}`;
+                */
+                let backPath: SVGPathElement = document.createElementNS(svgNamespace, 'path');
+                singleEdgeGroup.appendChild(backPath);
+                backPath.setAttribute('d',
+                    `M ${point2.x},${point2.y} ` +
+                    `C ${point2COut.x},${point2COut.y},${point3CIn.x},${point3CIn.y},${n2Center.x},${n2Center.y}`
+                );
+                backPath.style.strokeWidth = `${this.panel.strokeWidth}`;
+                backPath.style.fill = 'none';
 
                 let backTitle: SVGTitleElement = document.createElementNS(svgNamespace, 'title');
-                backLine.appendChild(backTitle);
+                //backLine.appendChild(backTitle);
+                backPath.appendChild(backTitle);
                 backTitle.textContent = `${edge.node2} \u2192 ${edge.node1}`;
 
                 if (edge.metricName in this.currentValues) {
                     let currentValue = this.currentValues[edge.metricName];
-                    thereLine.style.stroke = colorForValue(sortedGradient, 'strokeColor', currentValue);
+                    //thereLine.style.stroke = colorForValue(sortedGradient, 'strokeColor', currentValue);
+                    therePath.style.stroke = colorForValue(sortedGradient, 'strokeColor', currentValue);
                 }
                 if (edge.metric2Name in this.currentValues) {
                     let currentValue = this.currentValues[edge.metric2Name];
-                    backLine.style.stroke = colorForValue(sortedGradient, 'strokeColor', currentValue);
+                    //backLine.style.stroke = colorForValue(sortedGradient, 'strokeColor', currentValue);
+                    backPath.style.stroke = colorForValue(sortedGradient, 'strokeColor', currentValue);
                 }
 
                 if (ctrl.panel.showNumbers) {
-                    let quax = (n1cx + midx) / 2;
-                    let quay = (n1cy + midy) / 2;
-                    let tqax = (midx + n2cx) / 2;
-                    let tqay = (midy + n2cy) / 2;
+                    let quarterPoint = halveCubicBezier(n1Center, point1COut, point2CIn, point2)[3];
+                    let threeQuarterPoint = halveCubicBezier(point2, point2COut, point3CIn, n2Center)[3];
 
                     let valueString = (edge.metricName in this.currentValues) ? this.currentValues[edge.metricName].toFixed(2) : '?';
                     let text1 = document.createElementNS(svgNamespace, 'text');
                     singleEdgeGroup.appendChild(text1);
-                    text1.setAttribute('x', `${quax}`);
-                    text1.setAttribute('y', `${quay}`);
+                    text1.setAttribute('x', `${quarterPoint.x}`);
+                    text1.setAttribute('y', `${quarterPoint.y}`);
                     text1.textContent = valueString;
 
                     let value2String = (edge.metric2Name in this.currentValues) ? this.currentValues[edge.metric2Name].toFixed(2) : '?';
                     let text2 = document.createElementNS(svgNamespace, 'text');
                     singleEdgeGroup.appendChild(text2);
-                    text2.setAttribute('x', `${tqax}`);
-                    text2.setAttribute('y', `${tqay}`);
+                    text2.setAttribute('x', `${threeQuarterPoint.x}`);
+                    text2.setAttribute('y', `${threeQuarterPoint.y}`);
                     text2.textContent = value2String;
                 }
             } else {
+                /*
                 let edgeLine: SVGLineElement = document.createElementNS(svgNamespace, 'line');
                 singleEdgeGroup.appendChild(edgeLine);
                 edgeLine.setAttribute('x1', `${n1cx}`);
@@ -324,24 +370,34 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
                 edgeLine.setAttribute('x2', `${n2cx}`);
                 edgeLine.setAttribute('y2', `${n2cy}`);
                 edgeLine.style.strokeWidth = `${this.panel.strokeWidth}`;
+                */
+                let edgePath: SVGPathElement = document.createElementNS(svgNamespace, 'path');
+                singleEdgeGroup.appendChild(edgePath);
+                edgePath.setAttribute('d',
+                    `M ${n1Center.x},${n1Center.y} ` +
+                    `C ${control1.x},${control1.y},${control2.x},${control2.y},${n2Center.x},${n2Center.y}`
+                );
+                edgePath.style.strokeWidth = `${this.panel.strokeWidth}`;
+                edgePath.style.fill = 'none';
 
                 let edgeTitle: SVGTitleElement = document.createElementNS(svgNamespace, 'title');
-                edgeLine.appendChild(edgeTitle);
+                //edgeLine.appendChild(edgeTitle);
+                edgePath.appendChild(edgeTitle);
                 edgeTitle.textContent = `${edge.node2} \u2194 ${edge.node1}`;
 
                 if (edge.metricName in this.currentValues) {
                     let currentValue = this.currentValues[edge.metricName];
-                    edgeLine.style.stroke = colorForValue(sortedGradient, 'strokeColor', currentValue);
+                    //edgeLine.style.stroke = colorForValue(sortedGradient, 'strokeColor', currentValue);
+                    edgePath.style.stroke = colorForValue(sortedGradient, 'strokeColor', currentValue);
                 }
 
                 if (ctrl.panel.showNumbers) {
-                    let midx = (n1cx + n2cx) / 2;
-                    let midy = (n1cy + n2cy) / 2;
+                    let midpoint = halveCubicBezier(n1Center, control1, control2, n2Center)[3];
                     let valueString = (edge.metricName in this.currentValues) ? this.currentValues[edge.metricName].toFixed(2) : '?';
                     let text = document.createElementNS(svgNamespace, 'text');
                     singleEdgeGroup.appendChild(text);
-                    text.setAttribute('x', `${midx}`);
-                    text.setAttribute('y', `${midy}`);
+                    text.setAttribute('x', `${midpoint.x}`);
+                    text.setAttribute('y', `${midpoint.y}`);
                     text.textContent = valueString;
                 }
             }
@@ -367,7 +423,7 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
                 objLinkUri += (objLinkUri.indexOf('?') === -1)
                     ? '?'
                     : '&';
-                    objLinkUri += objLinkParams;
+                objLinkUri += objLinkParams;
             }
 
             let aElement: SVGAElement = document.createElementNS(svgNamespace, 'a');
@@ -395,6 +451,8 @@ interface WeathermapNode {
 interface WeathermapEdge {
     node1: string;
     node2: string;
+    bendDirection: number;
+    bendMagnitude: number;
     metricName: string;
     metric2Name: string|null;
     linkParams: string;

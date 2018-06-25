@@ -1,4 +1,4 @@
-System.register(["app/plugins/sdk", "./properties", "./gradients", "./legend", "lodash", "app/core/time_series2"], function (exports_1, context_1) {
+System.register(["app/plugins/sdk", "./properties", "./geometry", "./gradients", "./legend", "lodash", "app/core/time_series2"], function (exports_1, context_1) {
     "use strict";
     var __extends = (this && this.__extends) || (function () {
         var extendStatics = Object.setPrototypeOf ||
@@ -10,7 +10,7 @@ System.register(["app/plugins/sdk", "./properties", "./gradients", "./legend", "
             d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
         };
     })();
-    var sdk_1, properties_1, gradients_1, legend_1, lodash_1, time_series2_1, panelDefaults, WeathermapCtrl;
+    var sdk_1, properties_1, geometry_1, gradients_1, legend_1, lodash_1, time_series2_1, panelDefaults, WeathermapCtrl;
     var __moduleName = context_1 && context_1.id;
     return {
         setters: [
@@ -19,6 +19,9 @@ System.register(["app/plugins/sdk", "./properties", "./gradients", "./legend", "
             },
             function (properties_1_1) {
                 properties_1 = properties_1_1;
+            },
+            function (geometry_1_1) {
+                geometry_1 = geometry_1_1;
             },
             function (gradients_1_1) {
                 gradients_1 = gradients_1_1;
@@ -240,83 +243,95 @@ System.register(["app/plugins/sdk", "./properties", "./gradients", "./legend", "
                         }
                         var singleEdgeGroup = document.createElementNS(properties_1.svgNamespace, 'g');
                         WeathermapCtrl.maybeWrapIntoLink(edgeGroup, singleEdgeGroup, edgeLinkUriBase, edge.linkParams);
-                        var n1cx = (+node1.x) + ((+node1.width) / 2);
-                        var n1cy = (+node1.y) + ((+node1.height) / 2);
-                        var n2cx = (+node2.x) + ((+node2.width) / 2);
-                        var n2cy = (+node2.y) + ((+node2.height) / 2);
+                        var n1Center = {
+                            x: (+node1.x) + ((+node1.width) / 2),
+                            y: (+node1.y) + ((+node1.height) / 2)
+                        };
+                        var n2Center = {
+                            x: (+node2.x) + ((+node2.width) / 2),
+                            y: (+node2.y) + ((+node2.height) / 2)
+                        };
+                        var control1 = null;
+                        var control2 = null;
+                        if (edge.bendDirection && edge.bendMagnitude) {
+                            var n1N2Angle = Math.atan2(node2.y - node1.y, node2.x - node1.x);
+                            var n1N2BendAngle = geometry_1.normalizeAngle(n1N2Angle + geometry_1.deg2rad(edge.bendDirection));
+                            var control1Offset = geometry_1.polarToCartesian(n1N2BendAngle, edge.bendMagnitude);
+                            control1 = {
+                                x: (+node1.x) + control1Offset.x,
+                                y: (+node1.y) + control1Offset.y
+                            };
+                            control2 = {
+                                x: (+node2.x) - control1Offset.x,
+                                y: (+node2.y) - control1Offset.y
+                            };
+                        }
                         if (edge.metric2Name) {
-                            var midx = (n1cx + n2cx) / 2;
-                            var midy = (n1cy + n2cy) / 2;
-                            var thereLine = document.createElementNS(properties_1.svgNamespace, 'line');
-                            singleEdgeGroup.appendChild(thereLine);
-                            thereLine.setAttribute('x1', "" + n1cx);
-                            thereLine.setAttribute('y1', "" + n1cy);
-                            thereLine.setAttribute('x2', "" + midx);
-                            thereLine.setAttribute('y2', "" + midy);
-                            thereLine.style.strokeWidth = "" + this.panel.strokeWidth;
+                            var _d = geometry_1.halveCubicBezier(n1Center, control1, control2, n2Center), _point1 = _d[0], point1COut = _d[1], point2CIn = _d[2], point2 = _d[3], point2COut = _d[4], point3CIn = _d[5], _point2 = _d[6];
+                            var therePath = document.createElementNS(properties_1.svgNamespace, 'path');
+                            singleEdgeGroup.appendChild(therePath);
+                            therePath.setAttribute('d', "M " + n1Center.x + "," + n1Center.y + " " +
+                                ("C " + point1COut.x + "," + point1COut.y + "," + point2CIn.x + "," + point2CIn.y + "," + point2.x + "," + point2.y));
+                            therePath.style.strokeWidth = "" + this.panel.strokeWidth;
+                            therePath.style.fill = 'none';
                             var thereTitle = document.createElementNS(properties_1.svgNamespace, 'title');
-                            thereLine.appendChild(thereTitle);
+                            therePath.appendChild(thereTitle);
                             thereTitle.textContent = edge.node1 + " \u2192 " + edge.node2;
-                            var backLine = document.createElementNS(properties_1.svgNamespace, 'line');
-                            singleEdgeGroup.appendChild(backLine);
-                            backLine.setAttribute('x1', "" + midx);
-                            backLine.setAttribute('y1', "" + midy);
-                            backLine.setAttribute('x2', "" + n2cx);
-                            backLine.setAttribute('y2', "" + n2cy);
-                            backLine.style.strokeWidth = "" + this.panel.strokeWidth;
+                            var backPath = document.createElementNS(properties_1.svgNamespace, 'path');
+                            singleEdgeGroup.appendChild(backPath);
+                            backPath.setAttribute('d', "M " + point2.x + "," + point2.y + " " +
+                                ("C " + point2COut.x + "," + point2COut.y + "," + point3CIn.x + "," + point3CIn.y + "," + n2Center.x + "," + n2Center.y));
+                            backPath.style.strokeWidth = "" + this.panel.strokeWidth;
+                            backPath.style.fill = 'none';
                             var backTitle = document.createElementNS(properties_1.svgNamespace, 'title');
-                            backLine.appendChild(backTitle);
+                            backPath.appendChild(backTitle);
                             backTitle.textContent = edge.node2 + " \u2192 " + edge.node1;
                             if (edge.metricName in this.currentValues) {
                                 var currentValue = this.currentValues[edge.metricName];
-                                thereLine.style.stroke = gradients_1.colorForValue(sortedGradient, 'strokeColor', currentValue);
+                                therePath.style.stroke = gradients_1.colorForValue(sortedGradient, 'strokeColor', currentValue);
                             }
                             if (edge.metric2Name in this.currentValues) {
                                 var currentValue = this.currentValues[edge.metric2Name];
-                                backLine.style.stroke = gradients_1.colorForValue(sortedGradient, 'strokeColor', currentValue);
+                                backPath.style.stroke = gradients_1.colorForValue(sortedGradient, 'strokeColor', currentValue);
                             }
                             if (ctrl.panel.showNumbers) {
-                                var quax = (n1cx + midx) / 2;
-                                var quay = (n1cy + midy) / 2;
-                                var tqax = (midx + n2cx) / 2;
-                                var tqay = (midy + n2cy) / 2;
+                                var quarterPoint = geometry_1.halveCubicBezier(n1Center, point1COut, point2CIn, point2)[3];
+                                var threeQuarterPoint = geometry_1.halveCubicBezier(point2, point2COut, point3CIn, n2Center)[3];
                                 var valueString = (edge.metricName in this.currentValues) ? this.currentValues[edge.metricName].toFixed(2) : '?';
                                 var text1 = document.createElementNS(properties_1.svgNamespace, 'text');
                                 singleEdgeGroup.appendChild(text1);
-                                text1.setAttribute('x', "" + quax);
-                                text1.setAttribute('y', "" + quay);
+                                text1.setAttribute('x', "" + quarterPoint.x);
+                                text1.setAttribute('y', "" + quarterPoint.y);
                                 text1.textContent = valueString;
                                 var value2String = (edge.metric2Name in this.currentValues) ? this.currentValues[edge.metric2Name].toFixed(2) : '?';
                                 var text2 = document.createElementNS(properties_1.svgNamespace, 'text');
                                 singleEdgeGroup.appendChild(text2);
-                                text2.setAttribute('x', "" + tqax);
-                                text2.setAttribute('y', "" + tqay);
+                                text2.setAttribute('x', "" + threeQuarterPoint.x);
+                                text2.setAttribute('y', "" + threeQuarterPoint.y);
                                 text2.textContent = value2String;
                             }
                         }
                         else {
-                            var edgeLine = document.createElementNS(properties_1.svgNamespace, 'line');
-                            singleEdgeGroup.appendChild(edgeLine);
-                            edgeLine.setAttribute('x1', "" + n1cx);
-                            edgeLine.setAttribute('y1', "" + n1cy);
-                            edgeLine.setAttribute('x2', "" + n2cx);
-                            edgeLine.setAttribute('y2', "" + n2cy);
-                            edgeLine.style.strokeWidth = "" + this.panel.strokeWidth;
+                            var edgePath = document.createElementNS(properties_1.svgNamespace, 'path');
+                            singleEdgeGroup.appendChild(edgePath);
+                            edgePath.setAttribute('d', "M " + n1Center.x + "," + n1Center.y + " " +
+                                ("C " + control1.x + "," + control1.y + "," + control2.x + "," + control2.y + "," + n2Center.x + "," + n2Center.y));
+                            edgePath.style.strokeWidth = "" + this.panel.strokeWidth;
+                            edgePath.style.fill = 'none';
                             var edgeTitle = document.createElementNS(properties_1.svgNamespace, 'title');
-                            edgeLine.appendChild(edgeTitle);
+                            edgePath.appendChild(edgeTitle);
                             edgeTitle.textContent = edge.node2 + " \u2194 " + edge.node1;
                             if (edge.metricName in this.currentValues) {
                                 var currentValue = this.currentValues[edge.metricName];
-                                edgeLine.style.stroke = gradients_1.colorForValue(sortedGradient, 'strokeColor', currentValue);
+                                edgePath.style.stroke = gradients_1.colorForValue(sortedGradient, 'strokeColor', currentValue);
                             }
                             if (ctrl.panel.showNumbers) {
-                                var midx = (n1cx + n2cx) / 2;
-                                var midy = (n1cy + n2cy) / 2;
+                                var midpoint_1 = geometry_1.halveCubicBezier(n1Center, control1, control2, n2Center)[3];
                                 var valueString = (edge.metricName in this.currentValues) ? this.currentValues[edge.metricName].toFixed(2) : '?';
                                 var text = document.createElementNS(properties_1.svgNamespace, 'text');
                                 singleEdgeGroup.appendChild(text);
-                                text.setAttribute('x', "" + midx);
-                                text.setAttribute('y', "" + midy);
+                                text.setAttribute('x', "" + midpoint_1.x);
+                                text.setAttribute('y', "" + midpoint_1.y);
                                 text.textContent = valueString;
                             }
                         }

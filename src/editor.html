@@ -182,6 +182,14 @@
             <label class="gf-form-label">Node 2<tip>Node label of the second node of the edge</tip></label>
             <input type="text" ng-model="wmEdge.node2" ng-blur="ctrl.refresh()" class="gf-form-input">
         </div>
+        <div class="gf-form width-12">
+            <label class="gf-form-label">Bend direction</label>
+            <input type="number" ng-model="wmEdge.bendDirection" ng-blur="ctrl.refresh()" class="gf-form-input">
+        </div>
+        <div class="gf-form width-12">
+            <label class="gf-form-label">Bend magnitude</label>
+            <input type="number" ng-model="wmEdge.bendMagnitude" ng-blur="ctrl.refresh()" class="gf-form-input">
+        </div>
         <div class="gf-form width-20">
             <label class="gf-form-label">Metric<tip>Legend name of the metric to use to color the edge</tip></label>
             <input type="text" ng-model="wmEdge.metricName" ng-blur="ctrl.refresh()" class="gf-form-input">
