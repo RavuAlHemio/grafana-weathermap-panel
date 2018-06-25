@@ -48,7 +48,8 @@ const panelDefaults: PanelSettings = {
             dashboard: null,
             dashUri: null
         }
-    }
+    },
+    noValueDashArray: '4 4'
 };
 
 export class WeathermapCtrl extends MetricsPanelCtrl {
@@ -320,10 +321,16 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
                 if (edge.metricName in this.currentValues) {
                     let currentValue = this.currentValues[edge.metricName];
                     therePath.style.stroke = colorForValue(sortedGradient, 'strokeColor', currentValue);
+                } else {
+                    therePath.style.stroke = 'black';
+                    therePath.style.strokeDasharray = this.panel.noValueDashArray;
                 }
                 if (edge.metric2Name in this.currentValues) {
                     let currentValue = this.currentValues[edge.metric2Name];
                     backPath.style.stroke = colorForValue(sortedGradient, 'strokeColor', currentValue);
+                } else {
+                    backPath.style.stroke = 'black';
+                    backPath.style.strokeDasharray = this.panel.noValueDashArray;
                 }
 
                 if (ctrl.panel.showNumbers) {
@@ -361,6 +368,9 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
                 if (edge.metricName in this.currentValues) {
                     let currentValue = this.currentValues[edge.metricName];
                     edgePath.style.stroke = colorForValue(sortedGradient, 'strokeColor', currentValue);
+                } else {
+                    edgePath.style.stroke = 'black';
+                    edgePath.style.strokeDasharray = this.panel.noValueDashArray;
                 }
 
                 if (ctrl.panel.showNumbers) {
@@ -454,6 +464,7 @@ interface PanelSettings {
     gradient: Gradient;
     legend: LegendSettings;
     link: LinkSettings;
+    noValueDashArray: string;
 }
 
 WeathermapCtrl.templateUrl = 'module.html';

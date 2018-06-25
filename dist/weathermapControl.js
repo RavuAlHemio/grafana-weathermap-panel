@@ -76,7 +76,8 @@ System.register(["app/plugins/sdk", "./properties", "./geometry", "./gradients",
                         dashboard: null,
                         dashUri: null
                     }
-                }
+                },
+                noValueDashArray: '4 4'
             };
             WeathermapCtrl = (function (_super) {
                 __extends(WeathermapCtrl, _super);
@@ -293,9 +294,17 @@ System.register(["app/plugins/sdk", "./properties", "./geometry", "./gradients",
                                 var currentValue = this.currentValues[edge.metricName];
                                 therePath.style.stroke = gradients_1.colorForValue(sortedGradient, 'strokeColor', currentValue);
                             }
+                            else {
+                                therePath.style.stroke = 'black';
+                                therePath.style.strokeDasharray = this.panel.noValueDashArray;
+                            }
                             if (edge.metric2Name in this.currentValues) {
                                 var currentValue = this.currentValues[edge.metric2Name];
                                 backPath.style.stroke = gradients_1.colorForValue(sortedGradient, 'strokeColor', currentValue);
+                            }
+                            else {
+                                backPath.style.stroke = 'black';
+                                backPath.style.strokeDasharray = this.panel.noValueDashArray;
                             }
                             if (ctrl.panel.showNumbers) {
                                 var quarterPoint = geometry_1.halveCubicBezier(n1Center, point1COut, point2CIn, point2)[3];
@@ -327,6 +336,10 @@ System.register(["app/plugins/sdk", "./properties", "./geometry", "./gradients",
                             if (edge.metricName in this.currentValues) {
                                 var currentValue = this.currentValues[edge.metricName];
                                 edgePath.style.stroke = gradients_1.colorForValue(sortedGradient, 'strokeColor', currentValue);
+                            }
+                            else {
+                                edgePath.style.stroke = 'black';
+                                edgePath.style.strokeDasharray = this.panel.noValueDashArray;
                             }
                             if (ctrl.panel.showNumbers) {
                                 var midpoint_1 = geometry_1.halveCubicBezier(n1Center, control1, control2, n2Center)[3];

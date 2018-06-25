@@ -77,5 +77,6 @@ interface PanelSettings {
     gradient: Gradient;
     legend: LegendSettings;
     link: LinkSettings;
+    noValueDashArray: string;
 }
 export {};
