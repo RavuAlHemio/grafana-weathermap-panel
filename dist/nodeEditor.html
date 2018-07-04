@@ -1,0 +1,56 @@
+<div class="gf-form-group">
+    <h5>Nodes</h5>
+    <div class="gf-form-inline">
+        <div class="gf-form">
+            <label class="gf-form-label">Link</label>
+            <div class="gf-form-select-wrapper max-width-10">
+                <select class="gf-form-input" ng-model="ctrl.panel.link.node.type" ng-options="v for v in ['none','dashboard','absolute']" ng-change="ctrl.refresh()"></select>
+            </div>
+        </div>
+        <div class="gf-form" ng-show="ctrl.panel.link.node.type === 'dashboard'">
+            <label class="gf-form-label">Dashboard</label>
+            <input type="text" ng-show="ctrl.panel.link.node.type === 'dashboard'" ng-model="ctrl.panel.link.node.dashboard" bs-typeahead="ctrl.searchDashboards" ng-blur="ctrl.dashboardChanged(ctrl.panel.link.node)" class="gf-form-input" data-provide="typeahead">
+        </div>
+        <div class="gf-form" ng-show="ctrl.panel.link.node.type === 'absolute'">
+            <label class="gf-form-label">Target</label>
+            <input type="text" ng-model="ctrl.panel.link.node.absoluteUri" ng-blur="ctrl.refresh()" class="gf-form-input">
+        </div>
+    </div>
+
+    <div class="gf-form-inline" ng-repeat="wmNode in ctrl.panel.weathermapNodes">
+        <div class="gf-form width-15">
+            <label class="gf-form-label">Label<tip>Node label to display on the weathermap</tip></label>
+            <input type="text" ng-model="wmNode.label" ng-blur="ctrl.refresh()" class="gf-form-input">
+        </div>
+        <div class="gf-form width-7">
+            <label class="gf-form-label">X</label>
+            <input type="number" ng-model="wmNode.x" ng-blur="ctrl.refresh()" class="gf-form-input">
+        </div>
+        <div class="gf-form width-7">
+            <label class="gf-form-label">Y</label>
+            <input type="number" ng-model="wmNode.y" ng-blur="ctrl.refresh()" class="gf-form-input">
+        </div>
+        <div class="gf-form width-7">
+            <label class="gf-form-label">W</label>
+            <input type="number" ng-model="wmNode.width" ng-blur="ctrl.refresh()" class="gf-form-input">
+        </div>
+        <div class="gf-form width-7">
+            <label class="gf-form-label">H</label>
+            <input type="number" ng-model="wmNode.height" ng-blur="ctrl.refresh()" class="gf-form-input">
+        </div>
+        <div class="gf-form width-20">
+            <label class="gf-form-label">Metric<tip>Legend name of the metric to use to color the node's background</tip></label>
+            <input type="text" ng-model="wmNode.metricName" ng-blur="ctrl.refresh()" class="gf-form-input">
+        </div>
+        <div class="gf-form width-20" ng-hide="ctrl.panel.link.node.type === 'none'">
+            <label class="gf-form-label">Link params</label>
+            <input type="text" ng-model="wmNode.linkParams" ng-blur="ctrl.refresh()" class="gf-form-input">
+        </div>
+        <div class="gf-form">
+            <i class="fa fa-trash pointer" ng-click="ctrl.removeWeathermapNode(wmNode)"></i>
+        </div>
+    </div>
+    <button class="btn btn-inverse" ng-click="ctrl.addWeathermapNode()">
+        <i class="fa fa-plus"></i>&nbsp;Add node
+    </button>
+</div>

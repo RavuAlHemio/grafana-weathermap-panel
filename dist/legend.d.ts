@@ -1,5 +1,5 @@
 import { Gradient } from './gradients';
-export declare function placeLegend(settings: LegendSettings, gradient: Gradient, container: SVGElement): void;
+export declare function placeLegend(settings: LegendSettings, gradient: Gradient, container: SVGElement, defs: SVGDefsElement): void;
 export interface LegendSettings {
     type: '' | 'hn' | 'ha' | 'hb' | 'vn' | 'vl' | 'vr';
     x: number;

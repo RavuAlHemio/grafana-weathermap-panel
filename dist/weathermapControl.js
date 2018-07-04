@@ -100,6 +100,8 @@ System.register(["app/plugins/sdk", "./properties", "./geometry", "./gradients",
                 }
                 WeathermapCtrl.prototype.onInitEditMode = function () {
                     this.addEditorTab('Options', properties_1.editorPath, 2);
+                    this.addEditorTab('Nodes', properties_1.nodeEditorPath, 3);
+                    this.addEditorTab('Edges', properties_1.edgeEditorPath, 4);
                 };
                 WeathermapCtrl.prototype.onDataReceived = function (dataList) {
                     this.currentSeries = dataList.map(this.seriesHandler.bind(this));
@@ -189,6 +191,8 @@ System.register(["app/plugins/sdk", "./properties", "./geometry", "./gradients",
                     svg.style.width = this.panel.canvasSize.width + "px";
                     svg.style.height = this.panel.canvasSize.height + "px";
                     elem.appendChild(svg);
+                    var defs = document.createElementNS(properties_1.svgNamespace, 'defs');
+                    svg.appendChild(defs);
                     var legendGroup = document.createElementNS(properties_1.svgNamespace, 'g');
                     legendGroup.classList.add('legend');
                     svg.appendChild(legendGroup);
@@ -356,7 +360,7 @@ System.register(["app/plugins/sdk", "./properties", "./geometry", "./gradients",
                             }
                         }
                     }
-                    legend_1.placeLegend(this.panel.legend, sortedGradient, legendGroup);
+                    legend_1.placeLegend(this.panel.legend, sortedGradient, legendGroup, defs);
                 };
                 WeathermapCtrl.resolveLink = function (objLink) {
                     if (objLink.type == 'absolute' && objLink.absoluteUri) {

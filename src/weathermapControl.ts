@@ -1,7 +1,7 @@
 ///<reference path="../node_modules/grafana-sdk-mocks/app/headers/common.d.ts" />
 
 import { MetricsPanelCtrl } from 'app/plugins/sdk';
-import { editorPath, svgNamespace, xlinkNamespace } from './properties';
+import { edgeEditorPath, editorPath, nodeEditorPath, svgNamespace, xlinkNamespace } from './properties';
 import { deg2rad, halveCubicBezier, midpoint, normalizeAngle, Point2D, polarToCartesian, rad2deg } from './geometry';
 import { colorForValue, Gradient } from './gradients';
 import { placeLegend, LegendSettings } from './legend';
@@ -83,6 +83,8 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
 
     onInitEditMode() {
         this.addEditorTab('Options', editorPath, 2);
+        this.addEditorTab('Nodes', nodeEditorPath, 3);
+        this.addEditorTab('Edges', edgeEditorPath, 4);
     }
 
     onDataReceived(dataList) {
@@ -185,6 +187,9 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
         svg.style.width = `${this.panel.canvasSize.width}px`;
         svg.style.height = `${this.panel.canvasSize.height}px`;
         elem.appendChild(svg);
+
+        let defs = document.createElementNS(svgNamespace, 'defs');
+        svg.appendChild(defs);
 
         let legendGroup: SVGGElement = document.createElementNS(svgNamespace, 'g');
         legendGroup.classList.add('legend');
@@ -390,7 +395,7 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
         }
 
         // legend
-        placeLegend(this.panel.legend, sortedGradient, legendGroup);
+        placeLegend(this.panel.legend, sortedGradient, legendGroup, defs);
     }
 
     static resolveLink(objLink: ObjectLinkSettings): string|null {

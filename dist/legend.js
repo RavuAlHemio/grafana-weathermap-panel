@@ -2,7 +2,7 @@ System.register(["./properties"], function (exports_1, context_1) {
     "use strict";
     var properties_1, legendLength, legendWidth;
     var __moduleName = context_1 && context_1.id;
-    function placeLegend(settings, gradient, container) {
+    function placeLegend(settings, gradient, container, defs) {
         var transform = '';
         if (settings.type == '') {
             return;
@@ -17,7 +17,7 @@ System.register(["./properties"], function (exports_1, context_1) {
             transform = "translate(" + settings.x + " " + (settings.y + settings.length) + ") rotate(-90) scale(" + settings.length / legendLength + " " + settings.width / legendWidth + ")";
         }
         strokeLegendContainer.setAttribute('transform', transform);
-        drawLegend(gradient, 'strokeColor', strokeLegendContainer);
+        drawLegend(gradient, 'strokeColor', strokeLegendContainer, defs);
         var fillLegendContainer = document.createElementNS(properties_1.svgNamespace, 'g');
         container.appendChild(fillLegendContainer);
         fillLegendContainer.classList.add('fill-legend');
@@ -28,15 +28,15 @@ System.register(["./properties"], function (exports_1, context_1) {
             transform = "translate(" + (settings.x + settings.width) + " " + (settings.y + settings.length) + ") rotate(-90) scale(" + settings.length / legendLength + " " + settings.width / legendWidth + ")";
         }
         fillLegendContainer.setAttribute('transform', transform);
-        drawLegend(gradient, 'fillColor', fillLegendContainer);
+        drawLegend(gradient, 'fillColor', fillLegendContainer, defs);
         placeLabels(settings, gradient, container);
     }
     exports_1("placeLegend", placeLegend);
-    function drawLegend(gradient, colorType, container) {
+    function drawLegend(gradient, colorType, container, defs) {
         if (gradient.type == 'linear') {
             var legendGradientName = "WeathermapLegendGradient-" + colorType;
             var svgGrad = document.createElementNS(properties_1.svgNamespace, "linearGradient");
-            container.appendChild(svgGrad);
+            defs.appendChild(svgGrad);
             svgGrad.id = legendGradientName;
             for (var _i = 0, _a = gradient.stops; _i < _a.length; _i++) {
                 var stop_1 = _a[_i];

@@ -5,7 +5,7 @@ const legendLength = 100;
 const legendWidth = 5;
 // (let the container apply any transformations)
 
-export function placeLegend(settings: LegendSettings, gradient: Gradient, container: SVGElement) {
+export function placeLegend(settings: LegendSettings, gradient: Gradient, container: SVGElement, defs: SVGDefsElement): void {
     let transform = '';
 
     if (settings.type == '') {
@@ -23,7 +23,7 @@ export function placeLegend(settings: LegendSettings, gradient: Gradient, contai
         transform = `translate(${settings.x} ${settings.y + settings.length}) rotate(-90) scale(${settings.length/legendLength} ${settings.width/legendWidth})`;
     }
     strokeLegendContainer.setAttribute('transform', transform);
-    drawLegend(gradient, 'strokeColor', strokeLegendContainer);
+    drawLegend(gradient, 'strokeColor', strokeLegendContainer, defs);
 
     // draw fill-color legend
     let fillLegendContainer: SVGGElement = document.createElementNS(svgNamespace, 'g');
@@ -35,20 +35,20 @@ export function placeLegend(settings: LegendSettings, gradient: Gradient, contai
         transform = `translate(${settings.x + settings.width} ${settings.y + settings.length}) rotate(-90) scale(${settings.length/legendLength} ${settings.width/legendWidth})`;
     }
     fillLegendContainer.setAttribute('transform', transform);
-    drawLegend(gradient, 'fillColor', fillLegendContainer);
+    drawLegend(gradient, 'fillColor', fillLegendContainer, defs);
 
     // draw legend labels
     placeLabels(settings, gradient, container);
 }
 
-function drawLegend(gradient: Gradient, colorType: keyof GradientStop, container: SVGElement): void {
+function drawLegend(gradient: Gradient, colorType: keyof GradientStop, container: SVGElement, defs: SVGDefsElement): void {
     if (gradient.type == 'linear') {
         let legendGradientName = `WeathermapLegendGradient-${colorType}`;
 
         let svgGrad = document.createElementNS(svgNamespace, "linearGradient");
-        container.appendChild(svgGrad);
+        defs.appendChild(svgGrad);
         svgGrad.id = legendGradientName;
-        
+
         for (let stop of gradient.stops) {
             let svgStop = document.createElementNS(svgNamespace, "stop");
             svgGrad.appendChild(svgStop);
