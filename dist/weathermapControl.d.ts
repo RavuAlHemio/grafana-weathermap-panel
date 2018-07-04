@@ -29,6 +29,7 @@ export declare class WeathermapCtrl extends MetricsPanelCtrl {
     link(scope: any, elems: any, attrs: any, ctrl: any): void;
     renderThat(topElem: HTMLElement, ctrl: any): void;
     static resolveLink(objLink: ObjectLinkSettings): string | null;
+    static getSearchParams(url: URL): object;
     static maybeWrapIntoLink(upperGroup: SVGGElement, singleObjectGroup: SVGGElement, linkUriBase: string | null, objLinkParams: string | null): void;
 }
 interface WeathermapNode {

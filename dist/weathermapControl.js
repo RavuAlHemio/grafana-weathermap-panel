@@ -364,14 +364,13 @@ System.register(["app/plugins/sdk", "./properties", "./geometry", "./gradients",
                     }
                     else if (objLink.type == 'dashboard' && objLink.dashUri) {
                         var url = new URL(window.location.href);
+                        var oldParams = this.getSearchParams(url);
                         var params = [];
-                        var fromParam = url.searchParams.get('from');
-                        if (fromParam) {
-                            params.push("from=" + escape(fromParam));
+                        if (oldParams['from']) {
+                            params.push("from=" + escape(oldParams['from']));
                         }
-                        var toParam = url.searchParams.get('to');
-                        if (toParam) {
-                            params.push("to=" + escape(toParam));
+                        if (oldParams['to']) {
+                            params.push("to=" + escape(oldParams['to']));
                         }
                         var paramSuffix = '';
                         if (params.length > 0) {
@@ -380,6 +379,26 @@ System.register(["app/plugins/sdk", "./properties", "./geometry", "./gradients",
                         return "/dashboard/" + objLink.dashUri + paramSuffix;
                     }
                     return null;
+                };
+                WeathermapCtrl.getSearchParams = function (url) {
+                    var search = url.search;
+                    while (search.startsWith('?')) {
+                        search = search.substr(1);
+                    }
+                    var params = {};
+                    if (search.length > 0) {
+                        var pairs = search.split('&');
+                        for (var _i = 0, pairs_1 = pairs; _i < pairs_1.length; _i++) {
+                            var pair = pairs_1[_i];
+                            var keyValueMatch = pair.match(/^([^=]*)(?:=(.*))?$/);
+                            var key = keyValueMatch[1];
+                            var value = keyValueMatch[2];
+                            if (key !== undefined && value !== undefined) {
+                                params[unescape(key)] = unescape(value);
+                            }
+                        }
+                    }
+                    return params;
                 };
                 WeathermapCtrl.maybeWrapIntoLink = function (upperGroup, singleObjectGroup, linkUriBase, objLinkParams) {
                     if (linkUriBase) {

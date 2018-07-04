@@ -398,16 +398,15 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
             return objLink.absoluteUri;
         } else if (objLink.type == 'dashboard' && objLink.dashUri) {
             let url = new URL(window.location.href);
+            let oldParams = this.getSearchParams(url);
             let params = [];
 
-            let fromParam = url.searchParams.get('from');
-            if (fromParam) {
-                params.push(`from=${escape(fromParam)}`);
+            if (oldParams['from']) {
+                params.push(`from=${escape(oldParams['from'])}`);
             }
 
-            let toParam = url.searchParams.get('to');
-            if (toParam) {
-                params.push(`to=${escape(toParam)}`);
+            if (oldParams['to']) {
+                params.push(`to=${escape(oldParams['to'])}`);
             }
 
             let paramSuffix = '';
@@ -417,6 +416,28 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
             return `/dashboard/${objLink.dashUri}${paramSuffix}`;
         }
         return null;
+    }
+
+    static getSearchParams(url: URL): object {
+        let search = url.search;
+        while (search.startsWith('?')) {
+            search = search.substr(1);
+        }
+
+        let params = {};
+        if (search.length > 0) {
+            let pairs = search.split('&');
+            for (let pair of pairs) {
+                let keyValueMatch = pair.match(/^([^=]*)(?:=(.*))?$/);
+                let key = keyValueMatch[1];
+                let value = keyValueMatch[2];
+                if (key !== undefined && value !== undefined) {
+                    params[unescape(key)] = unescape(value);
+                }
+            }
+        }
+
+        return params;
     }
 
     static maybeWrapIntoLink(upperGroup: SVGGElement, singleObjectGroup: SVGGElement, linkUriBase: string|null, objLinkParams: string|null): void {
