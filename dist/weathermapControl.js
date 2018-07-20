@@ -334,8 +334,14 @@ System.register(["app/plugins/sdk", "./properties", "./geometry", "./gradients",
                         else {
                             var edgePath = document.createElementNS(properties_1.svgNamespace, 'path');
                             singleEdgeGroup.appendChild(edgePath);
-                            edgePath.setAttribute('d', "M " + n1Center.x + "," + n1Center.y + " " +
-                                ("C " + control1.x + "," + control1.y + "," + control2.x + "," + control2.y + "," + n2Center.x + "," + n2Center.y));
+                            if (control1 !== null && control2 !== null) {
+                                edgePath.setAttribute('d', "M " + n1Center.x + "," + n1Center.y + " " +
+                                    ("C " + control1.x + "," + control1.y + "," + control2.x + "," + control2.y + "," + n2Center.x + "," + n2Center.y));
+                            }
+                            else {
+                                edgePath.setAttribute('d', "M " + n1Center.x + "," + n1Center.y + " " +
+                                    ("L " + n2Center.x + "," + n2Center.y));
+                            }
                             edgePath.style.strokeWidth = "" + this.panel.strokeWidth;
                             edgePath.style.fill = 'none';
                             var edgeTitle = document.createElementNS(properties_1.svgNamespace, 'title');
