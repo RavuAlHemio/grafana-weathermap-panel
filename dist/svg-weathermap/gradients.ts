@@ -1,6 +1,6 @@
 const emergencyColor = "pink";
 
-export function colorForValue(gradient: Gradient, colorType: keyof GradientStop, value: number): string {
+export function gradientColorForValue(gradient: Gradient, colorType: keyof GradientStop, value: number): string {
     if (gradient.type == 'linear') {
         return linearColorForValue(gradient.stops, colorType, value);
     } else if (gradient.type == 'steps') {

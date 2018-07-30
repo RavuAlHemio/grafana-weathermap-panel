@@ -2,7 +2,7 @@ System.register([], function (exports_1, context_1) {
     "use strict";
     var emergencyColor;
     var __moduleName = context_1 && context_1.id;
-    function colorForValue(gradient, colorType, value) {
+    function gradientColorForValue(gradient, colorType, value) {
         if (gradient.type == 'linear') {
             return linearColorForValue(gradient.stops, colorType, value);
         }
@@ -11,7 +11,7 @@ System.register([], function (exports_1, context_1) {
         }
         return emergencyColor;
     }
-    exports_1("colorForValue", colorForValue);
+    exports_1("gradientColorForValue", gradientColorForValue);
     function linearColorForValue(stops, colorType, value) {
         if (stops.length == 0) {
             return emergencyColor;

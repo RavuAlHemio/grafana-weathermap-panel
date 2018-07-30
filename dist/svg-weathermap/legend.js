@@ -1,13 +1,13 @@
-System.register(["./properties"], function (exports_1, context_1) {
+System.register(["./constants"], function (exports_1, context_1) {
     "use strict";
-    var properties_1, legendLength, legendWidth;
+    var constants_1, legendLength, legendWidth;
     var __moduleName = context_1 && context_1.id;
     function placeLegend(settings, gradient, container, defs) {
         var transform = '';
         if (settings.type == '') {
             return;
         }
-        var strokeLegendContainer = document.createElementNS(properties_1.svgNamespace, 'g');
+        var strokeLegendContainer = document.createElementNS(constants_1.svgNamespace, 'g');
         container.appendChild(strokeLegendContainer);
         strokeLegendContainer.classList.add('stroke-legend');
         if (settings.type[0] == 'h') {
@@ -18,7 +18,7 @@ System.register(["./properties"], function (exports_1, context_1) {
         }
         strokeLegendContainer.setAttribute('transform', transform);
         drawLegend(gradient, 'strokeColor', strokeLegendContainer, defs);
-        var fillLegendContainer = document.createElementNS(properties_1.svgNamespace, 'g');
+        var fillLegendContainer = document.createElementNS(constants_1.svgNamespace, 'g');
         container.appendChild(fillLegendContainer);
         fillLegendContainer.classList.add('fill-legend');
         if (settings.type[0] == 'h') {
@@ -35,17 +35,17 @@ System.register(["./properties"], function (exports_1, context_1) {
     function drawLegend(gradient, colorType, container, defs) {
         if (gradient.type == 'linear') {
             var legendGradientName = "WeathermapLegendGradient-" + colorType;
-            var svgGrad = document.createElementNS(properties_1.svgNamespace, "linearGradient");
+            var svgGrad = document.createElementNS(constants_1.svgNamespace, "linearGradient");
             defs.appendChild(svgGrad);
             svgGrad.id = legendGradientName;
             for (var _i = 0, _a = gradient.stops; _i < _a.length; _i++) {
                 var stop_1 = _a[_i];
-                var svgStop = document.createElementNS(properties_1.svgNamespace, "stop");
+                var svgStop = document.createElementNS(constants_1.svgNamespace, "stop");
                 svgGrad.appendChild(svgStop);
                 svgStop.setAttribute('offset', stop_1.position + "%");
                 svgStop.setAttribute('stop-color', "" + stop_1[colorType]);
             }
-            var svgRect = document.createElementNS(properties_1.svgNamespace, "rect");
+            var svgRect = document.createElementNS(constants_1.svgNamespace, "rect");
             container.appendChild(svgRect);
             svgRect.setAttribute('x', '0');
             svgRect.setAttribute('y', '0');
@@ -55,7 +55,7 @@ System.register(["./properties"], function (exports_1, context_1) {
         }
         else if (gradient.type == 'steps') {
             for (var i = 1; i < gradient.stops.length; ++i) {
-                var rect_1 = document.createElementNS(properties_1.svgNamespace, "rect");
+                var rect_1 = document.createElementNS(constants_1.svgNamespace, "rect");
                 container.appendChild(rect_1);
                 rect_1.setAttribute('x', "" + gradient.stops[i - 1].position);
                 rect_1.setAttribute('y', '0');
@@ -63,7 +63,7 @@ System.register(["./properties"], function (exports_1, context_1) {
                 rect_1.setAttribute('height', "" + legendWidth);
                 rect_1.style.fill = "" + gradient.stops[i - 1][colorType];
             }
-            var rect = document.createElementNS(properties_1.svgNamespace, "rect");
+            var rect = document.createElementNS(constants_1.svgNamespace, "rect");
             container.appendChild(rect);
             rect.setAttribute('x', "" + gradient.stops[gradient.stops.length - 1].position);
             rect.setAttribute('y', '0');
@@ -101,7 +101,7 @@ System.register(["./properties"], function (exports_1, context_1) {
                     xCoord += 2 * settings.width;
                 }
             }
-            var label = document.createElementNS(properties_1.svgNamespace, 'text');
+            var label = document.createElementNS(constants_1.svgNamespace, 'text');
             container.appendChild(label);
             label.classList.add('legend-label');
             label.setAttribute('x', "" + xCoord);
@@ -113,8 +113,8 @@ System.register(["./properties"], function (exports_1, context_1) {
     }
     return {
         setters: [
-            function (properties_1_1) {
-                properties_1 = properties_1_1;
+            function (constants_1_1) {
+                constants_1 = constants_1_1;
             }
         ],
         execute: function () {

@@ -1,4 +1,4 @@
-export declare function colorForValue(gradient: Gradient, colorType: keyof GradientStop, value: number): string;
+export declare function gradientColorForValue(gradient: Gradient, colorType: keyof GradientStop, value: number): string;
 export interface GradientStop {
     position: number;
     strokeColor: string;

@@ -1,5 +1,5 @@
 import { Gradient, GradientStop } from './gradients';
-import { svgNamespace } from './properties';
+import { svgNamespace } from './constants';
 
 const legendLength = 100;
 const legendWidth = 5;
