@@ -1,11 +1,13 @@
 import { Gradient, GradientStop } from './gradients';
-import { svgNamespace } from './constants';
+import { SVGElementCreator, setRectangleDimensions } from './weathermap';
 
 const legendLength = 100;
 const legendWidth = 5;
 // (let the container apply any transformations)
 
-export function placeLegend(settings: LegendSettings, gradient: Gradient, container: SVGElement, defs: SVGDefsElement): void {
+export function placeLegend(
+    svgMake: SVGElementCreator, settings: LegendSettings, container: Element, defs: SVGDefsElement, gradient: Gradient
+): void {
     let transform = '';
 
     if (settings.type == '') {
@@ -14,76 +16,78 @@ export function placeLegend(settings: LegendSettings, gradient: Gradient, contai
     }
 
     // draw stroke-color legend
-    let strokeLegendContainer: SVGGElement = document.createElementNS(svgNamespace, 'g');
+    let strokeLegendContainer: SVGGElement = svgMake.g();
     container.appendChild(strokeLegendContainer);
-    strokeLegendContainer.classList.add('stroke-legend');
+    strokeLegendContainer.setAttribute('class', 'stroke-legend');
     if (settings.type[0] == 'h') {
         transform = `translate(${settings.x} ${settings.y}) scale(${settings.length/legendLength} ${settings.width/legendWidth})`;
     } else if (settings.type[0] == 'v') {
         transform = `translate(${settings.x} ${settings.y + settings.length}) rotate(-90) scale(${settings.length/legendLength} ${settings.width/legendWidth})`;
     }
     strokeLegendContainer.setAttribute('transform', transform);
-    drawLegend(gradient, 'strokeColor', strokeLegendContainer, defs);
+    drawLegend(svgMake, gradient, 'strokeColor', strokeLegendContainer, defs);
 
     // draw fill-color legend
-    let fillLegendContainer: SVGGElement = document.createElementNS(svgNamespace, 'g');
+    let fillLegendContainer: SVGGElement = svgMake.g();
     container.appendChild(fillLegendContainer);
-    fillLegendContainer.classList.add('fill-legend');
+    strokeLegendContainer.setAttribute('class', 'fill-legend');
     if (settings.type[0] == 'h') {
         transform = `translate(${settings.x} ${settings.y + settings.width}) scale(${settings.length/legendLength} ${settings.width/legendWidth})`;
     } else if (settings.type[0] == 'v') {
         transform = `translate(${settings.x + settings.width} ${settings.y + settings.length}) rotate(-90) scale(${settings.length/legendLength} ${settings.width/legendWidth})`;
     }
     fillLegendContainer.setAttribute('transform', transform);
-    drawLegend(gradient, 'fillColor', fillLegendContainer, defs);
+    drawLegend(svgMake, gradient, 'fillColor', fillLegendContainer, defs);
 
     // draw legend labels
-    placeLabels(settings, gradient, container);
+    placeLabels(svgMake, settings, gradient, container);
 }
 
-function drawLegend(gradient: Gradient, colorType: keyof GradientStop, container: SVGElement, defs: SVGDefsElement): void {
+function drawLegend(svgMake: SVGElementCreator, gradient: Gradient, colorType: keyof GradientStop, container: SVGElement, defs: SVGDefsElement): void {
     if (gradient.type == 'linear') {
         let legendGradientName = `WeathermapLegendGradient-${colorType}`;
 
-        let svgGrad = document.createElementNS(svgNamespace, "linearGradient");
+        let svgGrad = svgMake.linearGradient();
         defs.appendChild(svgGrad);
-        svgGrad.id = legendGradientName;
+        svgGrad.setAttribute('id', legendGradientName);
 
         for (let stop of gradient.stops) {
-            let svgStop = document.createElementNS(svgNamespace, "stop");
+            let svgStop = svgMake.stop();
             svgGrad.appendChild(svgStop);
             svgStop.setAttribute('offset', `${stop.position}%`);
             svgStop.setAttribute('stop-color', `${stop[colorType]}`);
         }
 
-        let svgRect = document.createElementNS(svgNamespace, "rect");
+        let svgRect = svgMake.rect();
         container.appendChild(svgRect);
-        svgRect.setAttribute('x', '0');
-        svgRect.setAttribute('y', '0');
-        svgRect.setAttribute('width', `${legendLength}`);
-        svgRect.setAttribute('height', `${legendWidth}`);
-        svgRect.style.fill = `url(#${legendGradientName})`;
+        setRectangleDimensions(svgRect, 0, 0, legendLength, legendWidth);
+        svgRect.setAttribute('style', `fill:url(#${legendGradientName})`);
     } else if (gradient.type == 'steps') {
         for (let i = 1; i < gradient.stops.length; ++i) {
-            let rect = document.createElementNS(svgNamespace, "rect");
+            let rect = svgMake.rect();
             container.appendChild(rect);
-            rect.setAttribute('x', `${gradient.stops[i-1].position}`);
-            rect.setAttribute('y', '0');
-            rect.setAttribute('width', `${gradient.stops[i].position - gradient.stops[i-1].position}`);
-            rect.setAttribute('height', `${legendWidth}`);
-            rect.style.fill = `${gradient.stops[i-1][colorType]}`;
+
+            setRectangleDimensions(rect,
+                gradient.stops[i-1].position,
+                0,
+                gradient.stops[i].position - gradient.stops[i-1].position,
+                legendWidth
+            );
+            rect.setAttribute('style', `fill:${gradient.stops[i-1][colorType]}`);
         }
-        let rect = document.createElementNS(svgNamespace, "rect");
+        let rect = svgMake.rect();
         container.appendChild(rect);
-        rect.setAttribute('x', `${gradient.stops[gradient.stops.length-1].position}`);
-        rect.setAttribute('y', '0');
-        rect.setAttribute('width', `${100 - gradient.stops[gradient.stops.length-1].position}`);
-        rect.setAttribute('height', `${legendWidth}`);
-        rect.style.fill = `${gradient.stops[gradient.stops.length-1][colorType]}`;
+        setRectangleDimensions(rect,
+            gradient.stops[gradient.stops.length-1].position,
+            0,
+            100 - gradient.stops[gradient.stops.length-1].position,
+            legendWidth
+        );
+        rect.setAttribute('style', `fill:${gradient.stops[gradient.stops.length-1][colorType]}`);
     }
 }
 
-function placeLabels(settings: LegendSettings, gradient: Gradient, container: SVGElement) {
+function placeLabels(svgMake: SVGElementCreator, settings: LegendSettings, gradient: Gradient, container: Element) {
     if (settings.type == '' || settings.type[1] == 'n') {
         // no labels
         return;
@@ -93,7 +97,7 @@ function placeLabels(settings: LegendSettings, gradient: Gradient, container: SV
         let xCoord = settings.x;
         let yCoord = settings.y;
         let dy = 0.0;
-        let textAnchor = 'start';
+        let textAnchor: 'start'|'middle'|'end' = 'start';
 
         if (settings.type[0] == 'h') {
             // horizontal scale
@@ -117,13 +121,13 @@ function placeLabels(settings: LegendSettings, gradient: Gradient, container: SV
             }
         }
 
-        let label = document.createElementNS(svgNamespace, 'text');
+        let label = svgMake.text();
         container.appendChild(label);
-        label.classList.add('legend-label');
+        label.setAttribute('class', 'legend-label');
         label.setAttribute('x', `${xCoord}`);
         label.setAttribute('y', `${yCoord}`);
         label.setAttribute('dy', `${dy}em`);
-        label.style.textAnchor = textAnchor;
+        label.setAttribute('style', `text-anchor:${textAnchor}`);
         label.textContent = `${stop.position}`;
     }
 }

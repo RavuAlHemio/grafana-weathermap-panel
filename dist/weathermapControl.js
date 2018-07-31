@@ -1,9 +1,12 @@
 System.register(["app/plugins/sdk", "./properties", "./svg-weathermap/weathermap", "lodash", "app/core/time_series2"], function (exports_1, context_1) {
     "use strict";
     var __extends = (this && this.__extends) || (function () {
-        var extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            return extendStatics(d, b);
+        }
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -12,6 +15,26 @@ System.register(["app/plugins/sdk", "./properties", "./svg-weathermap/weathermap
     })();
     var sdk_1, properties_1, weathermap_1, lodash_1, time_series2_1, panelDefaults, WeathermapCtrl;
     var __moduleName = context_1 && context_1.id;
+    function getSearchParams(url) {
+        var search = url.search;
+        while (search.startsWith('?')) {
+            search = search.substr(1);
+        }
+        var params = {};
+        if (search.length > 0) {
+            var pairs = search.split('&');
+            for (var _i = 0, pairs_1 = pairs; _i < pairs_1.length; _i++) {
+                var pair = pairs_1[_i];
+                var keyValueMatch = pair.match(/^([^=]*)(?:=(.*))?$/);
+                var key = keyValueMatch[1];
+                var value = keyValueMatch[2];
+                if (key !== undefined && value !== undefined) {
+                    params[decodeURIComponent(key)] = decodeURIComponent(value);
+                }
+            }
+        }
+        return params;
+    }
     return {
         setters: [
             function (sdk_1_1) {
@@ -174,7 +197,7 @@ System.register(["app/plugins/sdk", "./properties", "./svg-weathermap/weathermap
                     while (elem.lastChild) {
                         elem.removeChild(elem.lastChild);
                     }
-                    weathermap_1.renderWeathermapInto(elem, this.panel);
+                    weathermap_1.renderWeathermapInto(document, elem, this.panel, this.currentValues, WeathermapCtrl.resolveLink);
                 };
                 WeathermapCtrl.resolveLink = function (objLink) {
                     if (objLink.type == 'absolute' && objLink.absoluteUri) {
@@ -182,13 +205,13 @@ System.register(["app/plugins/sdk", "./properties", "./svg-weathermap/weathermap
                     }
                     else if (objLink.type == 'dashboard' && objLink.dashUri) {
                         var url = new URL(window.location.href);
-                        var oldParams = this.getSearchParams(url);
+                        var oldParams = getSearchParams(url);
                         var params = [];
                         if (oldParams['from']) {
-                            params.push("from=" + escape(oldParams['from']));
+                            params.push("from=" + encodeURIComponent(oldParams['from']));
                         }
                         if (oldParams['to']) {
-                            params.push("to=" + escape(oldParams['to']));
+                            params.push("to=" + encodeURIComponent(oldParams['to']));
                         }
                         var paramSuffix = '';
                         if (params.length > 0) {
@@ -197,26 +220,6 @@ System.register(["app/plugins/sdk", "./properties", "./svg-weathermap/weathermap
                         return "/dashboard/" + objLink.dashUri + paramSuffix;
                     }
                     return null;
-                };
-                WeathermapCtrl.getSearchParams = function (url) {
-                    var search = url.search;
-                    while (search.startsWith('?')) {
-                        search = search.substr(1);
-                    }
-                    var params = {};
-                    if (search.length > 0) {
-                        var pairs = search.split('&');
-                        for (var _i = 0, pairs_1 = pairs; _i < pairs_1.length; _i++) {
-                            var pair = pairs_1[_i];
-                            var keyValueMatch = pair.match(/^([^=]*)(?:=(.*))?$/);
-                            var key = keyValueMatch[1];
-                            var value = keyValueMatch[2];
-                            if (key !== undefined && value !== undefined) {
-                                params[unescape(key)] = unescape(value);
-                            }
-                        }
-                    }
-                    return params;
                 };
                 return WeathermapCtrl;
             }(sdk_1.MetricsPanelCtrl));

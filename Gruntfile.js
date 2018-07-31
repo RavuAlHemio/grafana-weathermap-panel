@@ -7,14 +7,29 @@ module.exports = function (grunt) {
 
     grunt.initConfig({
 
-        clean: ["dist"],
+        clean: [
+            "dist",
+            "dist_genwmap"
+        ],
 
         copy: {
             dist_js: {
                 expand: true,
                 cwd: 'src',
-                src: ['**/*.ts'],
+                src: ['**/*.ts', '**/*.js'],
                 dest: 'dist/'
+            },
+            dist_js_genwmap: {
+                expand: true,
+                cwd: 'src',
+                src: ['**/*.ts', '**/*.js'],
+                dest: 'dist_genwmap/'
+            },
+            dist_js_genwmap_specific: {
+                expand: true,
+                cwd: 'src_genwmap',
+                src: ['**/*.ts', '**/*.js'],
+                dest: 'dist_genwmap/'
             },
             dist_statics: {
                 expand: true,
@@ -37,6 +52,32 @@ module.exports = function (grunt) {
                     experimentalDecorators: true,
                     sourceMap: true,
                     noImplicitAny: false,
+                    paths: {
+                        "*": [
+                            "*",
+                            "node_modules/*",
+                        ]
+                    }
+                }
+            },
+            build_genwmap: {
+                src: ['dist_genwmap/**/*.ts', "!**/*.d.ts"],
+                dest: 'dist_genwmap/',
+                options: {
+                    module: 'CommonJS',
+                    target: 'es5',
+                    rootDir: 'dist_genwmap/',
+                    declaration: true,
+                    emitDecoratorMetadata: true,
+                    experimentalDecorators: true,
+                    sourceMap: true,
+                    noImplicitAny: false,
+                    paths: {
+                        "*": [
+                            "*",
+                            "node_modules/*",
+                        ]
+                    }
                 }
             },
         },
@@ -45,7 +86,10 @@ module.exports = function (grunt) {
     grunt.registerTask('default', [
         'clean',
         'copy:dist_js',
+        'copy:dist_js_genwmap',
+        'copy:dist_js_genwmap_specific',
         'ts:build',
+        'ts:build_genwmap',
         'copy:dist_statics',
     ]);
 };

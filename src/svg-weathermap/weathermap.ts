@@ -4,7 +4,8 @@ import { Gradient, gradientColorForValue } from './gradients';
 import { LegendSettings, placeLegend } from './legend';
 
 export function renderWeathermapInto(
-    container: Element, config: WeathermapConfig, linkResolver?: (ObjectLinkSettings) => string|null
+    elementCreator: SVGElementCreatorDOM, container: Node, config: WeathermapConfig, currentValues: MetricValueMap,
+    linkResolver?: (ObjectLinkSettings) => string|null
 ): void {
     // sort gradient stops
     let sortedStops = config.gradient.stops
@@ -15,103 +16,114 @@ export function renderWeathermapInto(
         stops: sortedStops
     };
 
-    // add SVG
-    let svg: SVGSVGElement = document.createElementNS(svgNamespace, 'svg');
-    svg.style.width = `${config.canvasSize.width}px`;
-    svg.style.height = `${config.canvasSize.height}px`;
-    container.appendChild(svg);
+    let state = new WeathermapRendererState(elementCreator, config, sortedGradient, currentValues);
 
-    let defs = document.createElementNS(svgNamespace, 'defs');
-    svg.appendChild(defs);
-
-    let legendGroup: SVGGElement = document.createElementNS(svgNamespace, 'g');
-    legendGroup.classList.add('legend');
-    svg.appendChild(legendGroup);
-
-    let edgeGroup: SVGGElement = document.createElementNS(svgNamespace, 'g');
-    edgeGroup.classList.add('edges');
-    svg.appendChild(edgeGroup);
-
-    let nodeGroup: SVGGElement = document.createElementNS(svgNamespace, 'g');
-    nodeGroup.classList.add('nodes');
-    svg.appendChild(nodeGroup);
+    initializeSVG(state, container);
 
     // resolve links
-    let edgeLinkUriBase: string|null;
-    let nodeLinkUriBase: string|null;
     if (linkResolver) {
-        nodeLinkUriBase = linkResolver(config.link.node);
-        edgeLinkUriBase = linkResolver(config.link.edge);
+        state.nodeLinkUriBase = linkResolver(config.link.node);
+        state.edgeLinkUriBase = linkResolver(config.link.edge);
     }
 
     // emplacement
-    let nodeLabelToNode = placeNodes(config, nodeGroup, nodeLinkUriBase, sortedGradient);
-    placeEdges(config, edgeGroup, edgeLinkUriBase, sortedGradient, nodeLabelToNode);
-    placeLegend(config.legend, sortedGradient, legendGroup, defs);
+    placeNodes(state);
+    placeEdges(state);
+    placeLegend(state.make, config.legend, state.legendGroup, state.defs, sortedGradient);
 }
 
-function placeNodes(
-    config: WeathermapConfig, nodeGroup: SVGGElement, nodeLinkUriBase: string|null, sortedGradient: Gradient
-): object {
-    let nodeLabelToNode = {};
-    for (let node of config.weathermapNodes) {
-        nodeLabelToNode[node.label] = node;
+function initializeSVG(state: WeathermapRendererState, container: Node): void {
+    // add SVG
+    let svg: SVGSVGElement = state.make.svg();
+    modifyStyle(svg, {
+        'width': state.config.canvasSize.width,
+        'height': state.config.canvasSize.height,
+    });
+    container.appendChild(svg);
 
-        let singleNodeGroup: SVGGElement = document.createElementNS(svgNamespace, 'g');
-        maybeWrapIntoLink(nodeGroup, singleNodeGroup, nodeLinkUriBase, node.linkParams);
+    state.defs = state.make.defs();
+    svg.appendChild(state.defs);
 
-        let rect: SVGRectElement = document.createElementNS(svgNamespace, 'rect');
+    state.legendGroup = state.make.g();
+    state.legendGroup.setAttribute('class', 'legend');
+    svg.appendChild(state.legendGroup);
+
+    state.edgeGroup = state.make.g();
+    state.edgeGroup.setAttribute('class', 'edges');
+    svg.appendChild(state.edgeGroup);
+
+    state.nodeGroup = state.make.g();
+    state.nodeGroup.setAttribute('class', 'nodes');
+    svg.appendChild(state.nodeGroup);
+}
+
+function placeNodes(state: WeathermapRendererState): void {
+    for (let node of state.config.weathermapNodes) {
+        state.nodeLabelToNode[node.label] = node;
+
+        let singleNodeGroup: SVGGElement = state.make.g();
+        maybeWrapIntoLink(state.make, state.nodeGroup, singleNodeGroup, state.nodeLinkUriBase, node.linkParams);
+
+        let rect: SVGRectElement = state.make.rect();
         singleNodeGroup.appendChild(rect);
 
         setRectangleDimensions(rect, node.x, node.y, node.width, node.height);
-        rect.style.strokeWidth = "1px";
-        rect.style.stroke = "gray";
+        modifyStyle(rect, {
+            'stroke': 'gray',
+            'stroke-width': '1px',
+        });
 
-        let text: SVGTextElement = document.createElementNS(svgNamespace, 'text');
+        let text: SVGTextElement = state.make.text();
         singleNodeGroup.appendChild(text);
 
-        text.setAttribute('x', `${(+node.x) + (+config.textOffsets.left)}`);
-        text.setAttribute('y', `${(+node.y) + (+node.height) - config.textOffsets.bottom}`);
-        if (config.showNumbers) {
-            let value = (node.metricName in this.currentValues) ? this.currentValues[node.metricName] : '?';
+        text.setAttribute('x', `${(+node.x) + (+state.config.textOffsets.left)}`);
+        text.setAttribute('y', `${(+node.y) + (+node.height) - state.config.textOffsets.bottom}`);
+        if (state.config.showNumbers) {
+            let value = (node.metricName in state.currentValues)
+                ? state.currentValues[node.metricName]
+                : '?'
+            ;
             text.textContent = `${node.label} (${value})`;
         } else {
             text.textContent = node.label;
         }
 
         if (!node.metricName) {
-            rect.style.fill = "silver";
-            rect.style.strokeDasharray = config.unmeasuredDashArray;
-        } else if (node.metricName in this.currentValues) {
+            modifyStyle(rect, {
+                'fill': 'silver',
+                'stroke-dasharray': state.config.unmeasuredDashArray,
+            });
+        } else if (node.metricName in state.currentValues) {
             // color node by metric
-            let currentValue = this.currentValues[node.metricName];
-            rect.style.fill = gradientColorForValue(sortedGradient, 'fillColor', currentValue);
+            let currentValue = state.currentValues[node.metricName];
+            modifyStyle(rect, {
+                'fill': gradientColorForValue(state.sortedGradient, 'fillColor', currentValue),
+            });
         } else {
             // no data
-            text.style.fill = "white";
-            rect.style.fill = "black";
-            rect.style.strokeDasharray = config.noValueDashArray;
+            modifyStyle(text, {
+                'fill': 'white',
+            });
+            modifyStyle(rect, {
+                'fill': 'black',
+                'stroke-dasharray': state.config.noValueDashArray,
+            });
         }
     }
-
-    return nodeLabelToNode;
 }
 
-function placeEdges(
-    config: WeathermapConfig, edgeGroup: SVGGElement, edgeLinkUriBase: string|null, sortedGradient: Gradient,
-    nodeLabelToNode: object
-): void {
+function placeEdges(state: WeathermapRendererState): void {
     // place edges
-    for (let edge of config.weathermapEdges) {
-        let node1 = nodeLabelToNode[edge.node1];
-        let node2 = nodeLabelToNode[edge.node2];
+    for (let edge of state.config.weathermapEdges) {
+        let node1 = state.nodeLabelToNode[edge.node1];
+        let node2 = state.nodeLabelToNode[edge.node2];
         if (!node1 || !node2) {
             // TODO: output error
             continue;
         }
 
-        let singleEdgeGroup: SVGGElement = document.createElementNS(svgNamespace, 'g');
-        maybeWrapIntoLink(edgeGroup, singleEdgeGroup, edgeLinkUriBase, edge.linkParams);
+        let singleEdgeGroup: SVGGElement = state.make.g();
+        maybeWrapIntoLink(state.make, state.edgeGroup, singleEdgeGroup, state.edgeLinkUriBase, edge.linkParams);
 
         let n1Center: Point2D = {
             x: (+node1.x) + ((+node1.width) / 2),
@@ -150,67 +162,85 @@ function placeEdges(
             // two metrics are twice the fun
             let [_point1, point1COut, point2CIn, point2, point2COut, point3CIn, _point2] = halveCubicBezier(n1Center, control1, control2, n2Center);
 
-            let therePath: SVGPathElement = document.createElementNS(svgNamespace, 'path');
+            let therePath: SVGPathElement = state.make.path();
             singleEdgeGroup.appendChild(therePath);
             therePath.setAttribute('d',
                 `M ${n1Center.x},${n1Center.y} ` +
                 `C ${point1COut.x},${point1COut.y},${point2CIn.x},${point2CIn.y},${point2.x},${point2.y}`
             );
-            therePath.style.strokeWidth = `${config.strokeWidth}`;
-            therePath.style.fill = 'none';
+            modifyStyle(therePath, {
+                'stroke-width': state.config.strokeWidth,
+                'fill': 'none',
+            });
 
-            let thereTitle: SVGTitleElement = document.createElementNS(svgNamespace, 'title');
+            let thereTitle: SVGTitleElement = state.make.title();
             therePath.appendChild(thereTitle);
             thereTitle.textContent = `${edge.node1} \u2192 ${edge.node2}`;
 
-            let backPath: SVGPathElement = document.createElementNS(svgNamespace, 'path');
+            let backPath: SVGPathElement = state.make.path();
             singleEdgeGroup.appendChild(backPath);
             backPath.setAttribute('d',
                 `M ${point2.x},${point2.y} ` +
                 `C ${point2COut.x},${point2COut.y},${point3CIn.x},${point3CIn.y},${n2Center.x},${n2Center.y}`
             );
-            backPath.style.strokeWidth = `${config.strokeWidth}`;
-            backPath.style.fill = 'none';
+            modifyStyle(backPath, {
+                'stroke-width': state.config.strokeWidth,
+                'fill': 'none',
+            });
 
-            let backTitle: SVGTitleElement = document.createElementNS(svgNamespace, 'title');
+            let backTitle: SVGTitleElement = state.make.title();
             backPath.appendChild(backTitle);
             backTitle.textContent = `${edge.node2} \u2192 ${edge.node1}`;
 
-            if (edge.metricName in this.currentValues) {
-                let currentValue = this.currentValues[edge.metricName];
-                therePath.style.stroke = gradientColorForValue(sortedGradient, 'strokeColor', currentValue);
+            if (edge.metricName in state.currentValues) {
+                let currentValue = state.currentValues[edge.metricName];
+                modifyStyle(therePath, {
+                    'stroke': gradientColorForValue(state.sortedGradient, 'strokeColor', currentValue),
+                });
             } else {
-                therePath.style.stroke = 'black';
-                therePath.style.strokeDasharray = config.noValueDashArray;
+                modifyStyle(therePath, {
+                    'stroke': 'black',
+                    'stroke-dasharray': state.config.noValueDashArray,
+                });
             }
-            if (edge.metric2Name in this.currentValues) {
-                let currentValue = this.currentValues[edge.metric2Name];
-                backPath.style.stroke = gradientColorForValue(sortedGradient, 'strokeColor', currentValue);
+            if (edge.metric2Name in state.currentValues) {
+                let currentValue = state.currentValues[edge.metric2Name];
+                modifyStyle(backPath, {
+                    'stroke': gradientColorForValue(state.sortedGradient, 'strokeColor', currentValue),
+                });
             } else {
-                backPath.style.stroke = 'black';
-                backPath.style.strokeDasharray = config.noValueDashArray;
+                modifyStyle(backPath, {
+                    'stroke': 'black',
+                    'stroke-dasharray': state.config.noValueDashArray,
+                });
             }
 
-            if (config.showNumbers) {
+            if (state.config.showNumbers) {
                 let quarterPoint = halveCubicBezier(n1Center, point1COut, point2CIn, point2)[3];
                 let threeQuarterPoint = halveCubicBezier(point2, point2COut, point3CIn, n2Center)[3];
 
-                let valueString = (edge.metricName in this.currentValues) ? this.currentValues[edge.metricName].toFixed(2) : '?';
-                let text1 = document.createElementNS(svgNamespace, 'text');
+                let valueString = (edge.metricName in state.currentValues)
+                    ? state.currentValues[edge.metricName].toFixed(2)
+                    : '?'
+                ;
+                let text1 = state.make.text();
                 singleEdgeGroup.appendChild(text1);
                 text1.setAttribute('x', `${quarterPoint.x}`);
                 text1.setAttribute('y', `${quarterPoint.y}`);
                 text1.textContent = valueString;
 
-                let value2String = (edge.metric2Name in this.currentValues) ? this.currentValues[edge.metric2Name].toFixed(2) : '?';
-                let text2 = document.createElementNS(svgNamespace, 'text');
+                let value2String = (edge.metric2Name in state.currentValues)
+                    ? state.currentValues[edge.metric2Name].toFixed(2)
+                    : '?'
+                ;
+                let text2 = state.make.text();
                 singleEdgeGroup.appendChild(text2);
                 text2.setAttribute('x', `${threeQuarterPoint.x}`);
                 text2.setAttribute('y', `${threeQuarterPoint.y}`);
                 text2.textContent = value2String;
             }
         } else {
-            let edgePath: SVGPathElement = document.createElementNS(svgNamespace, 'path');
+            let edgePath: SVGPathElement = state.make.path();
             singleEdgeGroup.appendChild(edgePath);
             if (control1 !== null && control2 !== null) {
                 edgePath.setAttribute('d',
@@ -223,25 +253,34 @@ function placeEdges(
                     `L ${n2Center.x},${n2Center.y}`
                 );
             }
-            edgePath.style.strokeWidth = `${config.strokeWidth}`;
-            edgePath.style.fill = 'none';
+            modifyStyle(edgePath, {
+                'stroke-width': state.config.strokeWidth,
+                'fill': 'none',
+            });
 
-            let edgeTitle: SVGTitleElement = document.createElementNS(svgNamespace, 'title');
+            let edgeTitle: SVGTitleElement = state.make.title();
             edgePath.appendChild(edgeTitle);
             edgeTitle.textContent = `${edge.node2} \u2194 ${edge.node1}`;
 
-            if (edge.metricName in this.currentValues) {
-                let currentValue = this.currentValues[edge.metricName];
-                edgePath.style.stroke = gradientColorForValue(sortedGradient, 'strokeColor', currentValue);
+            if (edge.metricName in state.currentValues) {
+                let currentValue = state.currentValues[edge.metricName];
+                modifyStyle(edgePath, {
+                    'stroke': gradientColorForValue(state.sortedGradient, 'strokeColor', currentValue),
+                });
             } else {
-                edgePath.style.stroke = 'black';
-                edgePath.style.strokeDasharray = config.noValueDashArray;
+                modifyStyle(edgePath, {
+                    'stroke': 'black',
+                    'stroke-dasharray': state.config.noValueDashArray,
+                });
             }
 
-            if (config.showNumbers) {
+            if (state.config.showNumbers) {
                 let midpoint = halveCubicBezier(n1Center, control1, control2, n2Center)[3];
-                let valueString = (edge.metricName in this.currentValues) ? this.currentValues[edge.metricName].toFixed(2) : '?';
-                let text = document.createElementNS(svgNamespace, 'text');
+                let valueString = (edge.metricName in state.currentValues)
+                    ? state.currentValues[edge.metricName].toFixed(2)
+                    : '?'
+                ;
+                let text = state.make.text();
                 singleEdgeGroup.appendChild(text);
                 text.setAttribute('x', `${midpoint.x}`);
                 text.setAttribute('y', `${midpoint.y}`);
@@ -251,7 +290,10 @@ function placeEdges(
     }
 }
 
-function maybeWrapIntoLink(upperGroup: SVGGElement, singleObjectGroup: SVGGElement, linkUriBase: string|null, objLinkParams: string|null): void {
+function maybeWrapIntoLink(
+    svgMake: SVGElementCreator, upperGroup: SVGGElement, singleObjectGroup: SVGGElement, linkUriBase: string|null,
+    objLinkParams: string|null
+): void {
     if (linkUriBase) {
         let objLinkUri = linkUriBase;
         if (objLinkParams) {
@@ -262,7 +304,7 @@ function maybeWrapIntoLink(upperGroup: SVGGElement, singleObjectGroup: SVGGEleme
             objLinkUri += objLinkParams;
         }
 
-        let aElement: SVGAElement = document.createElementNS(svgNamespace, 'a');
+        let aElement: SVGAElement = svgMake.a();
         upperGroup.appendChild(aElement);
         aElement.setAttributeNS(xlinkNamespace, 'href', objLinkUri);
 
@@ -272,7 +314,7 @@ function maybeWrapIntoLink(upperGroup: SVGGElement, singleObjectGroup: SVGGEleme
     }
 }
 
-function setRectangleDimensions(
+export function setRectangleDimensions(
     element: SVGRectElement, x: number|string, y: number|string, width: number|string, height: number|string
 ): void {
     element.setAttribute('x', `${x}`);
@@ -281,6 +323,93 @@ function setRectangleDimensions(
     element.setAttribute('height', `${height}`);
 }
 
+function modifyStyle(element: Element, newValues: object) {
+    // parse style
+    let assembledStyle = {};
+    if (element.hasAttribute('style')) {
+        for (let chunk of element.getAttribute('style').split(';')) {
+            let index = chunk.indexOf(':');
+            if (index == -1) {
+                continue;
+            }
+            let key = chunk.substr(0, index);
+            let value = chunk.substr(index + 1);
+            assembledStyle[key] = value;
+        }
+    }
+
+    for (let key in newValues) {
+        if (newValues.hasOwnProperty(key)) {
+            if (newValues[key] === null) {
+                delete assembledStyle[key];
+            } else {
+                assembledStyle[key] = newValues[key];
+            }
+        }
+    }
+
+    let keyValuePairs = [];
+    for (let key in assembledStyle) {
+        if (assembledStyle.hasOwnProperty(key)) {
+            keyValuePairs.push(`${key}:${assembledStyle[key]}`);
+        }
+    }
+
+    let keyValueString = keyValuePairs.join(';');
+    element.setAttribute('style', keyValueString);
+}
+
+
+export class WeathermapRendererState {
+    make: SVGElementCreator;
+    config: WeathermapConfig;
+    sortedGradient: Gradient;
+    currentValues: MetricValueMap;
+    nodeLabelToNode: LabelToNodeMap;
+    nodeLinkUriBase: string|null;
+    edgeLinkUriBase: string|null;
+    defs: SVGDefsElement|null;
+    edgeGroup: SVGGElement|null;
+    nodeGroup: SVGGElement|null;
+    legendGroup: SVGGElement|null;
+
+    constructor(
+        domCreator: SVGElementCreatorDOM, config: WeathermapConfig, sortedGradient: Gradient, currentValues: MetricValueMap
+    ) {
+        this.make = new SVGElementCreator(domCreator);
+        this.config = config;
+        this.sortedGradient = sortedGradient;
+        this.currentValues = currentValues;
+        this.nodeLabelToNode = {};
+        this.nodeLinkUriBase = null;
+        this.edgeLinkUriBase = null;
+        this.defs = null;
+        this.edgeGroup = null;
+        this.nodeGroup = null;
+        this.legendGroup = null;
+    }
+}
+
+export class SVGElementCreator {
+    maker: SVGElementCreatorDOM;
+
+    constructor(maker: SVGElementCreatorDOM) { this.maker = maker; }
+
+    a() { return <SVGAElement>this.maker.createElementNS(svgNamespace, 'a'); }
+    defs() { return <SVGDefsElement>this.maker.createElementNS(svgNamespace, 'defs'); }
+    g() { return <SVGGElement>this.maker.createElementNS(svgNamespace, 'g'); }
+    linearGradient() { return <SVGLinearGradientElement>this.maker.createElementNS(svgNamespace, 'linearGradient'); }
+    path() { return <SVGPathElement>this.maker.createElementNS(svgNamespace, 'path'); }
+    rect() { return <SVGRectElement>this.maker.createElementNS(svgNamespace, 'rect'); }
+    stop() { return <SVGStopElement>this.maker.createElementNS(svgNamespace, 'stop'); }
+    svg() { return <SVGSVGElement>this.maker.createElementNS(svgNamespace, 'svg'); }
+    text() { return <SVGTextElement>this.maker.createElementNS(svgNamespace, 'text'); }
+    title() { return <SVGTitleElement>this.maker.createElementNS(svgNamespace, 'title'); }
+}
+
+export interface SVGElementCreatorDOM {
+    createElementNS(namespaceURI: string, qualifiedName: string): Element;
+}
 
 interface WeathermapNode {
     label: string;
@@ -288,23 +417,31 @@ interface WeathermapNode {
     y: number;
     width: number;
     height: number;
-    metricName: string|null;
-    linkParams: string;
+    metricName?: string|null;
+    linkParams?: string;
 }
 
 interface WeathermapEdge {
     node1: string;
     node2: string;
-    bendDirection: number;
-    bendMagnitude: number;
-    metricName: string;
-    metric2Name: string|null;
-    linkParams: string;
+    bendDirection?: number;
+    bendMagnitude?: number;
+    metricName?: string;
+    metric2Name?: string|null;
+    linkParams?: string;
 }
 
 interface LinkSettings {
     node: ObjectLinkSettings;
     edge: ObjectLinkSettings;
+}
+
+export interface LabelToNodeMap {
+    [nodeLabel: string]: WeathermapNode;
+}
+
+export interface MetricValueMap {
+    [metricName: string]: number;
 }
 
 export interface ObjectLinkSettings {

@@ -1,8 +1,8 @@
 System.register(["./constants", "./geometry", "./gradients", "./legend"], function (exports_1, context_1) {
     "use strict";
-    var constants_1, geometry_1, gradients_1, legend_1;
+    var constants_1, geometry_1, gradients_1, legend_1, WeathermapRendererState, SVGElementCreator;
     var __moduleName = context_1 && context_1.id;
-    function renderWeathermapInto(container, config, linkResolver) {
+    function renderWeathermapInto(elementCreator, container, config, currentValues, linkResolver) {
         var sortedStops = config.gradient.stops
             .slice()
             .sort(function (l, r) { return l.position - r.position; });
@@ -10,81 +10,95 @@ System.register(["./constants", "./geometry", "./gradients", "./legend"], functi
             type: config.gradient.type,
             stops: sortedStops
         };
-        var svg = document.createElementNS(constants_1.svgNamespace, 'svg');
-        svg.style.width = config.canvasSize.width + "px";
-        svg.style.height = config.canvasSize.height + "px";
-        container.appendChild(svg);
-        var defs = document.createElementNS(constants_1.svgNamespace, 'defs');
-        svg.appendChild(defs);
-        var legendGroup = document.createElementNS(constants_1.svgNamespace, 'g');
-        legendGroup.classList.add('legend');
-        svg.appendChild(legendGroup);
-        var edgeGroup = document.createElementNS(constants_1.svgNamespace, 'g');
-        edgeGroup.classList.add('edges');
-        svg.appendChild(edgeGroup);
-        var nodeGroup = document.createElementNS(constants_1.svgNamespace, 'g');
-        nodeGroup.classList.add('nodes');
-        svg.appendChild(nodeGroup);
-        var edgeLinkUriBase;
-        var nodeLinkUriBase;
+        var state = new WeathermapRendererState(elementCreator, config, sortedGradient, currentValues);
+        initializeSVG(state, container);
         if (linkResolver) {
-            nodeLinkUriBase = linkResolver(config.link.node);
-            edgeLinkUriBase = linkResolver(config.link.edge);
+            state.nodeLinkUriBase = linkResolver(config.link.node);
+            state.edgeLinkUriBase = linkResolver(config.link.edge);
         }
-        var nodeLabelToNode = placeNodes(config, nodeGroup, nodeLinkUriBase, sortedGradient);
-        placeEdges(config, edgeGroup, edgeLinkUriBase, sortedGradient, nodeLabelToNode);
-        legend_1.placeLegend(config.legend, sortedGradient, legendGroup, defs);
+        placeNodes(state);
+        placeEdges(state);
+        legend_1.placeLegend(state.make, config.legend, state.legendGroup, state.defs, sortedGradient);
     }
     exports_1("renderWeathermapInto", renderWeathermapInto);
-    function placeNodes(config, nodeGroup, nodeLinkUriBase, sortedGradient) {
-        var nodeLabelToNode = {};
-        for (var _i = 0, _a = config.weathermapNodes; _i < _a.length; _i++) {
+    function initializeSVG(state, container) {
+        var svg = state.make.svg();
+        modifyStyle(svg, {
+            'width': state.config.canvasSize.width,
+            'height': state.config.canvasSize.height,
+        });
+        container.appendChild(svg);
+        state.defs = state.make.defs();
+        svg.appendChild(state.defs);
+        state.legendGroup = state.make.g();
+        state.legendGroup.setAttribute('class', 'legend');
+        svg.appendChild(state.legendGroup);
+        state.edgeGroup = state.make.g();
+        state.edgeGroup.setAttribute('class', 'edges');
+        svg.appendChild(state.edgeGroup);
+        state.nodeGroup = state.make.g();
+        state.nodeGroup.setAttribute('class', 'nodes');
+        svg.appendChild(state.nodeGroup);
+    }
+    function placeNodes(state) {
+        for (var _i = 0, _a = state.config.weathermapNodes; _i < _a.length; _i++) {
             var node = _a[_i];
-            nodeLabelToNode[node.label] = node;
-            var singleNodeGroup = document.createElementNS(constants_1.svgNamespace, 'g');
-            maybeWrapIntoLink(nodeGroup, singleNodeGroup, nodeLinkUriBase, node.linkParams);
-            var rect = document.createElementNS(constants_1.svgNamespace, 'rect');
+            state.nodeLabelToNode[node.label] = node;
+            var singleNodeGroup = state.make.g();
+            maybeWrapIntoLink(state.make, state.nodeGroup, singleNodeGroup, state.nodeLinkUriBase, node.linkParams);
+            var rect = state.make.rect();
             singleNodeGroup.appendChild(rect);
             setRectangleDimensions(rect, node.x, node.y, node.width, node.height);
-            rect.style.strokeWidth = "1px";
-            rect.style.stroke = "gray";
-            var text = document.createElementNS(constants_1.svgNamespace, 'text');
+            modifyStyle(rect, {
+                'stroke': 'gray',
+                'stroke-width': '1px',
+            });
+            var text = state.make.text();
             singleNodeGroup.appendChild(text);
-            text.setAttribute('x', "" + ((+node.x) + (+config.textOffsets.left)));
-            text.setAttribute('y', "" + ((+node.y) + (+node.height) - config.textOffsets.bottom));
-            if (config.showNumbers) {
-                var value = (node.metricName in this.currentValues) ? this.currentValues[node.metricName] : '?';
+            text.setAttribute('x', "" + ((+node.x) + (+state.config.textOffsets.left)));
+            text.setAttribute('y', "" + ((+node.y) + (+node.height) - state.config.textOffsets.bottom));
+            if (state.config.showNumbers) {
+                var value = (node.metricName in state.currentValues)
+                    ? state.currentValues[node.metricName]
+                    : '?';
                 text.textContent = node.label + " (" + value + ")";
             }
             else {
                 text.textContent = node.label;
             }
             if (!node.metricName) {
-                rect.style.fill = "silver";
-                rect.style.strokeDasharray = config.unmeasuredDashArray;
+                modifyStyle(rect, {
+                    'fill': 'silver',
+                    'stroke-dasharray': state.config.unmeasuredDashArray,
+                });
             }
-            else if (node.metricName in this.currentValues) {
-                var currentValue = this.currentValues[node.metricName];
-                rect.style.fill = gradients_1.gradientColorForValue(sortedGradient, 'fillColor', currentValue);
+            else if (node.metricName in state.currentValues) {
+                var currentValue = state.currentValues[node.metricName];
+                modifyStyle(rect, {
+                    'fill': gradients_1.gradientColorForValue(state.sortedGradient, 'fillColor', currentValue),
+                });
             }
             else {
-                text.style.fill = "white";
-                rect.style.fill = "black";
-                rect.style.strokeDasharray = config.noValueDashArray;
+                modifyStyle(text, {
+                    'fill': 'white',
+                });
+                modifyStyle(rect, {
+                    'fill': 'black',
+                    'stroke-dasharray': state.config.noValueDashArray,
+                });
             }
         }
-        return nodeLabelToNode;
     }
-    function placeEdges(config, edgeGroup, edgeLinkUriBase, sortedGradient, nodeLabelToNode) {
-        for (var _i = 0, _a = config.weathermapEdges; _i < _a.length; _i++) {
+    function placeEdges(state) {
+        for (var _i = 0, _a = state.config.weathermapEdges; _i < _a.length; _i++) {
             var edge = _a[_i];
-            var node1 = nodeLabelToNode[edge.node1];
-            var node2 = nodeLabelToNode[edge.node2];
+            var node1 = state.nodeLabelToNode[edge.node1];
+            var node2 = state.nodeLabelToNode[edge.node2];
             if (!node1 || !node2) {
                 continue;
             }
-            var singleEdgeGroup = document.createElementNS(constants_1.svgNamespace, 'g');
-            maybeWrapIntoLink(edgeGroup, singleEdgeGroup, edgeLinkUriBase, edge.linkParams);
+            var singleEdgeGroup = state.make.g();
+            maybeWrapIntoLink(state.make, state.edgeGroup, singleEdgeGroup, state.edgeLinkUriBase, edge.linkParams);
             var n1Center = {
                 x: (+node1.x) + ((+node1.width) / 2),
                 y: (+node1.y) + ((+node1.height) / 2)
@@ -113,51 +127,67 @@ System.register(["./constants", "./geometry", "./gradients", "./legend"], functi
             }
             if (edge.metric2Name) {
                 var _b = geometry_1.halveCubicBezier(n1Center, control1, control2, n2Center), _point1 = _b[0], point1COut = _b[1], point2CIn = _b[2], point2 = _b[3], point2COut = _b[4], point3CIn = _b[5], _point2 = _b[6];
-                var therePath = document.createElementNS(constants_1.svgNamespace, 'path');
+                var therePath = state.make.path();
                 singleEdgeGroup.appendChild(therePath);
                 therePath.setAttribute('d', "M " + n1Center.x + "," + n1Center.y + " " +
                     ("C " + point1COut.x + "," + point1COut.y + "," + point2CIn.x + "," + point2CIn.y + "," + point2.x + "," + point2.y));
-                therePath.style.strokeWidth = "" + config.strokeWidth;
-                therePath.style.fill = 'none';
-                var thereTitle = document.createElementNS(constants_1.svgNamespace, 'title');
+                modifyStyle(therePath, {
+                    'stroke-width': state.config.strokeWidth,
+                    'fill': 'none',
+                });
+                var thereTitle = state.make.title();
                 therePath.appendChild(thereTitle);
                 thereTitle.textContent = edge.node1 + " \u2192 " + edge.node2;
-                var backPath = document.createElementNS(constants_1.svgNamespace, 'path');
+                var backPath = state.make.path();
                 singleEdgeGroup.appendChild(backPath);
                 backPath.setAttribute('d', "M " + point2.x + "," + point2.y + " " +
                     ("C " + point2COut.x + "," + point2COut.y + "," + point3CIn.x + "," + point3CIn.y + "," + n2Center.x + "," + n2Center.y));
-                backPath.style.strokeWidth = "" + config.strokeWidth;
-                backPath.style.fill = 'none';
-                var backTitle = document.createElementNS(constants_1.svgNamespace, 'title');
+                modifyStyle(backPath, {
+                    'stroke-width': state.config.strokeWidth,
+                    'fill': 'none',
+                });
+                var backTitle = state.make.title();
                 backPath.appendChild(backTitle);
                 backTitle.textContent = edge.node2 + " \u2192 " + edge.node1;
-                if (edge.metricName in this.currentValues) {
-                    var currentValue = this.currentValues[edge.metricName];
-                    therePath.style.stroke = gradients_1.gradientColorForValue(sortedGradient, 'strokeColor', currentValue);
+                if (edge.metricName in state.currentValues) {
+                    var currentValue = state.currentValues[edge.metricName];
+                    modifyStyle(therePath, {
+                        'stroke': gradients_1.gradientColorForValue(state.sortedGradient, 'strokeColor', currentValue),
+                    });
                 }
                 else {
-                    therePath.style.stroke = 'black';
-                    therePath.style.strokeDasharray = config.noValueDashArray;
+                    modifyStyle(therePath, {
+                        'stroke': 'black',
+                        'stroke-dasharray': state.config.noValueDashArray,
+                    });
                 }
-                if (edge.metric2Name in this.currentValues) {
-                    var currentValue = this.currentValues[edge.metric2Name];
-                    backPath.style.stroke = gradients_1.gradientColorForValue(sortedGradient, 'strokeColor', currentValue);
+                if (edge.metric2Name in state.currentValues) {
+                    var currentValue = state.currentValues[edge.metric2Name];
+                    modifyStyle(backPath, {
+                        'stroke': gradients_1.gradientColorForValue(state.sortedGradient, 'strokeColor', currentValue),
+                    });
                 }
                 else {
-                    backPath.style.stroke = 'black';
-                    backPath.style.strokeDasharray = config.noValueDashArray;
+                    modifyStyle(backPath, {
+                        'stroke': 'black',
+                        'stroke-dasharray': state.config.noValueDashArray,
+                    });
                 }
-                if (config.showNumbers) {
+                if (state.config.showNumbers) {
                     var quarterPoint = geometry_1.halveCubicBezier(n1Center, point1COut, point2CIn, point2)[3];
                     var threeQuarterPoint = geometry_1.halveCubicBezier(point2, point2COut, point3CIn, n2Center)[3];
-                    var valueString = (edge.metricName in this.currentValues) ? this.currentValues[edge.metricName].toFixed(2) : '?';
-                    var text1 = document.createElementNS(constants_1.svgNamespace, 'text');
+                    var valueString = (edge.metricName in state.currentValues)
+                        ? state.currentValues[edge.metricName].toFixed(2)
+                        : '?';
+                    var text1 = state.make.text();
                     singleEdgeGroup.appendChild(text1);
                     text1.setAttribute('x', "" + quarterPoint.x);
                     text1.setAttribute('y', "" + quarterPoint.y);
                     text1.textContent = valueString;
-                    var value2String = (edge.metric2Name in this.currentValues) ? this.currentValues[edge.metric2Name].toFixed(2) : '?';
-                    var text2 = document.createElementNS(constants_1.svgNamespace, 'text');
+                    var value2String = (edge.metric2Name in state.currentValues)
+                        ? state.currentValues[edge.metric2Name].toFixed(2)
+                        : '?';
+                    var text2 = state.make.text();
                     singleEdgeGroup.appendChild(text2);
                     text2.setAttribute('x', "" + threeQuarterPoint.x);
                     text2.setAttribute('y', "" + threeQuarterPoint.y);
@@ -165,7 +195,7 @@ System.register(["./constants", "./geometry", "./gradients", "./legend"], functi
                 }
             }
             else {
-                var edgePath = document.createElementNS(constants_1.svgNamespace, 'path');
+                var edgePath = state.make.path();
                 singleEdgeGroup.appendChild(edgePath);
                 if (control1 !== null && control2 !== null) {
                     edgePath.setAttribute('d', "M " + n1Center.x + "," + n1Center.y + " " +
@@ -175,23 +205,31 @@ System.register(["./constants", "./geometry", "./gradients", "./legend"], functi
                     edgePath.setAttribute('d', "M " + n1Center.x + "," + n1Center.y + " " +
                         ("L " + n2Center.x + "," + n2Center.y));
                 }
-                edgePath.style.strokeWidth = "" + config.strokeWidth;
-                edgePath.style.fill = 'none';
-                var edgeTitle = document.createElementNS(constants_1.svgNamespace, 'title');
+                modifyStyle(edgePath, {
+                    'stroke-width': state.config.strokeWidth,
+                    'fill': 'none',
+                });
+                var edgeTitle = state.make.title();
                 edgePath.appendChild(edgeTitle);
                 edgeTitle.textContent = edge.node2 + " \u2194 " + edge.node1;
-                if (edge.metricName in this.currentValues) {
-                    var currentValue = this.currentValues[edge.metricName];
-                    edgePath.style.stroke = gradients_1.gradientColorForValue(sortedGradient, 'strokeColor', currentValue);
+                if (edge.metricName in state.currentValues) {
+                    var currentValue = state.currentValues[edge.metricName];
+                    modifyStyle(edgePath, {
+                        'stroke': gradients_1.gradientColorForValue(state.sortedGradient, 'strokeColor', currentValue),
+                    });
                 }
                 else {
-                    edgePath.style.stroke = 'black';
-                    edgePath.style.strokeDasharray = config.noValueDashArray;
+                    modifyStyle(edgePath, {
+                        'stroke': 'black',
+                        'stroke-dasharray': state.config.noValueDashArray,
+                    });
                 }
-                if (config.showNumbers) {
+                if (state.config.showNumbers) {
                     var midpoint = geometry_1.halveCubicBezier(n1Center, control1, control2, n2Center)[3];
-                    var valueString = (edge.metricName in this.currentValues) ? this.currentValues[edge.metricName].toFixed(2) : '?';
-                    var text = document.createElementNS(constants_1.svgNamespace, 'text');
+                    var valueString = (edge.metricName in state.currentValues)
+                        ? state.currentValues[edge.metricName].toFixed(2)
+                        : '?';
+                    var text = state.make.text();
                     singleEdgeGroup.appendChild(text);
                     text.setAttribute('x', "" + midpoint.x);
                     text.setAttribute('y', "" + midpoint.y);
@@ -200,7 +238,7 @@ System.register(["./constants", "./geometry", "./gradients", "./legend"], functi
             }
         }
     }
-    function maybeWrapIntoLink(upperGroup, singleObjectGroup, linkUriBase, objLinkParams) {
+    function maybeWrapIntoLink(svgMake, upperGroup, singleObjectGroup, linkUriBase, objLinkParams) {
         if (linkUriBase) {
             var objLinkUri = linkUriBase;
             if (objLinkParams) {
@@ -209,7 +247,7 @@ System.register(["./constants", "./geometry", "./gradients", "./legend"], functi
                     : '&';
                 objLinkUri += objLinkParams;
             }
-            var aElement = document.createElementNS(constants_1.svgNamespace, 'a');
+            var aElement = svgMake.a();
             upperGroup.appendChild(aElement);
             aElement.setAttributeNS(constants_1.xlinkNamespace, 'href', objLinkUri);
             aElement.appendChild(singleObjectGroup);
@@ -223,6 +261,40 @@ System.register(["./constants", "./geometry", "./gradients", "./legend"], functi
         element.setAttribute('y', "" + y);
         element.setAttribute('width', "" + width);
         element.setAttribute('height', "" + height);
+    }
+    exports_1("setRectangleDimensions", setRectangleDimensions);
+    function modifyStyle(element, newValues) {
+        var assembledStyle = {};
+        if (element.hasAttribute('style')) {
+            for (var _i = 0, _a = element.getAttribute('style').split(';'); _i < _a.length; _i++) {
+                var chunk = _a[_i];
+                var index = chunk.indexOf(':');
+                if (index == -1) {
+                    continue;
+                }
+                var key = chunk.substr(0, index);
+                var value = chunk.substr(index + 1);
+                assembledStyle[key] = value;
+            }
+        }
+        for (var key in newValues) {
+            if (newValues.hasOwnProperty(key)) {
+                if (newValues[key] === null) {
+                    delete assembledStyle[key];
+                }
+                else {
+                    assembledStyle[key] = newValues[key];
+                }
+            }
+        }
+        var keyValuePairs = [];
+        for (var key in assembledStyle) {
+            if (assembledStyle.hasOwnProperty(key)) {
+                keyValuePairs.push(key + ":" + assembledStyle[key]);
+            }
+        }
+        var keyValueString = keyValuePairs.join(';');
+        element.setAttribute('style', keyValueString);
     }
     return {
         setters: [
@@ -240,6 +312,40 @@ System.register(["./constants", "./geometry", "./gradients", "./legend"], functi
             }
         ],
         execute: function () {
+            WeathermapRendererState = (function () {
+                function WeathermapRendererState(domCreator, config, sortedGradient, currentValues) {
+                    this.make = new SVGElementCreator(domCreator);
+                    this.config = config;
+                    this.sortedGradient = sortedGradient;
+                    this.currentValues = currentValues;
+                    this.nodeLabelToNode = {};
+                    this.nodeLinkUriBase = null;
+                    this.edgeLinkUriBase = null;
+                    this.defs = null;
+                    this.edgeGroup = null;
+                    this.nodeGroup = null;
+                    this.legendGroup = null;
+                }
+                return WeathermapRendererState;
+            }());
+            exports_1("WeathermapRendererState", WeathermapRendererState);
+            SVGElementCreator = (function () {
+                function SVGElementCreator(maker) {
+                    this.maker = maker;
+                }
+                SVGElementCreator.prototype.a = function () { return this.maker.createElementNS(constants_1.svgNamespace, 'a'); };
+                SVGElementCreator.prototype.defs = function () { return this.maker.createElementNS(constants_1.svgNamespace, 'defs'); };
+                SVGElementCreator.prototype.g = function () { return this.maker.createElementNS(constants_1.svgNamespace, 'g'); };
+                SVGElementCreator.prototype.linearGradient = function () { return this.maker.createElementNS(constants_1.svgNamespace, 'linearGradient'); };
+                SVGElementCreator.prototype.path = function () { return this.maker.createElementNS(constants_1.svgNamespace, 'path'); };
+                SVGElementCreator.prototype.rect = function () { return this.maker.createElementNS(constants_1.svgNamespace, 'rect'); };
+                SVGElementCreator.prototype.stop = function () { return this.maker.createElementNS(constants_1.svgNamespace, 'stop'); };
+                SVGElementCreator.prototype.svg = function () { return this.maker.createElementNS(constants_1.svgNamespace, 'svg'); };
+                SVGElementCreator.prototype.text = function () { return this.maker.createElementNS(constants_1.svgNamespace, 'text'); };
+                SVGElementCreator.prototype.title = function () { return this.maker.createElementNS(constants_1.svgNamespace, 'title'); };
+                return SVGElementCreator;
+            }());
+            exports_1("SVGElementCreator", SVGElementCreator);
         }
     };
 });

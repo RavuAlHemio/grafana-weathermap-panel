@@ -172,7 +172,7 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
         }
 
         // do it
-        renderWeathermapInto(elem, this.panel);
+        renderWeathermapInto(document, elem, this.panel, this.currentValues, WeathermapCtrl.resolveLink);
     }
 
     static resolveLink(objLink: ObjectLinkSettings): string|null {
@@ -180,15 +180,15 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
             return objLink.absoluteUri;
         } else if (objLink.type == 'dashboard' && objLink.dashUri) {
             let url = new URL(window.location.href);
-            let oldParams = this.getSearchParams(url);
+            let oldParams = getSearchParams(url);
             let params = [];
 
             if (oldParams['from']) {
-                params.push(`from=${escape(oldParams['from'])}`);
+                params.push(`from=${encodeURIComponent(oldParams['from'])}`);
             }
 
             if (oldParams['to']) {
-                params.push(`to=${escape(oldParams['to'])}`);
+                params.push(`to=${encodeURIComponent(oldParams['to'])}`);
             }
 
             let paramSuffix = '';
@@ -199,28 +199,28 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
         }
         return null;
     }
-
-    static getSearchParams(url: URL): object {
-        let search = url.search;
-        while (search.startsWith('?')) {
-            search = search.substr(1);
-        }
-
-        let params = {};
-        if (search.length > 0) {
-            let pairs = search.split('&');
-            for (let pair of pairs) {
-                let keyValueMatch = pair.match(/^([^=]*)(?:=(.*))?$/);
-                let key = keyValueMatch[1];
-                let value = keyValueMatch[2];
-                if (key !== undefined && value !== undefined) {
-                    params[unescape(key)] = unescape(value);
-                }
-            }
-        }
-
-        return params;
-    }
 }
 
 WeathermapCtrl.templateUrl = 'module.html';
+
+function getSearchParams(url: URL): object {
+    let search = url.search;
+    while (search.startsWith('?')) {
+        search = search.substr(1);
+    }
+
+    let params = {};
+    if (search.length > 0) {
+        let pairs = search.split('&');
+        for (let pair of pairs) {
+            let keyValueMatch = pair.match(/^([^=]*)(?:=(.*))?$/);
+            let key = keyValueMatch[1];
+            let value = keyValueMatch[2];
+            if (key !== undefined && value !== undefined) {
+                params[decodeURIComponent(key)] = decodeURIComponent(value);
+            }
+        }
+    }
+
+    return params;
+}

@@ -1,15 +1,15 @@
-System.register(["./constants"], function (exports_1, context_1) {
+System.register(["./weathermap"], function (exports_1, context_1) {
     "use strict";
-    var constants_1, legendLength, legendWidth;
+    var weathermap_1, legendLength, legendWidth;
     var __moduleName = context_1 && context_1.id;
-    function placeLegend(settings, gradient, container, defs) {
+    function placeLegend(svgMake, settings, container, defs, gradient) {
         var transform = '';
         if (settings.type == '') {
             return;
         }
-        var strokeLegendContainer = document.createElementNS(constants_1.svgNamespace, 'g');
+        var strokeLegendContainer = svgMake.g();
         container.appendChild(strokeLegendContainer);
-        strokeLegendContainer.classList.add('stroke-legend');
+        strokeLegendContainer.setAttribute('class', 'stroke-legend');
         if (settings.type[0] == 'h') {
             transform = "translate(" + settings.x + " " + settings.y + ") scale(" + settings.length / legendLength + " " + settings.width / legendWidth + ")";
         }
@@ -17,10 +17,10 @@ System.register(["./constants"], function (exports_1, context_1) {
             transform = "translate(" + settings.x + " " + (settings.y + settings.length) + ") rotate(-90) scale(" + settings.length / legendLength + " " + settings.width / legendWidth + ")";
         }
         strokeLegendContainer.setAttribute('transform', transform);
-        drawLegend(gradient, 'strokeColor', strokeLegendContainer, defs);
-        var fillLegendContainer = document.createElementNS(constants_1.svgNamespace, 'g');
+        drawLegend(svgMake, gradient, 'strokeColor', strokeLegendContainer, defs);
+        var fillLegendContainer = svgMake.g();
         container.appendChild(fillLegendContainer);
-        fillLegendContainer.classList.add('fill-legend');
+        strokeLegendContainer.setAttribute('class', 'fill-legend');
         if (settings.type[0] == 'h') {
             transform = "translate(" + settings.x + " " + (settings.y + settings.width) + ") scale(" + settings.length / legendLength + " " + settings.width / legendWidth + ")";
         }
@@ -28,51 +28,42 @@ System.register(["./constants"], function (exports_1, context_1) {
             transform = "translate(" + (settings.x + settings.width) + " " + (settings.y + settings.length) + ") rotate(-90) scale(" + settings.length / legendLength + " " + settings.width / legendWidth + ")";
         }
         fillLegendContainer.setAttribute('transform', transform);
-        drawLegend(gradient, 'fillColor', fillLegendContainer, defs);
-        placeLabels(settings, gradient, container);
+        drawLegend(svgMake, gradient, 'fillColor', fillLegendContainer, defs);
+        placeLabels(svgMake, settings, gradient, container);
     }
     exports_1("placeLegend", placeLegend);
-    function drawLegend(gradient, colorType, container, defs) {
+    function drawLegend(svgMake, gradient, colorType, container, defs) {
         if (gradient.type == 'linear') {
             var legendGradientName = "WeathermapLegendGradient-" + colorType;
-            var svgGrad = document.createElementNS(constants_1.svgNamespace, "linearGradient");
+            var svgGrad = svgMake.linearGradient();
             defs.appendChild(svgGrad);
-            svgGrad.id = legendGradientName;
+            svgGrad.setAttribute('id', legendGradientName);
             for (var _i = 0, _a = gradient.stops; _i < _a.length; _i++) {
                 var stop_1 = _a[_i];
-                var svgStop = document.createElementNS(constants_1.svgNamespace, "stop");
+                var svgStop = svgMake.stop();
                 svgGrad.appendChild(svgStop);
                 svgStop.setAttribute('offset', stop_1.position + "%");
                 svgStop.setAttribute('stop-color', "" + stop_1[colorType]);
             }
-            var svgRect = document.createElementNS(constants_1.svgNamespace, "rect");
+            var svgRect = svgMake.rect();
             container.appendChild(svgRect);
-            svgRect.setAttribute('x', '0');
-            svgRect.setAttribute('y', '0');
-            svgRect.setAttribute('width', "" + legendLength);
-            svgRect.setAttribute('height', "" + legendWidth);
-            svgRect.style.fill = "url(#" + legendGradientName + ")";
+            weathermap_1.setRectangleDimensions(svgRect, 0, 0, legendLength, legendWidth);
+            svgRect.setAttribute('style', "fill:url(#" + legendGradientName + ")");
         }
         else if (gradient.type == 'steps') {
             for (var i = 1; i < gradient.stops.length; ++i) {
-                var rect_1 = document.createElementNS(constants_1.svgNamespace, "rect");
+                var rect_1 = svgMake.rect();
                 container.appendChild(rect_1);
-                rect_1.setAttribute('x', "" + gradient.stops[i - 1].position);
-                rect_1.setAttribute('y', '0');
-                rect_1.setAttribute('width', "" + (gradient.stops[i].position - gradient.stops[i - 1].position));
-                rect_1.setAttribute('height', "" + legendWidth);
-                rect_1.style.fill = "" + gradient.stops[i - 1][colorType];
+                weathermap_1.setRectangleDimensions(rect_1, gradient.stops[i - 1].position, 0, gradient.stops[i].position - gradient.stops[i - 1].position, legendWidth);
+                rect_1.setAttribute('style', "fill:" + gradient.stops[i - 1][colorType]);
             }
-            var rect = document.createElementNS(constants_1.svgNamespace, "rect");
+            var rect = svgMake.rect();
             container.appendChild(rect);
-            rect.setAttribute('x', "" + gradient.stops[gradient.stops.length - 1].position);
-            rect.setAttribute('y', '0');
-            rect.setAttribute('width', "" + (100 - gradient.stops[gradient.stops.length - 1].position));
-            rect.setAttribute('height', "" + legendWidth);
-            rect.style.fill = "" + gradient.stops[gradient.stops.length - 1][colorType];
+            weathermap_1.setRectangleDimensions(rect, gradient.stops[gradient.stops.length - 1].position, 0, 100 - gradient.stops[gradient.stops.length - 1].position, legendWidth);
+            rect.setAttribute('style', "fill:" + gradient.stops[gradient.stops.length - 1][colorType]);
         }
     }
-    function placeLabels(settings, gradient, container) {
+    function placeLabels(svgMake, settings, gradient, container) {
         if (settings.type == '' || settings.type[1] == 'n') {
             return;
         }
@@ -101,20 +92,20 @@ System.register(["./constants"], function (exports_1, context_1) {
                     xCoord += 2 * settings.width;
                 }
             }
-            var label = document.createElementNS(constants_1.svgNamespace, 'text');
+            var label = svgMake.text();
             container.appendChild(label);
-            label.classList.add('legend-label');
+            label.setAttribute('class', 'legend-label');
             label.setAttribute('x', "" + xCoord);
             label.setAttribute('y', "" + yCoord);
             label.setAttribute('dy', dy + "em");
-            label.style.textAnchor = textAnchor;
+            label.setAttribute('style', "text-anchor:" + textAnchor);
             label.textContent = "" + stop_2.position;
         }
     }
     return {
         setters: [
-            function (constants_1_1) {
-                constants_1 = constants_1_1;
+            function (weathermap_1_1) {
+                weathermap_1 = weathermap_1_1;
             }
         ],
         execute: function () {
