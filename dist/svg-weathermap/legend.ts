@@ -94,6 +94,10 @@ function placeLabels(svgMake: SVGElementCreator, settings: LegendSettings, gradi
     }
 
     for (let stop of gradient.stops) {
+        if (!stop.showLegendLabel) {
+            continue;
+        }
+
         let xCoord = settings.x;
         let yCoord = settings.y;
         let dy = 0.0;

@@ -70,6 +70,9 @@ function placeLabels(svgMake, settings, gradient, container) {
     }
     for (var _i = 0, _a = gradient.stops; _i < _a.length; _i++) {
         var stop_2 = _a[_i];
+        if (!stop_2.showLegendLabel) {
+            continue;
+        }
         var xCoord = settings.x;
         var yCoord = settings.y;
         var dy = 0.0;

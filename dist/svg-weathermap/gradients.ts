@@ -89,6 +89,7 @@ export interface GradientStop {
     position: number;
     strokeColor: string;
     fillColor: string;
+    showLegendLabel: boolean;
 }
 
 export interface Gradient {
