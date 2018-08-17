@@ -36,8 +36,8 @@ function initializeSVG(state: WeathermapRendererState, container: Node): void {
     // add SVG
     let svg: SVGSVGElement = state.make.svg();
     modifyStyle(svg, {
-        'width': state.config.canvasSize.width,
-        'height': state.config.canvasSize.height,
+        'width': `${state.config.canvasSize.width}px`,
+        'height': `${state.config.canvasSize.height}px`,
     });
     container.appendChild(svg);
 

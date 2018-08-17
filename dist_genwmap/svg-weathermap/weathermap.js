@@ -26,8 +26,8 @@ exports.renderWeathermapInto = renderWeathermapInto;
 function initializeSVG(state, container) {
     var svg = state.make.svg();
     modifyStyle(svg, {
-        'width': state.config.canvasSize.width,
-        'height': state.config.canvasSize.height,
+        'width': state.config.canvasSize.width + "px",
+        'height': state.config.canvasSize.height + "px",
     });
     container.appendChild(svg);
     state.defs = state.make.defs();
