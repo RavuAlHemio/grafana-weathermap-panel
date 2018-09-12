@@ -20,6 +20,7 @@ function renderWeathermapInto(elementCreator, container, config, currentValues, 
     }
     placeNodes(state);
     placeEdges(state);
+    placeLabels(state);
     legend_1.placeLegend(state.make, config.legend, state.legendGroup, state.defs, sortedGradient);
 }
 exports.renderWeathermapInto = renderWeathermapInto;
@@ -41,6 +42,9 @@ function initializeSVG(state, container) {
     state.nodeGroup = state.make.g();
     state.nodeGroup.setAttribute('class', 'nodes');
     svg.appendChild(state.nodeGroup);
+    state.labelGroup = state.make.g();
+    state.labelGroup.setAttribute('class', 'labels');
+    svg.appendChild(state.labelGroup);
 }
 function placeNodes(state) {
     for (var _i = 0, _a = state.config.weathermapNodes; _i < _a.length; _i++) {
@@ -240,6 +244,18 @@ function placeEdges(state) {
         }
     }
 }
+function placeLabels(state) {
+    for (var _i = 0, _a = state.config.weathermapLabels; _i < _a.length; _i++) {
+        var label = _a[_i];
+        var singleLabelGroup = state.make.g();
+        state.labelGroup.appendChild(singleLabelGroup);
+        var text = state.make.text();
+        singleLabelGroup.appendChild(text);
+        text.setAttribute('x', "" + +label.x);
+        text.setAttribute('y', "" + +label.y);
+        text.textContent = label.label;
+    }
+}
 function maybeWrapIntoLink(svgMake, upperGroup, singleObjectGroup, linkUriBase, objLinkParams) {
     if (linkUriBase) {
         var objLinkUri = linkUriBase;
@@ -310,6 +326,7 @@ var WeathermapRendererState = (function () {
         this.defs = null;
         this.edgeGroup = null;
         this.nodeGroup = null;
+        this.labelGroup = null;
         this.legendGroup = null;
     }
     return WeathermapRendererState;

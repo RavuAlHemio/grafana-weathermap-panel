@@ -1,0 +1,23 @@
+<div class="gf-form-group">
+    <h5>Labels</h5>
+    <div class="gf-form-inline" ng-repeat="wmLabel in ctrl.panel.weathermapLabels">
+        <div class="gf-form width-15">
+            <label class="gf-form-label">Label</label>
+            <input type="text" ng-model="wmLabel.label" ng-blur="ctrl.refresh()" class="gf-form-input">
+        </div>
+        <div class="gf-form width-7">
+            <label class="gf-form-label">X</label>
+            <input type="number" ng-model="wmLabel.x" ng-blur="ctrl.refresh()" class="gf-form-input">
+        </div>
+        <div class="gf-form width-7">
+            <label class="gf-form-label">Y</label>
+            <input type="number" ng-model="wmLabel.y" ng-blur="ctrl.refresh()" class="gf-form-input">
+        </div>
+        <div class="gf-form">
+            <i class="fa fa-trash pointer" ng-click="ctrl.removeWeathermapLabel(wmLabel)"></i>
+        </div>
+    </div>
+    <button class="btn btn-inverse" ng-click="ctrl.addWeathermapLabel()">
+        <i class="fa fa-plus"></i>&nbsp;Add label
+    </button>
+</div>

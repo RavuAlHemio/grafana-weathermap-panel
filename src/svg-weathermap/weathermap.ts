@@ -29,6 +29,7 @@ export function renderWeathermapInto(
     // emplacement
     placeNodes(state);
     placeEdges(state);
+    placeLabels(state);
     placeLegend(state.make, config.legend, state.legendGroup, state.defs, sortedGradient);
 }
 
@@ -55,6 +56,10 @@ function initializeSVG(state: WeathermapRendererState, container: Node): void {
     state.nodeGroup = state.make.g();
     state.nodeGroup.setAttribute('class', 'nodes');
     svg.appendChild(state.nodeGroup);
+
+    state.labelGroup = state.make.g();
+    state.labelGroup.setAttribute('class', 'labels');
+    svg.appendChild(state.labelGroup);
 }
 
 function placeNodes(state: WeathermapRendererState): void {
@@ -290,6 +295,20 @@ function placeEdges(state: WeathermapRendererState): void {
     }
 }
 
+function placeLabels(state: WeathermapRendererState): void {
+    for (let label of state.config.weathermapLabels) {
+        let singleLabelGroup: SVGGElement = state.make.g();
+        state.labelGroup.appendChild(singleLabelGroup);
+
+        let text: SVGTextElement = state.make.text();
+        singleLabelGroup.appendChild(text);
+
+        text.setAttribute('x', `${+label.x}`);
+        text.setAttribute('y', `${+label.y}`);
+        text.textContent = label.label;
+    }
+}
+
 function maybeWrapIntoLink(
     svgMake: SVGElementCreator, upperGroup: SVGGElement, singleObjectGroup: SVGGElement, linkUriBase: string|null,
     objLinkParams: string|null
@@ -371,6 +390,7 @@ export class WeathermapRendererState {
     defs: SVGDefsElement|null;
     edgeGroup: SVGGElement|null;
     nodeGroup: SVGGElement|null;
+    labelGroup: SVGGElement|null;
     legendGroup: SVGGElement|null;
 
     constructor(
@@ -386,6 +406,7 @@ export class WeathermapRendererState {
         this.defs = null;
         this.edgeGroup = null;
         this.nodeGroup = null;
+        this.labelGroup = null;
         this.legendGroup = null;
     }
 }
@@ -411,10 +432,13 @@ export interface SVGElementCreatorDOM {
     createElementNS(namespaceURI: string, qualifiedName: string): Element;
 }
 
-interface WeathermapNode {
+interface PositionableTextElement {
     label: string;
     x: number;
     y: number;
+}
+
+interface WeathermapNode extends PositionableTextElement {
     width: number;
     height: number;
     metricName?: string|null;
@@ -429,6 +453,9 @@ interface WeathermapEdge {
     metricName?: string;
     metric2Name?: string|null;
     linkParams?: string;
+}
+
+interface WeathermapLabel extends PositionableTextElement {
 }
 
 interface LinkSettings {
@@ -454,6 +481,7 @@ export interface ObjectLinkSettings {
 export interface WeathermapConfig {
     weathermapEdges: WeathermapEdge[];
     weathermapNodes: WeathermapNode[];
+    weathermapLabels: WeathermapLabel[];
     canvasSize: { width: number; height: number; };
     textOffsets: { left: number; bottom: number; };
     showNumbers: boolean;

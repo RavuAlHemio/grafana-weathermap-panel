@@ -21,6 +21,7 @@ var time_series2_1 = require("app/core/time_series2");
 var panelDefaults = {
     weathermapNodes: [],
     weathermapEdges: [],
+    weathermapLabels: [],
     canvasSize: {
         width: 800,
         height: 600
@@ -83,6 +84,7 @@ var WeathermapCtrl = (function (_super) {
         this.addEditorTab('Options', properties_1.editorPath, 2);
         this.addEditorTab('Nodes', properties_1.nodeEditorPath, 3);
         this.addEditorTab('Edges', properties_1.edgeEditorPath, 4);
+        this.addEditorTab('Labels', properties_1.labelEditorPath, 5);
     };
     WeathermapCtrl.prototype.onDataReceived = function (dataList) {
         this.currentSeries = dataList.map(this.seriesHandler.bind(this));
@@ -120,6 +122,13 @@ var WeathermapCtrl = (function (_super) {
     };
     WeathermapCtrl.prototype.removeWeathermapEdge = function (edge) {
         this.panel.weathermapEdges = lodash_1.default.without(this.panel.weathermapEdges, edge);
+        this.refresh();
+    };
+    WeathermapCtrl.prototype.addWeathermapLabel = function (label) {
+        this.panel.weathermapLabels.push(label || {});
+    };
+    WeathermapCtrl.prototype.removeWeathermapLabel = function (label) {
+        this.panel.weathermapLabels = lodash_1.default.without(this.panel.weathermapLabels, label);
         this.refresh();
     };
     WeathermapCtrl.prototype.addGradientStop = function (stop) {
