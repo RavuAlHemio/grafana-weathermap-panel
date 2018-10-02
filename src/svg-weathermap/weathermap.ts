@@ -36,14 +36,13 @@ export function renderWeathermapInto(
 function initializeSVG(state: WeathermapRendererState, container: Node, addViewBox: boolean = false): void {
     // add SVG
     let svg: SVGSVGElement = state.make.svg();
-    let newStyle = {
+    modifyStyle(svg, {
         'width': `${state.config.canvasSize.width}px`,
         'height': `${state.config.canvasSize.height}px`,
-    };
+    });
     if (addViewBox) {
-        newStyle['viewBox'] = `0 0 ${state.config.canvasSize.width} ${state.config.canvasSize.height}`;
+        svg.setAttribute('viewBox', `0 0 ${state.config.canvasSize.width} ${state.config.canvasSize.height}`);
     }
-    modifyStyle(svg, newStyle);
     container.appendChild(svg);
 
     state.defs = state.make.defs();
