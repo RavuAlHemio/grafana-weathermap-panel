@@ -41,7 +41,7 @@ var fetcher_1 = require("./fetcher");
 var fs = require("fs");
 function main() {
     return __awaiter(this, void 0, void 0, function () {
-        var configString, config, weathermap, metrics, dataSources, lookbackInterval, metricValues, impl, doc, outputter, outputString;
+        var configString, config, weathermap, metrics, dataSources, lookbackInterval, metricValues, impl, doc, nullLinkResolver, addViewBox, outputter, outputString;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0: return [4, readFileAsync('genwmap.json')];
@@ -57,7 +57,9 @@ function main() {
                     metricValues = _a.sent();
                     impl = new xmldom_1.DOMImplementation();
                     doc = impl.createDocument(null, null, null);
-                    weathermap_1.renderWeathermapInto(doc, doc, weathermap, metricValues);
+                    nullLinkResolver = null;
+                    addViewBox = true;
+                    weathermap_1.renderWeathermapInto(doc, doc, weathermap, metricValues, nullLinkResolver, addViewBox);
                     outputter = new xmldom_1.XMLSerializer();
                     outputString = outputter.serializeToString(doc);
                     return [4, writeFileAsync('weathermap.svg', outputString, {})];

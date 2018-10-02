@@ -2,7 +2,8 @@ System.register(["./constants", "./geometry", "./gradients", "./legend"], functi
     "use strict";
     var constants_1, geometry_1, gradients_1, legend_1, WeathermapRendererState, SVGElementCreator;
     var __moduleName = context_1 && context_1.id;
-    function renderWeathermapInto(elementCreator, container, config, currentValues, linkResolver) {
+    function renderWeathermapInto(elementCreator, container, config, currentValues, linkResolver, addViewBox) {
+        if (addViewBox === void 0) { addViewBox = false; }
         var sortedStops = config.gradient.stops
             .slice()
             .sort(function (l, r) { return l.position - r.position; });
@@ -11,7 +12,7 @@ System.register(["./constants", "./geometry", "./gradients", "./legend"], functi
             stops: sortedStops
         };
         var state = new WeathermapRendererState(elementCreator, config, sortedGradient, currentValues);
-        initializeSVG(state, container);
+        initializeSVG(state, container, addViewBox);
         if (linkResolver) {
             state.nodeLinkUriBase = linkResolver(config.link.node);
             state.edgeLinkUriBase = linkResolver(config.link.edge);
@@ -22,12 +23,17 @@ System.register(["./constants", "./geometry", "./gradients", "./legend"], functi
         legend_1.placeLegend(state.make, config.legend, state.legendGroup, state.defs, sortedGradient);
     }
     exports_1("renderWeathermapInto", renderWeathermapInto);
-    function initializeSVG(state, container) {
+    function initializeSVG(state, container, addViewBox) {
+        if (addViewBox === void 0) { addViewBox = false; }
         var svg = state.make.svg();
-        modifyStyle(svg, {
+        var newStyle = {
             'width': state.config.canvasSize.width + "px",
             'height': state.config.canvasSize.height + "px",
-        });
+        };
+        if (addViewBox) {
+            newStyle['viewBox'] = "0 0 " + state.config.canvasSize.width + " " + state.config.canvasSize.height;
+        }
+        modifyStyle(svg, newStyle);
         container.appendChild(svg);
         state.defs = state.make.defs();
         svg.appendChild(state.defs);

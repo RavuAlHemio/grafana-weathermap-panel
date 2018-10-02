@@ -5,7 +5,7 @@ import { LegendSettings, placeLegend } from './legend';
 
 export function renderWeathermapInto(
     elementCreator: SVGElementCreatorDOM, container: Node, config: WeathermapConfig, currentValues: MetricValueMap,
-    linkResolver?: (ObjectLinkSettings) => string|null
+    linkResolver?: (ObjectLinkSettings) => string|null, addViewBox: boolean = false
 ): void {
     // sort gradient stops
     let sortedStops = config.gradient.stops
@@ -18,7 +18,7 @@ export function renderWeathermapInto(
 
     let state = new WeathermapRendererState(elementCreator, config, sortedGradient, currentValues);
 
-    initializeSVG(state, container);
+    initializeSVG(state, container, addViewBox);
 
     // resolve links
     if (linkResolver) {
@@ -33,13 +33,17 @@ export function renderWeathermapInto(
     placeLegend(state.make, config.legend, state.legendGroup, state.defs, sortedGradient);
 }
 
-function initializeSVG(state: WeathermapRendererState, container: Node): void {
+function initializeSVG(state: WeathermapRendererState, container: Node, addViewBox: boolean = false): void {
     // add SVG
     let svg: SVGSVGElement = state.make.svg();
-    modifyStyle(svg, {
+    let newStyle = {
         'width': `${state.config.canvasSize.width}px`,
         'height': `${state.config.canvasSize.height}px`,
-    });
+    };
+    if (addViewBox) {
+        newStyle['viewBox'] = `0 0 ${state.config.canvasSize.width} ${state.config.canvasSize.height}`;
+    }
+    modifyStyle(svg, newStyle);
     container.appendChild(svg);
 
     state.defs = state.make.defs();

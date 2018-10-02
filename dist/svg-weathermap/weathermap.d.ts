@@ -1,6 +1,6 @@
 import { Gradient } from './gradients';
 import { LegendSettings } from './legend';
-export declare function renderWeathermapInto(elementCreator: SVGElementCreatorDOM, container: Node, config: WeathermapConfig, currentValues: MetricValueMap, linkResolver?: (ObjectLinkSettings: any) => string | null): void;
+export declare function renderWeathermapInto(elementCreator: SVGElementCreatorDOM, container: Node, config: WeathermapConfig, currentValues: MetricValueMap, linkResolver?: (ObjectLinkSettings: any) => string | null, addViewBox?: boolean): void;
 export declare function setRectangleDimensions(element: SVGRectElement, x: number | string, y: number | string, width: number | string, height: number | string): void;
 export declare class WeathermapRendererState {
     make: SVGElementCreator;

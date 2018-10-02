@@ -4,7 +4,8 @@ var constants_1 = require("./constants");
 var geometry_1 = require("./geometry");
 var gradients_1 = require("./gradients");
 var legend_1 = require("./legend");
-function renderWeathermapInto(elementCreator, container, config, currentValues, linkResolver) {
+function renderWeathermapInto(elementCreator, container, config, currentValues, linkResolver, addViewBox) {
+    if (addViewBox === void 0) { addViewBox = false; }
     var sortedStops = config.gradient.stops
         .slice()
         .sort(function (l, r) { return l.position - r.position; });
@@ -13,7 +14,7 @@ function renderWeathermapInto(elementCreator, container, config, currentValues, 
         stops: sortedStops
     };
     var state = new WeathermapRendererState(elementCreator, config, sortedGradient, currentValues);
-    initializeSVG(state, container);
+    initializeSVG(state, container, addViewBox);
     if (linkResolver) {
         state.nodeLinkUriBase = linkResolver(config.link.node);
         state.edgeLinkUriBase = linkResolver(config.link.edge);
@@ -24,12 +25,17 @@ function renderWeathermapInto(elementCreator, container, config, currentValues, 
     legend_1.placeLegend(state.make, config.legend, state.legendGroup, state.defs, sortedGradient);
 }
 exports.renderWeathermapInto = renderWeathermapInto;
-function initializeSVG(state, container) {
+function initializeSVG(state, container, addViewBox) {
+    if (addViewBox === void 0) { addViewBox = false; }
     var svg = state.make.svg();
-    modifyStyle(svg, {
+    var newStyle = {
         'width': state.config.canvasSize.width + "px",
         'height': state.config.canvasSize.height + "px",
-    });
+    };
+    if (addViewBox) {
+        newStyle['viewBox'] = "0 0 " + state.config.canvasSize.width + " " + state.config.canvasSize.height;
+    }
+    modifyStyle(svg, newStyle);
     container.appendChild(svg);
     state.defs = state.make.defs();
     svg.appendChild(state.defs);

@@ -17,7 +17,9 @@ export async function main(): Promise<void> {
     let impl = new DOMImplementation();
     let doc = impl.createDocument(null, null, null);
 
-    renderWeathermapInto(doc, doc, weathermap, metricValues);
+    const nullLinkResolver = null;
+    const addViewBox = true;
+    renderWeathermapInto(doc, doc, weathermap, metricValues, nullLinkResolver, addViewBox);
 
     let outputter = new XMLSerializer();
     let outputString = outputter.serializeToString(doc);
