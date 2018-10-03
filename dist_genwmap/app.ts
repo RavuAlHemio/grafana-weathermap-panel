@@ -11,6 +11,7 @@ export async function main(): Promise<void> {
     let metrics: PrometheusMetric[] = config.weathermap.targets;
     let dataSources: { [index: string]: string; } = config.dataSources;
     let lookbackInterval: string = config.lookbackInterval;
+    let styleOverride: string = config.styleOverride || '';
 
     let metricValues = await fetchMetrics(new URL(dataSources[config.weathermap.datasource]), metrics, lookbackInterval);
 
@@ -19,7 +20,8 @@ export async function main(): Promise<void> {
 
     const nullLinkResolver = null;
     const addViewBox = true;
-    renderWeathermapInto(doc, doc, weathermap, metricValues, nullLinkResolver, addViewBox);
+    let svg: SVGSVGElement = renderWeathermapInto(doc, doc, weathermap, metricValues, nullLinkResolver, addViewBox);
+    svg.setAttribute('style', styleOverride);
 
     let outputter = new XMLSerializer();
     let outputString = outputter.serializeToString(doc);

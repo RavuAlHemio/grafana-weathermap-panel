@@ -21,33 +21,34 @@ System.register(["./constants", "./geometry", "./gradients", "./legend"], functi
         placeEdges(state);
         placeLabels(state);
         legend_1.placeLegend(state.make, config.legend, state.legendGroup, state.defs, sortedGradient);
+        return state.svg;
     }
     exports_1("renderWeathermapInto", renderWeathermapInto);
     function initializeSVG(state, container, addViewBox) {
         if (addViewBox === void 0) { addViewBox = false; }
-        var svg = state.make.svg();
-        modifyStyle(svg, {
+        state.svg = state.make.svg();
+        modifyStyle(state.svg, {
             'width': state.config.canvasSize.width + "px",
             'height': state.config.canvasSize.height + "px",
         });
         if (addViewBox) {
-            svg.setAttribute('viewBox', "0 0 " + state.config.canvasSize.width + " " + state.config.canvasSize.height);
+            state.svg.setAttribute('viewBox', "0 0 " + state.config.canvasSize.width + " " + state.config.canvasSize.height);
         }
-        container.appendChild(svg);
+        container.appendChild(state.svg);
         state.defs = state.make.defs();
-        svg.appendChild(state.defs);
+        state.svg.appendChild(state.defs);
         state.legendGroup = state.make.g();
         state.legendGroup.setAttribute('class', 'legend');
-        svg.appendChild(state.legendGroup);
+        state.svg.appendChild(state.legendGroup);
         state.edgeGroup = state.make.g();
         state.edgeGroup.setAttribute('class', 'edges');
-        svg.appendChild(state.edgeGroup);
+        state.svg.appendChild(state.edgeGroup);
         state.nodeGroup = state.make.g();
         state.nodeGroup.setAttribute('class', 'nodes');
-        svg.appendChild(state.nodeGroup);
+        state.svg.appendChild(state.nodeGroup);
         state.labelGroup = state.make.g();
         state.labelGroup.setAttribute('class', 'labels');
-        svg.appendChild(state.labelGroup);
+        state.svg.appendChild(state.labelGroup);
     }
     function placeNodes(state) {
         for (var _i = 0, _a = state.config.weathermapNodes; _i < _a.length; _i++) {
@@ -342,6 +343,7 @@ System.register(["./constants", "./geometry", "./gradients", "./legend"], functi
                     this.nodeLabelToNode = {};
                     this.nodeLinkUriBase = null;
                     this.edgeLinkUriBase = null;
+                    this.svg = null;
                     this.defs = null;
                     this.edgeGroup = null;
                     this.nodeGroup = null;

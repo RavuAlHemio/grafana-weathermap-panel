@@ -6,7 +6,7 @@ import { LegendSettings, placeLegend } from './legend';
 export function renderWeathermapInto(
     elementCreator: SVGElementCreatorDOM, container: Node, config: WeathermapConfig, currentValues: MetricValueMap,
     linkResolver?: (ObjectLinkSettings) => string|null, addViewBox: boolean = false
-): void {
+): SVGSVGElement {
     // sort gradient stops
     let sortedStops = config.gradient.stops
         .slice()
@@ -31,38 +31,40 @@ export function renderWeathermapInto(
     placeEdges(state);
     placeLabels(state);
     placeLegend(state.make, config.legend, state.legendGroup, state.defs, sortedGradient);
+
+    return state.svg;
 }
 
 function initializeSVG(state: WeathermapRendererState, container: Node, addViewBox: boolean = false): void {
     // add SVG
-    let svg: SVGSVGElement = state.make.svg();
-    modifyStyle(svg, {
+    state.svg = state.make.svg();
+    modifyStyle(state.svg, {
         'width': `${state.config.canvasSize.width}px`,
         'height': `${state.config.canvasSize.height}px`,
     });
     if (addViewBox) {
-        svg.setAttribute('viewBox', `0 0 ${state.config.canvasSize.width} ${state.config.canvasSize.height}`);
+        state.svg.setAttribute('viewBox', `0 0 ${state.config.canvasSize.width} ${state.config.canvasSize.height}`);
     }
-    container.appendChild(svg);
+    container.appendChild(state.svg);
 
     state.defs = state.make.defs();
-    svg.appendChild(state.defs);
+    state.svg.appendChild(state.defs);
 
     state.legendGroup = state.make.g();
     state.legendGroup.setAttribute('class', 'legend');
-    svg.appendChild(state.legendGroup);
+    state.svg.appendChild(state.legendGroup);
 
     state.edgeGroup = state.make.g();
     state.edgeGroup.setAttribute('class', 'edges');
-    svg.appendChild(state.edgeGroup);
+    state.svg.appendChild(state.edgeGroup);
 
     state.nodeGroup = state.make.g();
     state.nodeGroup.setAttribute('class', 'nodes');
-    svg.appendChild(state.nodeGroup);
+    state.svg.appendChild(state.nodeGroup);
 
     state.labelGroup = state.make.g();
     state.labelGroup.setAttribute('class', 'labels');
-    svg.appendChild(state.labelGroup);
+    state.svg.appendChild(state.labelGroup);
 }
 
 function placeNodes(state: WeathermapRendererState): void {
@@ -390,6 +392,7 @@ export class WeathermapRendererState {
     nodeLabelToNode: LabelToNodeMap;
     nodeLinkUriBase: string|null;
     edgeLinkUriBase: string|null;
+    svg: SVGSVGElement|null;
     defs: SVGDefsElement|null;
     edgeGroup: SVGGElement|null;
     nodeGroup: SVGGElement|null;
@@ -406,6 +409,7 @@ export class WeathermapRendererState {
         this.nodeLabelToNode = {};
         this.nodeLinkUriBase = null;
         this.edgeLinkUriBase = null;
+        this.svg = null;
         this.defs = null;
         this.edgeGroup = null;
         this.nodeGroup = null;
