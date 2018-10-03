@@ -1,3 +1,4 @@
+import { svgNamespace } from './svg-weathermap/constants';
 import { WeathermapConfig, renderWeathermapInto } from './svg-weathermap/weathermap';
 import { DOMImplementation, XMLSerializer } from 'xmldom';
 import { PrometheusMetric, fetchMetrics } from './fetcher';
@@ -11,7 +12,7 @@ export async function main(): Promise<void> {
     let metrics: PrometheusMetric[] = config.weathermap.targets;
     let dataSources: { [index: string]: string; } = config.dataSources;
     let lookbackInterval: string = config.lookbackInterval;
-    let styleOverride: string = config.styleOverride || '';
+    let styleDefinition: string|null = config.styleDefinition;
 
     let metricValues = await fetchMetrics(new URL(dataSources[config.weathermap.datasource]), metrics, lookbackInterval);
 
@@ -21,7 +22,11 @@ export async function main(): Promise<void> {
     const nullLinkResolver = null;
     const addViewBox = true;
     let svg: SVGSVGElement = renderWeathermapInto(doc, doc, weathermap, metricValues, nullLinkResolver, addViewBox);
-    svg.setAttribute('style', styleOverride);
+    if (styleDefinition) {
+        let svgStyle: SVGStyleElement = doc.createElementNS(svgNamespace, 'style');
+        svgStyle.setAttribute('type', 'text/css');
+        svgStyle.textContent = styleDefinition;
+    }
 
     let outputter = new XMLSerializer();
     let outputString = outputter.serializeToString(doc);

@@ -35,13 +35,14 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+var constants_1 = require("./svg-weathermap/constants");
 var weathermap_1 = require("./svg-weathermap/weathermap");
 var xmldom_1 = require("xmldom");
 var fetcher_1 = require("./fetcher");
 var fs = require("fs");
 function main() {
     return __awaiter(this, void 0, void 0, function () {
-        var configString, config, weathermap, metrics, dataSources, lookbackInterval, styleOverride, metricValues, impl, doc, nullLinkResolver, addViewBox, svg, outputter, outputString;
+        var configString, config, weathermap, metrics, dataSources, lookbackInterval, styleDefinition, metricValues, impl, doc, nullLinkResolver, addViewBox, svg, svgStyle, outputter, outputString;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0: return [4, readFileAsync('genwmap.json')];
@@ -52,7 +53,7 @@ function main() {
                     metrics = config.weathermap.targets;
                     dataSources = config.dataSources;
                     lookbackInterval = config.lookbackInterval;
-                    styleOverride = config.styleOverride || '';
+                    styleDefinition = config.styleDefinition;
                     return [4, fetcher_1.fetchMetrics(new URL(dataSources[config.weathermap.datasource]), metrics, lookbackInterval)];
                 case 2:
                     metricValues = _a.sent();
@@ -61,7 +62,11 @@ function main() {
                     nullLinkResolver = null;
                     addViewBox = true;
                     svg = weathermap_1.renderWeathermapInto(doc, doc, weathermap, metricValues, nullLinkResolver, addViewBox);
-                    svg.setAttribute('style', styleOverride);
+                    if (styleDefinition) {
+                        svgStyle = doc.createElementNS(constants_1.svgNamespace, 'style');
+                        svgStyle.setAttribute('type', 'text/css');
+                        svgStyle.textContent = styleDefinition;
+                    }
                     outputter = new xmldom_1.XMLSerializer();
                     outputString = outputter.serializeToString(doc);
                     return [4, writeFileAsync('weathermap.svg', outputString, {})];
