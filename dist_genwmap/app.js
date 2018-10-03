@@ -64,6 +64,7 @@ function main() {
                     svg = weathermap_1.renderWeathermapInto(doc, doc, weathermap, metricValues, nullLinkResolver, addViewBox);
                     if (styleDefinition) {
                         svgStyle = doc.createElementNS(constants_1.svgNamespace, 'style');
+                        svg.insertBefore(svgStyle, svg.firstElementChild);
                         svgStyle.setAttribute('type', 'text/css');
                         svgStyle.textContent = styleDefinition;
                     }

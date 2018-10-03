@@ -24,6 +24,7 @@ export async function main(): Promise<void> {
     let svg: SVGSVGElement = renderWeathermapInto(doc, doc, weathermap, metricValues, nullLinkResolver, addViewBox);
     if (styleDefinition) {
         let svgStyle: SVGStyleElement = doc.createElementNS(svgNamespace, 'style');
+        svg.insertBefore(svgStyle, svg.firstElementChild);
         svgStyle.setAttribute('type', 'text/css');
         svgStyle.textContent = styleDefinition;
     }
