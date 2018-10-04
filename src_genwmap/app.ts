@@ -4,8 +4,55 @@ import { DOMImplementation, XMLSerializer } from 'xmldom';
 import { PrometheusMetric, fetchMetrics } from './fetcher';
 import fs = require('fs');
 
+let options = {
+    configFile: 'genwmap.json',
+    outputFile: 'weathermap.svg'
+};
+
+function printUsage(): void {
+    console.error("Usage: genwmap [-c CONFIG.json] [-o OUTPUT.svg]");
+}
+
+function processOptions(): boolean {
+    let awaiting: string|null = null;
+
+    for (let i = 2; i < process.argv.length; ++i) {
+        let arg = process.argv[i];
+
+        if (awaiting === null) {
+            if (arg == "-c" || arg == "-o") {
+                awaiting = arg;
+            } else {
+                console.error(`Unknown option '${arg}'`);
+                printUsage();
+                return false;
+            }
+        } else {
+            if (awaiting == "-c") {
+                options.configFile = arg;
+            } else if (awaiting == "-o") {
+                options.outputFile = arg;
+            }
+            awaiting = null;
+        }
+    }
+
+    if (awaiting !== null) {
+        console.error(`No value specified for option '${awaiting}'`);
+        printUsage();
+        return false;
+    }
+
+    return true;
+}
+
 export async function main(): Promise<void> {
-    let configString = await readFileAsync('genwmap.json');
+    if (!processOptions()) {
+        process.exitCode = 1;
+        return;
+    }
+
+    let configString = await readFileAsync(options.configFile);
     let config = JSON.parse(configString);
 
     let weathermap: WeathermapConfig = config.weathermap;
@@ -31,7 +78,7 @@ export async function main(): Promise<void> {
 
     let outputter = new XMLSerializer();
     let outputString = outputter.serializeToString(doc);
-    await writeFileAsync('weathermap.svg', outputString, {});
+    await writeFileAsync(options.outputFile, outputString, {});
 }
 
 function readFileAsync(path: string): Promise<string> {

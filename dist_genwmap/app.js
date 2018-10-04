@@ -40,12 +40,55 @@ var weathermap_1 = require("./svg-weathermap/weathermap");
 var xmldom_1 = require("xmldom");
 var fetcher_1 = require("./fetcher");
 var fs = require("fs");
+var options = {
+    configFile: 'genwmap.json',
+    outputFile: 'weathermap.svg'
+};
+function printUsage() {
+    console.error("Usage: genwmap [-c CONFIG.json] [-o OUTPUT.svg]");
+}
+function processOptions() {
+    var awaiting = null;
+    for (var i = 2; i < process.argv.length; ++i) {
+        var arg = process.argv[i];
+        if (awaiting === null) {
+            if (arg == "-c" || arg == "-o") {
+                awaiting = arg;
+            }
+            else {
+                console.error("Unknown option '" + arg + "'");
+                printUsage();
+                return false;
+            }
+        }
+        else {
+            if (awaiting == "-c") {
+                options.configFile = arg;
+            }
+            else if (awaiting == "-o") {
+                options.outputFile = arg;
+            }
+            awaiting = null;
+        }
+    }
+    if (awaiting !== null) {
+        console.error("No value specified for option '" + awaiting + "'");
+        printUsage();
+        return false;
+    }
+    return true;
+}
 function main() {
     return __awaiter(this, void 0, void 0, function () {
         var configString, config, weathermap, metrics, dataSources, lookbackInterval, styleDefinition, metricValues, impl, doc, nullLinkResolver, addViewBox, svg, svgStyle, outputter, outputString;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4, readFileAsync('genwmap.json')];
+                case 0:
+                    if (!processOptions()) {
+                        process.exitCode = 1;
+                        return [2];
+                    }
+                    return [4, readFileAsync(options.configFile)];
                 case 1:
                     configString = _a.sent();
                     config = JSON.parse(configString);
@@ -70,7 +113,7 @@ function main() {
                     }
                     outputter = new xmldom_1.XMLSerializer();
                     outputString = outputter.serializeToString(doc);
-                    return [4, writeFileAsync('weathermap.svg', outputString, {})];
+                    return [4, writeFileAsync(options.outputFile, outputString, {})];
                 case 3:
                     _a.sent();
                     return [2];
