@@ -22,6 +22,8 @@ export declare class WeathermapCtrl extends MetricsPanelCtrl {
     removeWeathermapEdge(edge: any): void;
     addWeathermapLabel(label?: any): void;
     removeWeathermapLabel(label: any): void;
+    addWeathermapStyle(style?: any): void;
+    removeWeathermapStyle(style: any): void;
     addGradientStop(stop?: any): void;
     onGradientStopStrokeColorChange(stopIndex: any): (color: string) => void;
     onGradientStopFillColorChange(stopIndex: any): (color: string) => void;

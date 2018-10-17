@@ -22,6 +22,7 @@ var panelDefaults = {
     weathermapNodes: [],
     weathermapEdges: [],
     weathermapLabels: [],
+    weathermapStyles: [],
     canvasSize: {
         width: 800,
         height: 600
@@ -60,7 +61,7 @@ var panelDefaults = {
         }
     },
     noValueDashArray: '4 4',
-    unmeasuredDashArray: '4 2'
+    unmeasuredDashArray: '4 2',
 };
 var WeathermapCtrl = (function (_super) {
     __extends(WeathermapCtrl, _super);
@@ -85,6 +86,7 @@ var WeathermapCtrl = (function (_super) {
         this.addEditorTab('Nodes', properties_1.nodeEditorPath, 3);
         this.addEditorTab('Edges', properties_1.edgeEditorPath, 4);
         this.addEditorTab('Labels', properties_1.labelEditorPath, 5);
+        this.addEditorTab('Styles', properties_1.styleEditorPath, 6);
     };
     WeathermapCtrl.prototype.onDataReceived = function (dataList) {
         this.currentSeries = dataList.map(this.seriesHandler.bind(this));
@@ -129,6 +131,13 @@ var WeathermapCtrl = (function (_super) {
     };
     WeathermapCtrl.prototype.removeWeathermapLabel = function (label) {
         this.panel.weathermapLabels = lodash_1.default.without(this.panel.weathermapLabels, label);
+        this.refresh();
+    };
+    WeathermapCtrl.prototype.addWeathermapStyle = function (style) {
+        this.panel.weathermapStyles.push(style || {});
+    };
+    WeathermapCtrl.prototype.removeWeathermapStyle = function (style) {
+        this.panel.weathermapStyles = lodash_1.default.without(this.panel.weathermapStyles, style);
         this.refresh();
     };
     WeathermapCtrl.prototype.addGradientStop = function (stop) {

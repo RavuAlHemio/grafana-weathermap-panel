@@ -1,0 +1,23 @@
+<div class="gf-form-group">
+    <h5>Styles</h5>
+    <div class="gf-form-inline" ng-repeat="wmStyle in ctrl.panel.weathermapStyles">
+        <div class="gf-form width-15">
+            <label class="gf-form-label">Name</label>
+            <input type="text" ng-model="wmStyle.name" ng-blur="ctrl.refresh()" class="gf-form-input">
+        </div>
+        <div class="gf-form width-12">
+            <label class="gf-form-label">Stroke width</label>
+            <input type="number" ng-model="wmStyle.strokeWidth" ng-blur="ctrl.refresh()" class="gf-form-input">
+        </div>
+        <div class="gf-form width-15">
+            <label class="gf-form-label">Dash array</label>
+            <input type="text" ng-model="wmStyle.dashArray" ng-blur="ctrl.refresh()" class="gf-form-input">
+        </div>
+        <div class="gf-form">
+            <i class="fa fa-trash pointer" ng-click="ctrl.removeWeathermapStyle(wmStyle)"></i>
+        </div>
+    </div>
+    <button class="btn btn-inverse" ng-click="ctrl.addWeathermapStyle()">
+        <i class="fa fa-plus"></i>&nbsp;Add style
+    </button>
+</div>

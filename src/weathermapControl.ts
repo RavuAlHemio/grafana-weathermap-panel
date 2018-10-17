@@ -1,7 +1,7 @@
 ///<reference path="../node_modules/grafana-sdk-mocks/app/headers/common.d.ts" />
 
 import { MetricsPanelCtrl } from 'app/plugins/sdk';
-import { editorPath, nodeEditorPath, edgeEditorPath, labelEditorPath } from './properties';
+import { editorPath, nodeEditorPath, edgeEditorPath, labelEditorPath, styleEditorPath } from './properties';
 import { renderWeathermapInto, WeathermapConfig, ObjectLinkSettings } from './svg-weathermap/weathermap';
 import _ from 'lodash';
 import TimeSeries from 'app/core/time_series2';
@@ -11,6 +11,7 @@ const panelDefaults: WeathermapConfig = {
     weathermapNodes: [],
     weathermapEdges: [],
     weathermapLabels: [],
+    weathermapStyles: [],
     canvasSize: {
         width: 800,
         height: 600
@@ -49,7 +50,7 @@ const panelDefaults: WeathermapConfig = {
         }
     },
     noValueDashArray: '4 4',
-    unmeasuredDashArray: '4 2'
+    unmeasuredDashArray: '4 2',
 };
 
 export class WeathermapCtrl extends MetricsPanelCtrl {
@@ -85,6 +86,7 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
         this.addEditorTab('Nodes', nodeEditorPath, 3);
         this.addEditorTab('Edges', edgeEditorPath, 4);
         this.addEditorTab('Labels', labelEditorPath, 5);
+        this.addEditorTab('Styles', styleEditorPath, 6);
     }
 
     onDataReceived(dataList) {
@@ -136,6 +138,14 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
     }
     removeWeathermapLabel(label): void {
         this.panel.weathermapLabels = _.without(this.panel.weathermapLabels, label);
+        this.refresh();
+    }
+
+    addWeathermapStyle(style?): void {
+        this.panel.weathermapStyles.push(style || {});
+    }
+    removeWeathermapStyle(style): void {
+        this.panel.weathermapStyles = _.without(this.panel.weathermapStyles, style);
         this.refresh();
     }
 

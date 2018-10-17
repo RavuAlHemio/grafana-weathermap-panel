@@ -207,6 +207,7 @@ function placeEdges(state: WeathermapRendererState): void {
                 modifyStyle(therePath, {
                     'stroke': gradientColorForValue(state.sortedGradient, 'strokeColor', currentValue),
                 });
+                modifyWithWeathermapStyle(state, therePath, edge.styleName);
             } else {
                 modifyStyle(therePath, {
                     'stroke': 'black',
@@ -218,6 +219,7 @@ function placeEdges(state: WeathermapRendererState): void {
                 modifyStyle(backPath, {
                     'stroke': gradientColorForValue(state.sortedGradient, 'strokeColor', currentValue),
                 });
+                modifyWithWeathermapStyle(state, backPath, edge.styleName);
             } else {
                 modifyStyle(backPath, {
                     'stroke': 'black',
@@ -277,6 +279,7 @@ function placeEdges(state: WeathermapRendererState): void {
                 modifyStyle(edgePath, {
                     'stroke': gradientColorForValue(state.sortedGradient, 'strokeColor', currentValue),
                 });
+                modifyWithWeathermapStyle(state, edgePath, edge.styleName);
             } else {
                 modifyStyle(edgePath, {
                     'stroke': 'black',
@@ -347,7 +350,7 @@ export function setRectangleDimensions(
     element.setAttribute('height', `${height}`);
 }
 
-function modifyStyle(element: Element, newValues: object) {
+function modifyStyle(element: Element, newValues: object): void {
     // parse style
     let assembledStyle = {};
     if (element.hasAttribute('style')) {
@@ -384,6 +387,30 @@ function modifyStyle(element: Element, newValues: object) {
 }
 
 
+function modifyWithWeathermapStyle(
+    state: WeathermapRendererState, element: Element, styleName: string|null|undefined
+): void {
+    if (!styleName) {
+        return;
+    }
+
+    let style = state.styleMap[styleName];
+    if (!style) {
+        return;
+    }
+
+    let styleProps = {};
+    if (style.dashArray) {
+        styleProps['stroke-dasharray'] = style.dashArray;
+    }
+    if (style.strokeWidth) {
+        styleProps['stroke-width'] = style.strokeWidth;
+    }
+
+    modifyStyle(element, styleProps);
+}
+
+
 export class WeathermapRendererState {
     make: SVGElementCreator;
     config: WeathermapConfig;
@@ -398,6 +425,7 @@ export class WeathermapRendererState {
     nodeGroup: SVGGElement|null;
     labelGroup: SVGGElement|null;
     legendGroup: SVGGElement|null;
+    styleMap: NameToStyleMap;
 
     constructor(
         domCreator: SVGElementCreatorDOM, config: WeathermapConfig, sortedGradient: Gradient, currentValues: MetricValueMap
@@ -415,6 +443,11 @@ export class WeathermapRendererState {
         this.nodeGroup = null;
         this.labelGroup = null;
         this.legendGroup = null;
+
+        this.styleMap = {};
+        for (let style of config.weathermapStyles) {
+            this.styleMap[style.name] = style;
+        }
     }
 }
 
@@ -460,9 +493,16 @@ interface WeathermapEdge {
     metricName?: string;
     metric2Name?: string|null;
     linkParams?: string;
+    styleName?: string;
 }
 
 interface WeathermapLabel extends PositionableTextElement {
+}
+
+interface WeathermapStyle {
+    name: string;
+    strokeWidth?: number;
+    dashArray?: string;
 }
 
 interface LinkSettings {
@@ -470,13 +510,13 @@ interface LinkSettings {
     edge: ObjectLinkSettings;
 }
 
-export interface LabelToNodeMap {
-    [nodeLabel: string]: WeathermapNode;
+export interface StringMapping<V> {
+    [key: string]: V;
 }
 
-export interface MetricValueMap {
-    [metricName: string]: number;
-}
+export type LabelToNodeMap = StringMapping<WeathermapNode>;
+export type MetricValueMap = StringMapping<number>;
+export type NameToStyleMap = StringMapping<WeathermapStyle>;
 
 export interface ObjectLinkSettings {
     type: 'none'|'dashboard'|'absolute';
@@ -489,6 +529,7 @@ export interface WeathermapConfig {
     weathermapEdges: WeathermapEdge[];
     weathermapNodes: WeathermapNode[];
     weathermapLabels: WeathermapLabel[];
+    weathermapStyles: WeathermapStyle[];
     canvasSize: { width: number; height: number; };
     textOffsets: { left: number; bottom: number; };
     showNumbers: boolean;

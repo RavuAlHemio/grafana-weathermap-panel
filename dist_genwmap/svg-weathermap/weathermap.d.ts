@@ -16,6 +16,7 @@ export declare class WeathermapRendererState {
     nodeGroup: SVGGElement | null;
     labelGroup: SVGGElement | null;
     legendGroup: SVGGElement | null;
+    styleMap: NameToStyleMap;
     constructor(domCreator: SVGElementCreatorDOM, config: WeathermapConfig, sortedGradient: Gradient, currentValues: MetricValueMap);
 }
 export declare class SVGElementCreator {
@@ -54,19 +55,25 @@ interface WeathermapEdge {
     metricName?: string;
     metric2Name?: string | null;
     linkParams?: string;
+    styleName?: string;
 }
 interface WeathermapLabel extends PositionableTextElement {
+}
+interface WeathermapStyle {
+    name: string;
+    strokeWidth?: number;
+    dashArray?: string;
 }
 interface LinkSettings {
     node: ObjectLinkSettings;
     edge: ObjectLinkSettings;
 }
-export interface LabelToNodeMap {
-    [nodeLabel: string]: WeathermapNode;
+export interface StringMapping<V> {
+    [key: string]: V;
 }
-export interface MetricValueMap {
-    [metricName: string]: number;
-}
+export declare type LabelToNodeMap = StringMapping<WeathermapNode>;
+export declare type MetricValueMap = StringMapping<number>;
+export declare type NameToStyleMap = StringMapping<WeathermapStyle>;
 export interface ObjectLinkSettings {
     type: 'none' | 'dashboard' | 'absolute';
     dashboard: string | null;
@@ -77,6 +84,7 @@ export interface WeathermapConfig {
     weathermapEdges: WeathermapEdge[];
     weathermapNodes: WeathermapNode[];
     weathermapLabels: WeathermapLabel[];
+    weathermapStyles: WeathermapStyle[];
     canvasSize: {
         width: number;
         height: number;

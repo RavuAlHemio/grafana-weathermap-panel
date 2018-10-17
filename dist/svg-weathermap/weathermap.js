@@ -164,6 +164,7 @@ System.register(["./constants", "./geometry", "./gradients", "./legend"], functi
                     modifyStyle(therePath, {
                         'stroke': gradients_1.gradientColorForValue(state.sortedGradient, 'strokeColor', currentValue),
                     });
+                    modifyWithWeathermapStyle(state, therePath, edge.styleName);
                 }
                 else {
                     modifyStyle(therePath, {
@@ -176,6 +177,7 @@ System.register(["./constants", "./geometry", "./gradients", "./legend"], functi
                     modifyStyle(backPath, {
                         'stroke': gradients_1.gradientColorForValue(state.sortedGradient, 'strokeColor', currentValue),
                     });
+                    modifyWithWeathermapStyle(state, backPath, edge.styleName);
                 }
                 else {
                     modifyStyle(backPath, {
@@ -227,6 +229,7 @@ System.register(["./constants", "./geometry", "./gradients", "./legend"], functi
                     modifyStyle(edgePath, {
                         'stroke': gradients_1.gradientColorForValue(state.sortedGradient, 'strokeColor', currentValue),
                     });
+                    modifyWithWeathermapStyle(state, edgePath, edge.styleName);
                 }
                 else {
                     modifyStyle(edgePath, {
@@ -318,6 +321,23 @@ System.register(["./constants", "./geometry", "./gradients", "./legend"], functi
         var keyValueString = keyValuePairs.join(';');
         element.setAttribute('style', keyValueString);
     }
+    function modifyWithWeathermapStyle(state, element, styleName) {
+        if (!styleName) {
+            return;
+        }
+        var style = state.styleMap[styleName];
+        if (!style) {
+            return;
+        }
+        var styleProps = {};
+        if (style.dashArray) {
+            styleProps['stroke-dasharray'] = style.dashArray;
+        }
+        if (style.strokeWidth) {
+            styleProps['stroke-width'] = style.strokeWidth;
+        }
+        modifyStyle(element, styleProps);
+    }
     return {
         setters: [
             function (constants_1_1) {
@@ -349,6 +369,11 @@ System.register(["./constants", "./geometry", "./gradients", "./legend"], functi
                     this.nodeGroup = null;
                     this.labelGroup = null;
                     this.legendGroup = null;
+                    this.styleMap = {};
+                    for (var _i = 0, _a = config.weathermapStyles; _i < _a.length; _i++) {
+                        var style = _a[_i];
+                        this.styleMap[style.name] = style;
+                    }
                 }
                 return WeathermapRendererState;
             }());

@@ -166,6 +166,7 @@ function placeEdges(state) {
                 modifyStyle(therePath, {
                     'stroke': gradients_1.gradientColorForValue(state.sortedGradient, 'strokeColor', currentValue),
                 });
+                modifyWithWeathermapStyle(state, therePath, edge.styleName);
             }
             else {
                 modifyStyle(therePath, {
@@ -178,6 +179,7 @@ function placeEdges(state) {
                 modifyStyle(backPath, {
                     'stroke': gradients_1.gradientColorForValue(state.sortedGradient, 'strokeColor', currentValue),
                 });
+                modifyWithWeathermapStyle(state, backPath, edge.styleName);
             }
             else {
                 modifyStyle(backPath, {
@@ -229,6 +231,7 @@ function placeEdges(state) {
                 modifyStyle(edgePath, {
                     'stroke': gradients_1.gradientColorForValue(state.sortedGradient, 'strokeColor', currentValue),
                 });
+                modifyWithWeathermapStyle(state, edgePath, edge.styleName);
             }
             else {
                 modifyStyle(edgePath, {
@@ -320,6 +323,23 @@ function modifyStyle(element, newValues) {
     var keyValueString = keyValuePairs.join(';');
     element.setAttribute('style', keyValueString);
 }
+function modifyWithWeathermapStyle(state, element, styleName) {
+    if (!styleName) {
+        return;
+    }
+    var style = state.styleMap[styleName];
+    if (!style) {
+        return;
+    }
+    var styleProps = {};
+    if (style.dashArray) {
+        styleProps['stroke-dasharray'] = style.dashArray;
+    }
+    if (style.strokeWidth) {
+        styleProps['stroke-width'] = style.strokeWidth;
+    }
+    modifyStyle(element, styleProps);
+}
 var WeathermapRendererState = (function () {
     function WeathermapRendererState(domCreator, config, sortedGradient, currentValues) {
         this.make = new SVGElementCreator(domCreator);
@@ -335,6 +355,11 @@ var WeathermapRendererState = (function () {
         this.nodeGroup = null;
         this.labelGroup = null;
         this.legendGroup = null;
+        this.styleMap = {};
+        for (var _i = 0, _a = config.weathermapStyles; _i < _a.length; _i++) {
+            var style = _a[_i];
+            this.styleMap[style.name] = style;
+        }
     }
     return WeathermapRendererState;
 }());
