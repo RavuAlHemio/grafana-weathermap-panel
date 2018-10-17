@@ -356,9 +356,11 @@ var WeathermapRendererState = (function () {
         this.labelGroup = null;
         this.legendGroup = null;
         this.styleMap = {};
-        for (var _i = 0, _a = config.weathermapStyles; _i < _a.length; _i++) {
-            var style = _a[_i];
-            this.styleMap[style.name] = style;
+        if (config.weathermapStyles) {
+            for (var _i = 0, _a = config.weathermapStyles; _i < _a.length; _i++) {
+                var style = _a[_i];
+                this.styleMap[style.name] = style;
+            }
         }
     }
     return WeathermapRendererState;

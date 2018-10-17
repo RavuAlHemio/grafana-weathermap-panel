@@ -445,8 +445,10 @@ export class WeathermapRendererState {
         this.legendGroup = null;
 
         this.styleMap = {};
-        for (let style of config.weathermapStyles) {
-            this.styleMap[style.name] = style;
+        if (config.weathermapStyles) {
+            for (let style of config.weathermapStyles) {
+                this.styleMap[style.name] = style;
+            }
         }
     }
 }
