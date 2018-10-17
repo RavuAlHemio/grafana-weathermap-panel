@@ -172,133 +172,26 @@ function placeEdges(state: WeathermapRendererState): void {
             // two metrics are twice the fun
             let [_point1, point1COut, point2CIn, point2, point2COut, point3CIn, _point2] = halveCubicBezier(n1Center, control1, control2, n2Center);
 
-            let therePath: SVGPathElement = state.make.path();
-            singleEdgeGroup.appendChild(therePath);
-            therePath.setAttribute('d',
-                `M ${n1Center.x},${n1Center.y} ` +
-                `C ${point1COut.x},${point1COut.y},${point2CIn.x},${point2CIn.y},${point2.x},${point2.y}`
+            makeAndPlaceEdge(
+                state, singleEdgeGroup,
+                n1Center, point1COut, point2CIn, point2,
+                edge.metricName, edge.styleName,
+                `${edge.node1} \u2192 ${edge.node2}`
             );
-            modifyStyle(therePath, {
-                'stroke-width': state.config.strokeWidth,
-                'fill': 'none',
-            });
 
-            let thereTitle: SVGTitleElement = state.make.title();
-            therePath.appendChild(thereTitle);
-            thereTitle.textContent = `${edge.node1} \u2192 ${edge.node2}`;
-
-            let backPath: SVGPathElement = state.make.path();
-            singleEdgeGroup.appendChild(backPath);
-            backPath.setAttribute('d',
-                `M ${point2.x},${point2.y} ` +
-                `C ${point2COut.x},${point2COut.y},${point3CIn.x},${point3CIn.y},${n2Center.x},${n2Center.y}`
+            makeAndPlaceEdge(
+                state, singleEdgeGroup,
+                point2, point2COut, point3CIn, n2Center,
+                edge.metric2Name, edge.styleName,
+                `${edge.node2} \u2192 ${edge.node1}`
             );
-            modifyStyle(backPath, {
-                'stroke-width': state.config.strokeWidth,
-                'fill': 'none',
-            });
-
-            let backTitle: SVGTitleElement = state.make.title();
-            backPath.appendChild(backTitle);
-            backTitle.textContent = `${edge.node2} \u2192 ${edge.node1}`;
-
-            if (edge.metricName in state.currentValues) {
-                let currentValue = state.currentValues[edge.metricName];
-                modifyStyle(therePath, {
-                    'stroke': gradientColorForValue(state.sortedGradient, 'strokeColor', currentValue),
-                });
-                modifyWithWeathermapStyle(state, therePath, edge.styleName);
-            } else {
-                modifyStyle(therePath, {
-                    'stroke': 'black',
-                    'stroke-dasharray': state.config.noValueDashArray,
-                });
-            }
-            if (edge.metric2Name in state.currentValues) {
-                let currentValue = state.currentValues[edge.metric2Name];
-                modifyStyle(backPath, {
-                    'stroke': gradientColorForValue(state.sortedGradient, 'strokeColor', currentValue),
-                });
-                modifyWithWeathermapStyle(state, backPath, edge.styleName);
-            } else {
-                modifyStyle(backPath, {
-                    'stroke': 'black',
-                    'stroke-dasharray': state.config.noValueDashArray,
-                });
-            }
-
-            if (state.config.showNumbers) {
-                let quarterPoint = halveCubicBezier(n1Center, point1COut, point2CIn, point2)[3];
-                let threeQuarterPoint = halveCubicBezier(point2, point2COut, point3CIn, n2Center)[3];
-
-                let valueString = (edge.metricName in state.currentValues)
-                    ? state.currentValues[edge.metricName].toFixed(2)
-                    : '?'
-                ;
-                let text1 = state.make.text();
-                singleEdgeGroup.appendChild(text1);
-                text1.setAttribute('x', `${quarterPoint.x}`);
-                text1.setAttribute('y', `${quarterPoint.y}`);
-                text1.textContent = valueString;
-
-                let value2String = (edge.metric2Name in state.currentValues)
-                    ? state.currentValues[edge.metric2Name].toFixed(2)
-                    : '?'
-                ;
-                let text2 = state.make.text();
-                singleEdgeGroup.appendChild(text2);
-                text2.setAttribute('x', `${threeQuarterPoint.x}`);
-                text2.setAttribute('y', `${threeQuarterPoint.y}`);
-                text2.textContent = value2String;
-            }
         } else {
-            let edgePath: SVGPathElement = state.make.path();
-            singleEdgeGroup.appendChild(edgePath);
-            if (control1 !== null && control2 !== null) {
-                edgePath.setAttribute('d',
-                    `M ${n1Center.x},${n1Center.y} ` +
-                    `C ${control1.x},${control1.y},${control2.x},${control2.y},${n2Center.x},${n2Center.y}`
-                );
-            } else {
-                edgePath.setAttribute('d',
-                    `M ${n1Center.x},${n1Center.y} ` +
-                    `L ${n2Center.x},${n2Center.y}`
-                );
-            }
-            modifyStyle(edgePath, {
-                'stroke-width': state.config.strokeWidth,
-                'fill': 'none',
-            });
-
-            let edgeTitle: SVGTitleElement = state.make.title();
-            edgePath.appendChild(edgeTitle);
-            edgeTitle.textContent = `${edge.node2} \u2194 ${edge.node1}`;
-
-            if (edge.metricName in state.currentValues) {
-                let currentValue = state.currentValues[edge.metricName];
-                modifyStyle(edgePath, {
-                    'stroke': gradientColorForValue(state.sortedGradient, 'strokeColor', currentValue),
-                });
-                modifyWithWeathermapStyle(state, edgePath, edge.styleName);
-            } else {
-                modifyStyle(edgePath, {
-                    'stroke': 'black',
-                    'stroke-dasharray': state.config.noValueDashArray,
-                });
-            }
-
-            if (state.config.showNumbers) {
-                let midpoint = halveCubicBezier(n1Center, control1, control2, n2Center)[3];
-                let valueString = (edge.metricName in state.currentValues)
-                    ? state.currentValues[edge.metricName].toFixed(2)
-                    : '?'
-                ;
-                let text = state.make.text();
-                singleEdgeGroup.appendChild(text);
-                text.setAttribute('x', `${midpoint.x}`);
-                text.setAttribute('y', `${midpoint.y}`);
-                text.textContent = valueString;
-            }
+            makeAndPlaceEdge(
+                state, singleEdgeGroup,
+                n1Center, control1, control2, n2Center,
+                edge.metricName, edge.styleName,
+                `${edge.node1} \u2194 ${edge.node2}`
+            );
         }
     }
 }
@@ -314,6 +207,54 @@ function placeLabels(state: WeathermapRendererState): void {
         text.setAttribute('x', `${+label.x}`);
         text.setAttribute('y', `${+label.y}`);
         text.textContent = label.label;
+    }
+}
+
+function makeAndPlaceEdge(
+    state: WeathermapRendererState, singleEdgeGroup: SVGGElement, start: Point2D, control1: Point2D, control2: Point2D,
+    end: Point2D, metricName: string, edgeStyleName: string|null, title: string|null
+): void {
+    let path: SVGPathElement = state.make.path();
+    singleEdgeGroup.appendChild(path);
+    path.setAttribute('d',
+        `M ${start.x},${start.y} ` +
+        `C ${control1.x},${control1.y},${control2.x},${control2.y},${end.x},${end.y}`
+    );
+    modifyStyle(path, {
+        'stroke-width': state.config.strokeWidth,
+        'fill': 'none',
+    });
+
+    if (title) {
+        let titleElem = state.make.title();
+        path.appendChild(titleElem);
+        titleElem.textContent = title;
+    }
+
+    if (metricName in state.currentValues) {
+        let currentValue = state.currentValues[metricName];
+        modifyStyle(path, {
+            'stroke': gradientColorForValue(state.sortedGradient, 'strokeColor', currentValue)
+        });
+        modifyWithWeathermapStyle(state, path, edgeStyleName);
+    } else {
+        modifyStyle(path, {
+            'stroke': 'black',
+            'stroke-dasharray': state.config.noValueDashArray
+        });
+    }
+
+    if (state.config.showNumbers) {
+        let midpoint = halveCubicBezier(start, control1, control2, end)[3];
+        let valueString = (metricName in state.currentValues)
+            ? state.currentValues[metricName].toFixed(2)
+            : '?'
+        ;
+        let text = state.make.text();
+        singleEdgeGroup.appendChild(text);
+        text.setAttribute('x', `${midpoint.x}`);
+        text.setAttribute('y', `${midpoint.y}`);
+        text.textContent = valueString;
     }
 }
 

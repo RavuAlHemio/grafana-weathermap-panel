@@ -139,117 +139,11 @@ function placeEdges(state) {
         }
         if (edge.metric2Name) {
             var _b = geometry_1.halveCubicBezier(n1Center, control1, control2, n2Center), _point1 = _b[0], point1COut = _b[1], point2CIn = _b[2], point2 = _b[3], point2COut = _b[4], point3CIn = _b[5], _point2 = _b[6];
-            var therePath = state.make.path();
-            singleEdgeGroup.appendChild(therePath);
-            therePath.setAttribute('d', "M " + n1Center.x + "," + n1Center.y + " " +
-                ("C " + point1COut.x + "," + point1COut.y + "," + point2CIn.x + "," + point2CIn.y + "," + point2.x + "," + point2.y));
-            modifyStyle(therePath, {
-                'stroke-width': state.config.strokeWidth,
-                'fill': 'none',
-            });
-            var thereTitle = state.make.title();
-            therePath.appendChild(thereTitle);
-            thereTitle.textContent = edge.node1 + " \u2192 " + edge.node2;
-            var backPath = state.make.path();
-            singleEdgeGroup.appendChild(backPath);
-            backPath.setAttribute('d', "M " + point2.x + "," + point2.y + " " +
-                ("C " + point2COut.x + "," + point2COut.y + "," + point3CIn.x + "," + point3CIn.y + "," + n2Center.x + "," + n2Center.y));
-            modifyStyle(backPath, {
-                'stroke-width': state.config.strokeWidth,
-                'fill': 'none',
-            });
-            var backTitle = state.make.title();
-            backPath.appendChild(backTitle);
-            backTitle.textContent = edge.node2 + " \u2192 " + edge.node1;
-            if (edge.metricName in state.currentValues) {
-                var currentValue = state.currentValues[edge.metricName];
-                modifyStyle(therePath, {
-                    'stroke': gradients_1.gradientColorForValue(state.sortedGradient, 'strokeColor', currentValue),
-                });
-                modifyWithWeathermapStyle(state, therePath, edge.styleName);
-            }
-            else {
-                modifyStyle(therePath, {
-                    'stroke': 'black',
-                    'stroke-dasharray': state.config.noValueDashArray,
-                });
-            }
-            if (edge.metric2Name in state.currentValues) {
-                var currentValue = state.currentValues[edge.metric2Name];
-                modifyStyle(backPath, {
-                    'stroke': gradients_1.gradientColorForValue(state.sortedGradient, 'strokeColor', currentValue),
-                });
-                modifyWithWeathermapStyle(state, backPath, edge.styleName);
-            }
-            else {
-                modifyStyle(backPath, {
-                    'stroke': 'black',
-                    'stroke-dasharray': state.config.noValueDashArray,
-                });
-            }
-            if (state.config.showNumbers) {
-                var quarterPoint = geometry_1.halveCubicBezier(n1Center, point1COut, point2CIn, point2)[3];
-                var threeQuarterPoint = geometry_1.halveCubicBezier(point2, point2COut, point3CIn, n2Center)[3];
-                var valueString = (edge.metricName in state.currentValues)
-                    ? state.currentValues[edge.metricName].toFixed(2)
-                    : '?';
-                var text1 = state.make.text();
-                singleEdgeGroup.appendChild(text1);
-                text1.setAttribute('x', "" + quarterPoint.x);
-                text1.setAttribute('y', "" + quarterPoint.y);
-                text1.textContent = valueString;
-                var value2String = (edge.metric2Name in state.currentValues)
-                    ? state.currentValues[edge.metric2Name].toFixed(2)
-                    : '?';
-                var text2 = state.make.text();
-                singleEdgeGroup.appendChild(text2);
-                text2.setAttribute('x', "" + threeQuarterPoint.x);
-                text2.setAttribute('y', "" + threeQuarterPoint.y);
-                text2.textContent = value2String;
-            }
+            makeAndPlaceEdge(state, singleEdgeGroup, n1Center, point1COut, point2CIn, point2, edge.metricName, edge.styleName, edge.node1 + " \u2192 " + edge.node2);
+            makeAndPlaceEdge(state, singleEdgeGroup, point2, point2COut, point3CIn, n2Center, edge.metric2Name, edge.styleName, edge.node2 + " \u2192 " + edge.node1);
         }
         else {
-            var edgePath = state.make.path();
-            singleEdgeGroup.appendChild(edgePath);
-            if (control1 !== null && control2 !== null) {
-                edgePath.setAttribute('d', "M " + n1Center.x + "," + n1Center.y + " " +
-                    ("C " + control1.x + "," + control1.y + "," + control2.x + "," + control2.y + "," + n2Center.x + "," + n2Center.y));
-            }
-            else {
-                edgePath.setAttribute('d', "M " + n1Center.x + "," + n1Center.y + " " +
-                    ("L " + n2Center.x + "," + n2Center.y));
-            }
-            modifyStyle(edgePath, {
-                'stroke-width': state.config.strokeWidth,
-                'fill': 'none',
-            });
-            var edgeTitle = state.make.title();
-            edgePath.appendChild(edgeTitle);
-            edgeTitle.textContent = edge.node2 + " \u2194 " + edge.node1;
-            if (edge.metricName in state.currentValues) {
-                var currentValue = state.currentValues[edge.metricName];
-                modifyStyle(edgePath, {
-                    'stroke': gradients_1.gradientColorForValue(state.sortedGradient, 'strokeColor', currentValue),
-                });
-                modifyWithWeathermapStyle(state, edgePath, edge.styleName);
-            }
-            else {
-                modifyStyle(edgePath, {
-                    'stroke': 'black',
-                    'stroke-dasharray': state.config.noValueDashArray,
-                });
-            }
-            if (state.config.showNumbers) {
-                var midpoint = geometry_1.halveCubicBezier(n1Center, control1, control2, n2Center)[3];
-                var valueString = (edge.metricName in state.currentValues)
-                    ? state.currentValues[edge.metricName].toFixed(2)
-                    : '?';
-                var text = state.make.text();
-                singleEdgeGroup.appendChild(text);
-                text.setAttribute('x', "" + midpoint.x);
-                text.setAttribute('y', "" + midpoint.y);
-                text.textContent = valueString;
-            }
+            makeAndPlaceEdge(state, singleEdgeGroup, n1Center, control1, control2, n2Center, edge.metricName, edge.styleName, edge.node1 + " \u2194 " + edge.node2);
         }
     }
 }
@@ -263,6 +157,45 @@ function placeLabels(state) {
         text.setAttribute('x', "" + +label.x);
         text.setAttribute('y', "" + +label.y);
         text.textContent = label.label;
+    }
+}
+function makeAndPlaceEdge(state, singleEdgeGroup, start, control1, control2, end, metricName, edgeStyleName, title) {
+    var path = state.make.path();
+    singleEdgeGroup.appendChild(path);
+    path.setAttribute('d', "M " + start.x + "," + start.y + " " +
+        ("C " + control1.x + "," + control1.y + "," + control2.x + "," + control2.y + "," + end.x + "," + end.y));
+    modifyStyle(path, {
+        'stroke-width': state.config.strokeWidth,
+        'fill': 'none',
+    });
+    if (title) {
+        var titleElem = state.make.title();
+        path.appendChild(titleElem);
+        titleElem.textContent = title;
+    }
+    if (metricName in state.currentValues) {
+        var currentValue = state.currentValues[metricName];
+        modifyStyle(path, {
+            'stroke': gradients_1.gradientColorForValue(state.sortedGradient, 'strokeColor', currentValue)
+        });
+        modifyWithWeathermapStyle(state, path, edgeStyleName);
+    }
+    else {
+        modifyStyle(path, {
+            'stroke': 'black',
+            'stroke-dasharray': state.config.noValueDashArray
+        });
+    }
+    if (state.config.showNumbers) {
+        var midpoint = geometry_1.halveCubicBezier(start, control1, control2, end)[3];
+        var valueString = (metricName in state.currentValues)
+            ? state.currentValues[metricName].toFixed(2)
+            : '?';
+        var text = state.make.text();
+        singleEdgeGroup.appendChild(text);
+        text.setAttribute('x', "" + midpoint.x);
+        text.setAttribute('y', "" + midpoint.y);
+        text.textContent = valueString;
     }
 }
 function maybeWrapIntoLink(svgMake, upperGroup, singleObjectGroup, linkUriBase, objLinkParams) {
