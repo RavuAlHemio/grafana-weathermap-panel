@@ -50,6 +50,14 @@ function normalizeAngle(angleRadians) {
     return angleRadians;
 }
 exports.normalizeAngle = normalizeAngle;
+function unitVector(vector) {
+    var euclidNorm = Math.sqrt(vector.x * vector.x + vector.y * vector.y);
+    return {
+        x: vector.x / euclidNorm,
+        y: vector.y / euclidNorm
+    };
+}
+exports.unitVector = unitVector;
 function deg2rad(angleDegrees) {
     return angleDegrees * Math.PI / 180;
 }

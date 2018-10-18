@@ -51,6 +51,14 @@ System.register([], function (exports_1, context_1) {
         return angleRadians;
     }
     exports_1("normalizeAngle", normalizeAngle);
+    function unitVector(vector) {
+        var euclidNorm = Math.sqrt(vector.x * vector.x + vector.y * vector.y);
+        return {
+            x: vector.x / euclidNorm,
+            y: vector.y / euclidNorm
+        };
+    }
+    exports_1("unitVector", unitVector);
     function deg2rad(angleDegrees) {
         return angleDegrees * Math.PI / 180;
     }

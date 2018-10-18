@@ -1,5 +1,5 @@
 import { svgNamespace, xlinkNamespace } from './constants';
-import { deg2rad, halveCubicBezier, normalizeAngle, Point2D, polarToCartesian } from './geometry';
+import { deg2rad, halveCubicBezier, normalizeAngle, Point2D, polarToCartesian, unitVector } from './geometry';
 import { Gradient, gradientColorForValue } from './gradients';
 import { LegendSettings, placeLegend } from './legend';
 
@@ -214,34 +214,108 @@ function makeAndPlaceEdge(
     state: WeathermapRendererState, singleEdgeGroup: SVGGElement, start: Point2D, control1: Point2D, control2: Point2D,
     end: Point2D, metricName: string, edgeStyleName: string|null, title: string|null
 ): void {
-    let path: SVGPathElement = state.make.path();
-    singleEdgeGroup.appendChild(path);
-    path.setAttribute('d',
-        `M ${start.x},${start.y} ` +
-        `C ${control1.x},${control1.y},${control2.x},${control2.y},${end.x},${end.y}`
-    );
-    modifyStyle(path, {
-        'stroke-width': state.config.strokeWidth,
+    let strokeWidths: number[] = [state.config.strokeWidth];
+    let edgeStyle: WeathermapStyle|null = getWeathermapStyle(state, edgeStyleName);
+    if (edgeStyle && edgeStyle.strokeWidthArray) {
+        let pieces = edgeStyle.strokeWidthArray.split(/[ ,]+/);
+        strokeWidths = pieces.map(p => Number.parseFloat(p));
+    }
+
+    if (strokeWidths.length % 2 != 1) {
+        // like stroke-dasharray, double the elements
+        strokeWidths.push(...strokeWidths);
+    }
+
+    let offsetUnitVector: Point2D = {x: 0, y: 0};
+    if (strokeWidths.length > 1) {
+        // calculate an actual offset vector
+
+        // get the direction
+        let direction: Point2D = {
+            x: start.x - end.x,
+            y: start.y - end.y
+        };
+
+        // rotate 90°; that's the offset vector
+        let offsetVector: Point2D = {
+            x: direction.y,
+            y: -direction.x
+        };
+
+        // calculate unit vector
+        offsetUnitVector = unitVector(offsetVector);
+    }
+
+    let multistrokeGroup = state.make.g();
+    singleEdgeGroup.appendChild(multistrokeGroup);
+    modifyStyle(multistrokeGroup, {
         'fill': 'none',
     });
 
     if (title) {
         let titleElem = state.make.title();
-        path.appendChild(titleElem);
+        multistrokeGroup.appendChild(titleElem);
         titleElem.textContent = title;
     }
 
     if (metricName in state.currentValues) {
         let currentValue = state.currentValues[metricName];
-        modifyStyle(path, {
+        modifyStyle(multistrokeGroup, {
             'stroke': gradientColorForValue(state.sortedGradient, 'strokeColor', currentValue)
         });
-        modifyWithWeathermapStyle(state, path, edgeStyleName);
+        modifyApplyingWeathermapStyle(state, multistrokeGroup, edgeStyle);
     } else {
-        modifyStyle(path, {
+        modifyStyle(multistrokeGroup, {
             'stroke': 'black',
             'stroke-dasharray': state.config.noValueDashArray
         });
+    }
+
+    let totalStrokeWidth: number = strokeWidths.reduce((acc, cur) => acc + cur, 0);
+    let currentOffset: number = -totalStrokeWidth/2.0;
+    let isSpacing: boolean = true;
+    for (let strokeWidth of strokeWidths) {
+        isSpacing = !isSpacing;
+        if (isSpacing) {
+            currentOffset += strokeWidth;
+            continue;
+        }
+
+        // calculate offset
+        let xOffset = offsetUnitVector.x * (currentOffset + strokeWidth/2.0);
+        let yOffset = offsetUnitVector.y * (currentOffset + strokeWidth/2.0);
+
+        let strokeStart: Point2D = {
+            x: start.x + xOffset,
+            y: start.y + yOffset,
+        };
+        let strokeControl1: Point2D = {
+            x: control1.x + xOffset,
+            y: control1.y + yOffset,
+        };
+        let strokeControl2: Point2D = {
+            x: control2.x + xOffset,
+            y: control2.y + yOffset,
+        };
+        let strokeEnd: Point2D = {
+            x: end.x + xOffset,
+            y: end.y + yOffset,
+        };
+
+        // make the path
+        let path: SVGPathElement = state.make.path();
+        multistrokeGroup.appendChild(path);
+        path.setAttribute('d',
+            `M ${strokeStart.x},${strokeStart.y} ` +
+            `C ${strokeControl1.x},${strokeControl1.y},${strokeControl2.x},${strokeControl2.y},${strokeEnd.x},${strokeEnd.y}`
+        );
+
+        // apply the specific stroke width
+        modifyStyle(path, {
+            'stroke-width': `${strokeWidth}`,
+        });
+
+        currentOffset += strokeWidth;
     }
 
     if (state.config.showNumbers) {
@@ -327,15 +401,23 @@ function modifyStyle(element: Element, newValues: object): void {
     element.setAttribute('style', keyValueString);
 }
 
-
-function modifyWithWeathermapStyle(
-    state: WeathermapRendererState, element: Element, styleName: string|null|undefined
-): void {
+function getWeathermapStyle(
+    state: WeathermapRendererState, styleName: string|null|undefined
+): WeathermapStyle|null {
     if (!styleName) {
-        return;
+        return null;
     }
 
     let style = state.styleMap[styleName];
+    if (!style) {
+        return null;
+    }
+    return style;
+}
+
+function modifyApplyingWeathermapStyle(
+    state: WeathermapRendererState, element: Element, style: WeathermapStyle|null
+): void {
     if (!style) {
         return;
     }
@@ -344,9 +426,7 @@ function modifyWithWeathermapStyle(
     if (style.dashArray) {
         styleProps['stroke-dasharray'] = style.dashArray;
     }
-    if (style.strokeWidth) {
-        styleProps['stroke-width'] = style.strokeWidth;
-    }
+    // style.strokeWidthArray is handled beforehand
 
     modifyStyle(element, styleProps);
 }
@@ -444,7 +524,7 @@ interface WeathermapLabel extends PositionableTextElement {
 
 interface WeathermapStyle {
     name: string;
-    strokeWidth?: number;
+    strokeWidthArray?: string;
     dashArray?: string;
 }
 

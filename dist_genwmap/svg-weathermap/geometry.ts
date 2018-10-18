@@ -55,6 +55,14 @@ export function normalizeAngle(angleRadians: number): number {
     return angleRadians;
 }
 
+export function unitVector(vector: Point2D) {
+    let euclidNorm = Math.sqrt(vector.x*vector.x + vector.y*vector.y);
+    return {
+        x: vector.x / euclidNorm,
+        y: vector.y / euclidNorm
+    };
+}
+
 export function deg2rad(angleDegrees: number): number {
     return angleDegrees * Math.PI / 180;
 }

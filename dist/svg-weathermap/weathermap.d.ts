@@ -61,7 +61,7 @@ interface WeathermapLabel extends PositionableTextElement {
 }
 interface WeathermapStyle {
     name: string;
-    strokeWidth?: number;
+    strokeWidthArray?: string;
     dashArray?: string;
 }
 interface LinkSettings {

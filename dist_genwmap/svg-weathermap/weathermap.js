@@ -160,31 +160,86 @@ function placeLabels(state) {
     }
 }
 function makeAndPlaceEdge(state, singleEdgeGroup, start, control1, control2, end, metricName, edgeStyleName, title) {
-    var path = state.make.path();
-    singleEdgeGroup.appendChild(path);
-    path.setAttribute('d', "M " + start.x + "," + start.y + " " +
-        ("C " + control1.x + "," + control1.y + "," + control2.x + "," + control2.y + "," + end.x + "," + end.y));
-    modifyStyle(path, {
-        'stroke-width': state.config.strokeWidth,
+    var strokeWidths = [state.config.strokeWidth];
+    var edgeStyle = getWeathermapStyle(state, edgeStyleName);
+    if (edgeStyle && edgeStyle.strokeWidthArray) {
+        var pieces = edgeStyle.strokeWidthArray.split(/[ ,]+/);
+        strokeWidths = pieces.map(function (p) { return Number.parseFloat(p); });
+    }
+    if (strokeWidths.length % 2 != 1) {
+        strokeWidths.push.apply(strokeWidths, strokeWidths);
+    }
+    var offsetUnitVector = { x: 0, y: 0 };
+    if (strokeWidths.length > 1) {
+        var direction = {
+            x: start.x - end.x,
+            y: start.y - end.y
+        };
+        var offsetVector = {
+            x: direction.y,
+            y: -direction.x
+        };
+        offsetUnitVector = geometry_1.unitVector(offsetVector);
+    }
+    var multistrokeGroup = state.make.g();
+    singleEdgeGroup.appendChild(multistrokeGroup);
+    modifyStyle(multistrokeGroup, {
         'fill': 'none',
     });
     if (title) {
         var titleElem = state.make.title();
-        path.appendChild(titleElem);
+        multistrokeGroup.appendChild(titleElem);
         titleElem.textContent = title;
     }
     if (metricName in state.currentValues) {
         var currentValue = state.currentValues[metricName];
-        modifyStyle(path, {
+        modifyStyle(multistrokeGroup, {
             'stroke': gradients_1.gradientColorForValue(state.sortedGradient, 'strokeColor', currentValue)
         });
-        modifyWithWeathermapStyle(state, path, edgeStyleName);
+        modifyApplyingWeathermapStyle(state, multistrokeGroup, edgeStyle);
     }
     else {
-        modifyStyle(path, {
+        modifyStyle(multistrokeGroup, {
             'stroke': 'black',
             'stroke-dasharray': state.config.noValueDashArray
         });
+    }
+    var totalStrokeWidth = strokeWidths.reduce(function (acc, cur) { return acc + cur; }, 0);
+    var currentOffset = -totalStrokeWidth / 2.0;
+    var isSpacing = true;
+    for (var _i = 0, strokeWidths_1 = strokeWidths; _i < strokeWidths_1.length; _i++) {
+        var strokeWidth = strokeWidths_1[_i];
+        isSpacing = !isSpacing;
+        if (isSpacing) {
+            currentOffset += strokeWidth;
+            continue;
+        }
+        var xOffset = offsetUnitVector.x * (currentOffset + strokeWidth / 2.0);
+        var yOffset = offsetUnitVector.y * (currentOffset + strokeWidth / 2.0);
+        var strokeStart = {
+            x: start.x + xOffset,
+            y: start.y + yOffset,
+        };
+        var strokeControl1 = {
+            x: control1.x + xOffset,
+            y: control1.y + yOffset,
+        };
+        var strokeControl2 = {
+            x: control2.x + xOffset,
+            y: control2.y + yOffset,
+        };
+        var strokeEnd = {
+            x: end.x + xOffset,
+            y: end.y + yOffset,
+        };
+        var path = state.make.path();
+        multistrokeGroup.appendChild(path);
+        path.setAttribute('d', "M " + strokeStart.x + "," + strokeStart.y + " " +
+            ("C " + strokeControl1.x + "," + strokeControl1.y + "," + strokeControl2.x + "," + strokeControl2.y + "," + strokeEnd.x + "," + strokeEnd.y));
+        modifyStyle(path, {
+            'stroke-width': "" + strokeWidth,
+        });
+        currentOffset += strokeWidth;
     }
     if (state.config.showNumbers) {
         var midpoint = geometry_1.halveCubicBezier(start, control1, control2, end)[3];
@@ -256,20 +311,23 @@ function modifyStyle(element, newValues) {
     var keyValueString = keyValuePairs.join(';');
     element.setAttribute('style', keyValueString);
 }
-function modifyWithWeathermapStyle(state, element, styleName) {
+function getWeathermapStyle(state, styleName) {
     if (!styleName) {
-        return;
+        return null;
     }
     var style = state.styleMap[styleName];
+    if (!style) {
+        return null;
+    }
+    return style;
+}
+function modifyApplyingWeathermapStyle(state, element, style) {
     if (!style) {
         return;
     }
     var styleProps = {};
     if (style.dashArray) {
         styleProps['stroke-dasharray'] = style.dashArray;
-    }
-    if (style.strokeWidth) {
-        styleProps['stroke-width'] = style.strokeWidth;
     }
     modifyStyle(element, styleProps);
 }
