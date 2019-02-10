@@ -1,4 +1,3 @@
-/// <reference path="../node_modules/grafana-sdk-mocks/app/headers/common.d.ts" />
 import { MetricsPanelCtrl } from 'app/plugins/sdk';
 import { WeathermapConfig, ObjectLinkSettings } from './svg-weathermap/weathermap';
 export declare class WeathermapCtrl extends MetricsPanelCtrl {
