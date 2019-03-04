@@ -51,6 +51,7 @@ module.exports = function (grunt) {
                     emitDecoratorMetadata: true,
                     experimentalDecorators: true,
                     sourceMap: true,
+                    strictNullChecks: true,
                     noImplicitAny: false,
                     paths: {
                         "*": [
@@ -71,6 +72,7 @@ module.exports = function (grunt) {
                     emitDecoratorMetadata: true,
                     experimentalDecorators: true,
                     sourceMap: true,
+                    strictNullChecks: true,
                     noImplicitAny: false,
                     paths: {
                         "*": [

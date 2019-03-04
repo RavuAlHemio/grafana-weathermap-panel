@@ -26,6 +26,9 @@ System.register(["app/plugins/sdk", "./properties", "./svg-weathermap/weathermap
             for (var _i = 0, pairs_1 = pairs; _i < pairs_1.length; _i++) {
                 var pair = pairs_1[_i];
                 var keyValueMatch = pair.match(/^([^=]*)(?:=(.*))?$/);
+                if (keyValueMatch == null) {
+                    continue;
+                }
                 var key = keyValueMatch[1];
                 var value = keyValueMatch[2];
                 if (key !== undefined && value !== undefined) {
@@ -212,6 +215,9 @@ System.register(["app/plugins/sdk", "./properties", "./svg-weathermap/weathermap
                 };
                 WeathermapCtrl.prototype.renderThat = function (topElem, ctrl) {
                     var elem = topElem.querySelector('div.weathermap');
+                    if (elem == null) {
+                        return;
+                    }
                     while (elem.lastChild) {
                         elem.removeChild(elem.lastChild);
                     }

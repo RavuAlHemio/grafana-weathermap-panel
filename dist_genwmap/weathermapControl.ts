@@ -185,6 +185,10 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
     renderThat(topElem: HTMLElement, ctrl) {
         // find weathermap div
         let elem = topElem.querySelector('div.weathermap');
+        if (elem == null) {
+            // oh well
+            return;
+        }
 
         // filicide
         while (elem.lastChild) {
@@ -201,7 +205,7 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
         } else if (objLink.type == 'dashboard' && objLink.dashUri) {
             let url = new URL(window.location.href);
             let oldParams = getSearchParams(url);
-            let params = [];
+            let params: string[] = [];
 
             if (oldParams['from']) {
                 params.push(`from=${encodeURIComponent(oldParams['from'])}`);
@@ -234,6 +238,10 @@ function getSearchParams(url: URL): object {
         let pairs = search.split('&');
         for (let pair of pairs) {
             let keyValueMatch = pair.match(/^([^=]*)(?:=(.*))?$/);
+            if (keyValueMatch == null) {
+                continue;
+            }
+
             let key = keyValueMatch[1];
             let value = keyValueMatch[2];
             if (key !== undefined && value !== undefined) {

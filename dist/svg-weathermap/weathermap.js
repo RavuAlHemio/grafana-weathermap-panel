@@ -13,7 +13,7 @@ System.register(["./constants", "./geometry", "./gradients", "./legend"], functi
         };
         var state = new WeathermapRendererState(elementCreator, config, sortedGradient, currentValues);
         initializeSVG(state, container, addViewBox);
-        if (linkResolver) {
+        if (linkResolver != null) {
             state.nodeLinkUriBase = linkResolver(config.link.node);
             state.edgeLinkUriBase = linkResolver(config.link.edge);
         }
@@ -67,7 +67,7 @@ System.register(["./constants", "./geometry", "./gradients", "./legend"], functi
             singleNodeGroup.appendChild(text);
             text.setAttribute('x', "" + ((+node.x) + (+state.config.textOffsets.left)));
             text.setAttribute('y', "" + ((+node.y) + (+node.height) - state.config.textOffsets.bottom));
-            if (state.config.showNumbers) {
+            if (state.config.showNumbers && node.metricName != null) {
                 var value = (node.metricName in state.currentValues)
                     ? state.currentValues[node.metricName]
                     : '?';
@@ -189,7 +189,7 @@ System.register(["./constants", "./geometry", "./gradients", "./legend"], functi
             multistrokeGroup.appendChild(titleElem);
             titleElem.textContent = title;
         }
-        if (metricName in state.currentValues) {
+        if (metricName != null && metricName in state.currentValues) {
             var currentValue = state.currentValues[metricName];
             modifyStyle(multistrokeGroup, {
                 'stroke': gradients_1.gradientColorForValue(state.sortedGradient, 'strokeColor', currentValue)
@@ -218,11 +218,11 @@ System.register(["./constants", "./geometry", "./gradients", "./legend"], functi
                 x: start.x + xOffset,
                 y: start.y + yOffset,
             };
-            var strokeControl1 = {
+            var strokeControl1 = (control1 == null) ? null : {
                 x: control1.x + xOffset,
                 y: control1.y + yOffset,
             };
-            var strokeControl2 = {
+            var strokeControl2 = (control2 == null) ? null : {
                 x: control2.x + xOffset,
                 y: control2.y + yOffset,
             };
@@ -232,8 +232,14 @@ System.register(["./constants", "./geometry", "./gradients", "./legend"], functi
             };
             var path = state.make.path();
             multistrokeGroup.appendChild(path);
-            path.setAttribute('d', "M " + strokeStart.x + "," + strokeStart.y + " " +
-                ("C " + strokeControl1.x + "," + strokeControl1.y + "," + strokeControl2.x + "," + strokeControl2.y + "," + strokeEnd.x + "," + strokeEnd.y));
+            if (strokeControl1 == null || strokeControl2 == null) {
+                path.setAttribute('d', "M " + strokeStart.x + "," + strokeStart.y + " " +
+                    ("L " + strokeEnd.x + "," + strokeEnd.y));
+            }
+            else {
+                path.setAttribute('d', "M " + strokeStart.x + "," + strokeStart.y + " " +
+                    ("C " + strokeControl1.x + "," + strokeControl1.y + "," + strokeControl2.x + "," + strokeControl2.y + "," + strokeEnd.x + "," + strokeEnd.y));
+            }
             modifyStyle(path, {
                 'stroke-width': "" + strokeWidth,
             });
@@ -241,7 +247,7 @@ System.register(["./constants", "./geometry", "./gradients", "./legend"], functi
         }
         if (state.config.showNumbers) {
             var midpoint = geometry_1.halveCubicBezier(start, control1, control2, end)[3];
-            var valueString = (metricName in state.currentValues)
+            var valueString = (metricName != null && metricName in state.currentValues)
                 ? state.currentValues[metricName].toFixed(2)
                 : '?';
             var text = state.make.text();
@@ -252,9 +258,9 @@ System.register(["./constants", "./geometry", "./gradients", "./legend"], functi
         }
     }
     function maybeWrapIntoLink(svgMake, upperGroup, singleObjectGroup, linkUriBase, objLinkParams) {
-        if (linkUriBase) {
+        if (linkUriBase != null) {
             var objLinkUri = linkUriBase;
-            if (objLinkParams) {
+            if (objLinkParams != null) {
                 objLinkUri += (objLinkUri.indexOf('?') === -1)
                     ? '?'
                     : '&';
@@ -279,15 +285,18 @@ System.register(["./constants", "./geometry", "./gradients", "./legend"], functi
     function modifyStyle(element, newValues) {
         var assembledStyle = {};
         if (element.hasAttribute('style')) {
-            for (var _i = 0, _a = element.getAttribute('style').split(';'); _i < _a.length; _i++) {
-                var chunk = _a[_i];
-                var index = chunk.indexOf(':');
-                if (index == -1) {
-                    continue;
+            var styleVal = element.getAttribute('style');
+            if (styleVal != null) {
+                for (var _i = 0, _a = styleVal.split(';'); _i < _a.length; _i++) {
+                    var chunk = _a[_i];
+                    var index = chunk.indexOf(':');
+                    if (index == -1) {
+                        continue;
+                    }
+                    var key = chunk.substr(0, index);
+                    var value = chunk.substr(index + 1);
+                    assembledStyle[key] = value;
                 }
-                var key = chunk.substr(0, index);
-                var value = chunk.substr(index + 1);
-                assembledStyle[key] = value;
             }
         }
         for (var key in newValues) {

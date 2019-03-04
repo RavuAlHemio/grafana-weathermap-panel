@@ -5,7 +5,7 @@ import { LegendSettings, placeLegend } from './legend';
 
 export function renderWeathermapInto(
     elementCreator: SVGElementCreatorDOM, container: Node, config: WeathermapConfig, currentValues: MetricValueMap,
-    linkResolver?: (ObjectLinkSettings) => string|null, addViewBox: boolean = false
+    linkResolver: ((ObjectLinkSettings) => string|null)|null|undefined, addViewBox: boolean = false
 ): SVGSVGElement {
     // sort gradient stops
     let sortedStops = config.gradient.stops
@@ -21,7 +21,7 @@ export function renderWeathermapInto(
     initializeSVG(state, container, addViewBox);
 
     // resolve links
-    if (linkResolver) {
+    if (linkResolver != null) {
         state.nodeLinkUriBase = linkResolver(config.link.node);
         state.edgeLinkUriBase = linkResolver(config.link.edge);
     }
@@ -30,9 +30,9 @@ export function renderWeathermapInto(
     placeNodes(state);
     placeEdges(state);
     placeLabels(state);
-    placeLegend(state.make, config.legend, state.legendGroup, state.defs, sortedGradient, `${config.id}`);
+    placeLegend(state.make, config.legend, state.legendGroup!, state.defs!, sortedGradient, `${config.id}`);
 
-    return state.svg;
+    return state.svg!;
 }
 
 function initializeSVG(state: WeathermapRendererState, container: Node, addViewBox: boolean = false): void {
@@ -72,7 +72,7 @@ function placeNodes(state: WeathermapRendererState): void {
         state.nodeLabelToNode[node.label] = node;
 
         let singleNodeGroup: SVGGElement = state.make.g();
-        maybeWrapIntoLink(state.make, state.nodeGroup, singleNodeGroup, state.nodeLinkUriBase, node.linkParams);
+        maybeWrapIntoLink(state.make, state.nodeGroup!, singleNodeGroup, state.nodeLinkUriBase, node.linkParams);
 
         let rect: SVGRectElement = state.make.rect();
         singleNodeGroup.appendChild(rect);
@@ -88,7 +88,7 @@ function placeNodes(state: WeathermapRendererState): void {
 
         text.setAttribute('x', `${(+node.x) + (+state.config.textOffsets.left)}`);
         text.setAttribute('y', `${(+node.y) + (+node.height) - state.config.textOffsets.bottom}`);
-        if (state.config.showNumbers) {
+        if (state.config.showNumbers && node.metricName != null) {
             let value = (node.metricName in state.currentValues)
                 ? state.currentValues[node.metricName]
                 : '?'
@@ -133,7 +133,7 @@ function placeEdges(state: WeathermapRendererState): void {
         }
 
         let singleEdgeGroup: SVGGElement = state.make.g();
-        maybeWrapIntoLink(state.make, state.edgeGroup, singleEdgeGroup, state.edgeLinkUriBase, edge.linkParams);
+        maybeWrapIntoLink(state.make, state.edgeGroup!, singleEdgeGroup, state.edgeLinkUriBase, edge.linkParams);
 
         let n1Center: Point2D = {
             x: (+node1.x) + ((+node1.width) / 2),
@@ -199,7 +199,7 @@ function placeEdges(state: WeathermapRendererState): void {
 function placeLabels(state: WeathermapRendererState): void {
     for (let label of state.config.weathermapLabels) {
         let singleLabelGroup: SVGGElement = state.make.g();
-        state.labelGroup.appendChild(singleLabelGroup);
+        state.labelGroup!.appendChild(singleLabelGroup);
 
         let text: SVGTextElement = state.make.text();
         singleLabelGroup.appendChild(text);
@@ -211,8 +211,9 @@ function placeLabels(state: WeathermapRendererState): void {
 }
 
 function makeAndPlaceEdge(
-    state: WeathermapRendererState, singleEdgeGroup: SVGGElement, start: Point2D, control1: Point2D, control2: Point2D,
-    end: Point2D, metricName: string, edgeStyleName: string|null, title: string|null
+    state: WeathermapRendererState, singleEdgeGroup: SVGGElement, start: Point2D, control1: Point2D|null,
+    control2: Point2D|null, end: Point2D, metricName: string|null|undefined, edgeStyleName: string|null|undefined,
+    title: string|null|undefined
 ): void {
     let strokeWidths: number[] = [state.config.strokeWidth];
     let edgeStyle: WeathermapStyle|null = getWeathermapStyle(state, edgeStyleName);
@@ -258,7 +259,7 @@ function makeAndPlaceEdge(
         titleElem.textContent = title;
     }
 
-    if (metricName in state.currentValues) {
+    if (metricName != null && metricName in state.currentValues) {
         let currentValue = state.currentValues[metricName];
         modifyStyle(multistrokeGroup, {
             'stroke': gradientColorForValue(state.sortedGradient, 'strokeColor', currentValue)
@@ -289,11 +290,11 @@ function makeAndPlaceEdge(
             x: start.x + xOffset,
             y: start.y + yOffset,
         };
-        let strokeControl1: Point2D = {
+        let strokeControl1: Point2D|null = (control1 == null) ? null : {
             x: control1.x + xOffset,
             y: control1.y + yOffset,
         };
-        let strokeControl2: Point2D = {
+        let strokeControl2: Point2D|null = (control2 == null) ? null : {
             x: control2.x + xOffset,
             y: control2.y + yOffset,
         };
@@ -305,10 +306,17 @@ function makeAndPlaceEdge(
         // make the path
         let path: SVGPathElement = state.make.path();
         multistrokeGroup.appendChild(path);
-        path.setAttribute('d',
-            `M ${strokeStart.x},${strokeStart.y} ` +
-            `C ${strokeControl1.x},${strokeControl1.y},${strokeControl2.x},${strokeControl2.y},${strokeEnd.x},${strokeEnd.y}`
-        );
+        if (strokeControl1 == null || strokeControl2 == null) {
+            path.setAttribute('d',
+                `M ${strokeStart.x},${strokeStart.y} ` +
+                `L ${strokeEnd.x},${strokeEnd.y}`
+            );
+        } else {
+            path.setAttribute('d',
+                `M ${strokeStart.x},${strokeStart.y} ` +
+                `C ${strokeControl1.x},${strokeControl1.y},${strokeControl2.x},${strokeControl2.y},${strokeEnd.x},${strokeEnd.y}`
+            );
+        }
 
         // apply the specific stroke width
         modifyStyle(path, {
@@ -320,7 +328,7 @@ function makeAndPlaceEdge(
 
     if (state.config.showNumbers) {
         let midpoint = halveCubicBezier(start, control1, control2, end)[3];
-        let valueString = (metricName in state.currentValues)
+        let valueString = (metricName != null && metricName in state.currentValues)
             ? state.currentValues[metricName].toFixed(2)
             : '?'
         ;
@@ -333,12 +341,12 @@ function makeAndPlaceEdge(
 }
 
 function maybeWrapIntoLink(
-    svgMake: SVGElementCreator, upperGroup: SVGGElement, singleObjectGroup: SVGGElement, linkUriBase: string|null,
-    objLinkParams: string|null
+    svgMake: SVGElementCreator, upperGroup: SVGGElement, singleObjectGroup: SVGGElement,
+    linkUriBase: string|null|undefined, objLinkParams: string|null|undefined
 ): void {
-    if (linkUriBase) {
+    if (linkUriBase != null) {
         let objLinkUri = linkUriBase;
-        if (objLinkParams) {
+        if (objLinkParams != null) {
             objLinkUri += (objLinkUri.indexOf('?') === -1)
                 ? '?'
                 : '&';
@@ -369,14 +377,17 @@ function modifyStyle(element: Element, newValues: object): void {
     // parse style
     let assembledStyle = {};
     if (element.hasAttribute('style')) {
-        for (let chunk of element.getAttribute('style').split(';')) {
-            let index = chunk.indexOf(':');
-            if (index == -1) {
-                continue;
+        let styleVal = element.getAttribute('style');
+        if (styleVal != null) {
+            for (let chunk of styleVal.split(';')) {
+                let index = chunk.indexOf(':');
+                if (index == -1) {
+                    continue;
+                }
+                let key = chunk.substr(0, index);
+                let value = chunk.substr(index + 1);
+                assembledStyle[key] = value;
             }
-            let key = chunk.substr(0, index);
-            let value = chunk.substr(index + 1);
-            assembledStyle[key] = value;
         }
     }
 
@@ -390,7 +401,7 @@ function modifyStyle(element: Element, newValues: object): void {
         }
     }
 
-    let keyValuePairs = [];
+    let keyValuePairs: string[] = [];
     for (let key in assembledStyle) {
         if (assembledStyle.hasOwnProperty(key)) {
             keyValuePairs.push(`${key}:${assembledStyle[key]}`);
