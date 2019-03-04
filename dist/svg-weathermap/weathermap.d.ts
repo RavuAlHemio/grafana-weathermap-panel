@@ -80,7 +80,7 @@ export interface ObjectLinkSettings {
     dashUri: string | null;
     absoluteUri: string | null;
 }
-export interface WeathermapConfig {
+export interface WeathermapDefaultConfig {
     weathermapEdges: WeathermapEdge[];
     weathermapNodes: WeathermapNode[];
     weathermapLabels: WeathermapLabel[];
@@ -102,5 +102,8 @@ export interface WeathermapConfig {
     link: LinkSettings;
     noValueDashArray: string;
     unmeasuredDashArray: string;
+}
+export interface WeathermapConfig extends WeathermapDefaultConfig {
+    id: number;
 }
 export {};

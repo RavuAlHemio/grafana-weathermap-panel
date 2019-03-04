@@ -30,7 +30,7 @@ export function renderWeathermapInto(
     placeNodes(state);
     placeEdges(state);
     placeLabels(state);
-    placeLegend(state.make, config.legend, state.legendGroup, state.defs, sortedGradient);
+    placeLegend(state.make, config.legend, state.legendGroup, state.defs, sortedGradient, `${config.id}`);
 
     return state.svg;
 }
@@ -548,7 +548,7 @@ export interface ObjectLinkSettings {
     absoluteUri: string|null;
 }
 
-export interface WeathermapConfig {
+export interface WeathermapDefaultConfig {
     weathermapEdges: WeathermapEdge[];
     weathermapNodes: WeathermapNode[];
     weathermapLabels: WeathermapLabel[];
@@ -564,4 +564,8 @@ export interface WeathermapConfig {
     link: LinkSettings;
     noValueDashArray: string;
     unmeasuredDashArray: string;
+}
+
+export interface WeathermapConfig extends WeathermapDefaultConfig {
+    id: number;
 }

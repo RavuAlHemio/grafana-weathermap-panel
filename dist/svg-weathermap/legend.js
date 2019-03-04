@@ -2,7 +2,7 @@ System.register(["./weathermap"], function (exports_1, context_1) {
     "use strict";
     var weathermap_1, legendLength, legendWidth;
     var __moduleName = context_1 && context_1.id;
-    function placeLegend(svgMake, settings, container, defs, gradient) {
+    function placeLegend(svgMake, settings, container, defs, gradient, weathermapID) {
         var transform = '';
         if (settings.type == '') {
             return;
@@ -17,7 +17,7 @@ System.register(["./weathermap"], function (exports_1, context_1) {
             transform = "translate(" + settings.x + " " + (settings.y + settings.length) + ") rotate(-90) scale(" + settings.length / legendLength + " " + settings.width / legendWidth + ")";
         }
         strokeLegendContainer.setAttribute('transform', transform);
-        drawLegend(svgMake, gradient, 'strokeColor', strokeLegendContainer, defs);
+        drawLegend(svgMake, gradient, 'strokeColor', strokeLegendContainer, defs, weathermapID);
         var fillLegendContainer = svgMake.g();
         container.appendChild(fillLegendContainer);
         strokeLegendContainer.setAttribute('class', 'fill-legend');
@@ -28,13 +28,16 @@ System.register(["./weathermap"], function (exports_1, context_1) {
             transform = "translate(" + (settings.x + settings.width) + " " + (settings.y + settings.length) + ") rotate(-90) scale(" + settings.length / legendLength + " " + settings.width / legendWidth + ")";
         }
         fillLegendContainer.setAttribute('transform', transform);
-        drawLegend(svgMake, gradient, 'fillColor', fillLegendContainer, defs);
+        drawLegend(svgMake, gradient, 'fillColor', fillLegendContainer, defs, weathermapID);
         placeLabels(svgMake, settings, gradient, container);
     }
     exports_1("placeLegend", placeLegend);
-    function drawLegend(svgMake, gradient, colorType, container, defs) {
+    function drawLegend(svgMake, gradient, colorType, container, defs, weathermapID) {
         if (gradient.type == 'linear') {
             var legendGradientName = "WeathermapLegendGradient-" + colorType;
+            if (weathermapID != null) {
+                legendGradientName = legendGradientName + "-" + weathermapID;
+            }
             var svgGrad = svgMake.linearGradient();
             defs.appendChild(svgGrad);
             svgGrad.setAttribute('id', legendGradientName);

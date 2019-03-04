@@ -20,7 +20,7 @@ System.register(["./constants", "./geometry", "./gradients", "./legend"], functi
         placeNodes(state);
         placeEdges(state);
         placeLabels(state);
-        legend_1.placeLegend(state.make, config.legend, state.legendGroup, state.defs, sortedGradient);
+        legend_1.placeLegend(state.make, config.legend, state.legendGroup, state.defs, sortedGradient, "" + config.id);
         return state.svg;
     }
     exports_1("renderWeathermapInto", renderWeathermapInto);

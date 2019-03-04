@@ -6,7 +6,8 @@ const legendWidth = 5;
 // (let the container apply any transformations)
 
 export function placeLegend(
-    svgMake: SVGElementCreator, settings: LegendSettings, container: Element, defs: SVGDefsElement, gradient: Gradient
+    svgMake: SVGElementCreator, settings: LegendSettings, container: Element, defs: SVGDefsElement, gradient: Gradient,
+    weathermapID?: string|null
 ): void {
     let transform = '';
 
@@ -25,7 +26,7 @@ export function placeLegend(
         transform = `translate(${settings.x} ${settings.y + settings.length}) rotate(-90) scale(${settings.length/legendLength} ${settings.width/legendWidth})`;
     }
     strokeLegendContainer.setAttribute('transform', transform);
-    drawLegend(svgMake, gradient, 'strokeColor', strokeLegendContainer, defs);
+    drawLegend(svgMake, gradient, 'strokeColor', strokeLegendContainer, defs, weathermapID);
 
     // draw fill-color legend
     let fillLegendContainer: SVGGElement = svgMake.g();
@@ -37,15 +38,21 @@ export function placeLegend(
         transform = `translate(${settings.x + settings.width} ${settings.y + settings.length}) rotate(-90) scale(${settings.length/legendLength} ${settings.width/legendWidth})`;
     }
     fillLegendContainer.setAttribute('transform', transform);
-    drawLegend(svgMake, gradient, 'fillColor', fillLegendContainer, defs);
+    drawLegend(svgMake, gradient, 'fillColor', fillLegendContainer, defs, weathermapID);
 
     // draw legend labels
     placeLabels(svgMake, settings, gradient, container);
 }
 
-function drawLegend(svgMake: SVGElementCreator, gradient: Gradient, colorType: keyof GradientStop, container: SVGElement, defs: SVGDefsElement): void {
+function drawLegend(
+    svgMake: SVGElementCreator, gradient: Gradient, colorType: keyof GradientStop, container: SVGElement,
+    defs: SVGDefsElement, weathermapID?: string|null
+): void {
     if (gradient.type == 'linear') {
         let legendGradientName = `WeathermapLegendGradient-${colorType}`;
+        if (weathermapID != null) {
+            legendGradientName = `${legendGradientName}-${weathermapID}`;
+        }
 
         let svgGrad = svgMake.linearGradient();
         defs.appendChild(svgGrad);

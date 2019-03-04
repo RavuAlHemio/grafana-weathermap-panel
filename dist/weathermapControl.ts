@@ -2,11 +2,11 @@
 
 import { MetricsPanelCtrl } from 'app/plugins/sdk';
 import { editorPath, nodeEditorPath, edgeEditorPath, labelEditorPath, styleEditorPath } from './properties';
-import { renderWeathermapInto, WeathermapConfig, ObjectLinkSettings } from './svg-weathermap/weathermap';
+import { renderWeathermapInto, WeathermapConfig, WeathermapDefaultConfig, ObjectLinkSettings } from './svg-weathermap/weathermap';
 import _ from 'lodash';
 import TimeSeries from 'app/core/time_series2';
 
-const panelDefaults: WeathermapConfig = {
+const panelDefaults: WeathermapDefaultConfig = {
     // data
     weathermapNodes: [],
     weathermapEdges: [],
