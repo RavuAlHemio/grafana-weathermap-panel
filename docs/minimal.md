@@ -59,6 +59,15 @@ As the gradient *Type*, we choose *linear*. We add two stops:
   *Show label in legend*.
 
 Since we chose a linear gradient, the values in between will be interpolated.
+This is done by comparing the actual value returned by the metric to the
+*Position* values of the gradient stops; the value is always interpolated
+between the next greater position and the next smaller position.
+
+When choosing a color, the metric values are clamped to the range of the
+gradient: if the metric value is smaller than the value of the lowest stop, the
+color of the lowest stop is used without any interpolation; if the metric value
+is larger than the value of the largest stop, the color of the largest stop is
+used.
 
 ## Adding the switches as nodes
 
