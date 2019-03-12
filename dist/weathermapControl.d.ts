@@ -1,6 +1,6 @@
-/// <reference path="../node_modules/grafana-sdk-mocks/app/headers/common.d.ts" />
-import { MetricsPanelCtrl } from 'app/plugins/sdk';
-import { WeathermapConfig, ObjectLinkSettings } from './svg-weathermap/weathermap';
+import { MetricsPanelCtrl } from "app/plugins/sdk";
+import { WeathermapConfig, WeathermapNode, WeathermapEdge, WeathermapLabel, WeathermapStyle, ObjectLinkSettings, StringMapping } from "./svg-weathermap/weathermap";
+import { GradientStop } from "./svg-weathermap/gradients";
 export declare class WeathermapCtrl extends MetricsPanelCtrl {
     private backendSrv;
     static templateUrl: string;
@@ -13,23 +13,23 @@ export declare class WeathermapCtrl extends MetricsPanelCtrl {
     constructor($scope: any, $injector: any, backendSrv: any);
     onInitEditMode(): void;
     onDataReceived(dataList: any): void;
-    seriesHandler(seriesData: any): any;
-    parseSeries(series: any): {};
+    seriesHandler(seriesData: any): void;
+    parseSeries(series: any): StringMapping<number>;
     onDataSnapshotLoad(snapshotData: any): void;
-    addWeathermapNode(node?: any): void;
-    removeWeathermapNode(node: any): void;
-    addWeathermapEdge(edge?: any): void;
-    removeWeathermapEdge(edge: any): void;
-    addWeathermapLabel(label?: any): void;
-    removeWeathermapLabel(label: any): void;
-    addWeathermapStyle(style?: any): void;
-    removeWeathermapStyle(style: any): void;
-    addGradientStop(stop?: any): void;
-    onGradientStopStrokeColorChange(stopIndex: any): (color: string) => void;
-    onGradientStopFillColorChange(stopIndex: any): (color: string) => void;
-    removeGradientStop(stop: any): void;
+    addWeathermapNode(node?: WeathermapNode): void;
+    removeWeathermapNode(node: WeathermapNode): void;
+    addWeathermapEdge(edge?: WeathermapEdge): void;
+    removeWeathermapEdge(edge: WeathermapEdge): void;
+    addWeathermapLabel(label?: WeathermapLabel): void;
+    removeWeathermapLabel(label: WeathermapLabel): void;
+    addWeathermapStyle(style?: WeathermapStyle): void;
+    removeWeathermapStyle(style: WeathermapStyle): void;
+    addGradientStop(stop?: GradientStop): void;
+    onGradientStopStrokeColorChange(stopIndex: number): (color: string) => void;
+    onGradientStopFillColorChange(stopIndex: number): (color: string) => void;
+    removeGradientStop(stop: GradientStop): void;
     dashboardChanged(link: ObjectLinkSettings): void;
-    link(scope: any, elems: any, attrs: any, ctrl: any): void;
-    renderThat(topElem: HTMLElement, ctrl: any): void;
+    link(_scope: any, elems: HTMLElement[], _attrs: any, ctrl: any): void;
+    renderThat(topElem: HTMLElement, _ctrl: any): void;
     static resolveLink(objLink: ObjectLinkSettings): string | null;
 }

@@ -1,12 +1,12 @@
-import { svgNamespace } from './svg-weathermap/constants';
-import { WeathermapConfig, renderWeathermapInto } from './svg-weathermap/weathermap';
-import { DOMImplementation, XMLSerializer } from 'xmldom';
-import { PrometheusMetric, fetchMetrics } from './fetcher';
-import fs = require('fs');
+import { svgNamespace } from "./svg-weathermap/constants";
+import { WeathermapConfig, renderWeathermapInto } from "./svg-weathermap/weathermap";
+import { DOMImplementation, XMLSerializer } from "xmldom";
+import { PrometheusMetric, fetchMetrics } from "./fetcher";
+import fs = require("fs");
 
 let options = {
-    configFile: 'genwmap.json',
-    outputFile: 'weathermap.svg'
+    configFile: "genwmap.json",
+    outputFile: "weathermap.svg"
 };
 
 function printUsage(): void {
@@ -16,11 +16,11 @@ function printUsage(): void {
 function processOptions(): boolean {
     let awaiting: string|null = null;
 
-    for (let i = 2; i < process.argv.length; ++i) {
-        let arg = process.argv[i];
+    for (let i: number = 2; i < process.argv.length; ++i) {
+        let arg: string = process.argv[i];
 
         if (awaiting === null) {
-            if (arg == "-c" || arg == "-o") {
+            if (arg === "-c" || arg === "-o") {
                 awaiting = arg;
             } else {
                 console.error(`Unknown option '${arg}'`);
@@ -28,9 +28,9 @@ function processOptions(): boolean {
                 return false;
             }
         } else {
-            if (awaiting == "-c") {
+            if (awaiting === "-c") {
                 options.configFile = arg;
-            } else if (awaiting == "-o") {
+            } else if (awaiting === "-o") {
                 options.outputFile = arg;
             }
             awaiting = null;
@@ -52,8 +52,8 @@ export async function main(): Promise<void> {
         return;
     }
 
-    let configString = await readFileAsync(options.configFile);
-    let config = JSON.parse(configString);
+    let configString: string = await readFileAsync(options.configFile);
+    let config: any = JSON.parse(configString);
 
     let weathermap: WeathermapConfig = config.weathermap;
     let metrics: PrometheusMetric[] = config.weathermap.targets;
@@ -61,29 +61,29 @@ export async function main(): Promise<void> {
     let lookbackInterval: string = config.lookbackInterval;
     let styleDefinition: string|null = config.styleDefinition;
 
-    let metricValues = await fetchMetrics(new URL(dataSources[config.weathermap.datasource]), metrics, lookbackInterval);
+    let metricValues: any = await fetchMetrics(new URL(dataSources[config.weathermap.datasource]), metrics, lookbackInterval);
 
     let impl = new DOMImplementation();
-    let doc = impl.createDocument(null, null, null);
+    let doc: Document = impl.createDocument(null, null, null);
 
-    const nullLinkResolver = null;
-    const addViewBox = true;
+    const nullLinkResolver: null = null;
+    const addViewBox: boolean = true;
     let svg: SVGSVGElement = renderWeathermapInto(doc, doc, weathermap, metricValues, nullLinkResolver, addViewBox);
     if (styleDefinition) {
-        let svgStyle: SVGStyleElement = doc.createElementNS(svgNamespace, 'style');
+        let svgStyle = <SVGStyleElement><unknown>doc.createElementNS(svgNamespace, "style");
         svg.insertBefore(svgStyle, svg.firstElementChild);
-        svgStyle.setAttribute('type', 'text/css');
+        svgStyle.setAttribute("type", "text/css");
         svgStyle.textContent = styleDefinition;
     }
 
     let outputter = new XMLSerializer();
-    let outputString = outputter.serializeToString(doc);
+    let outputString: string = outputter.serializeToString(doc);
     await writeFileAsync(options.outputFile, outputString, {});
 }
 
 function readFileAsync(path: string): Promise<string> {
-    return new Promise<string>(function (resolve, reject) {
-        fs.readFile(path, { encoding: 'utf8' }, function (err, data) {
+    return new Promise<string>((resolve, reject) => {
+        fs.readFile(path, { encoding: "utf8" }, (err, data) => {
             if (err) {
                 reject(err);
             } else {
@@ -94,8 +94,8 @@ function readFileAsync(path: string): Promise<string> {
 }
 
 function writeFileAsync(path: string, data: string, options: {}): Promise<void> {
-    return new Promise<void>(function (resolve, reject) {
-        fs.writeFile(path, data, options, function (err) {
+    return new Promise<void>((resolve, reject) => {
+        fs.writeFile(path, data, options, err => {
             if (err) {
                 reject(err);
             } else {

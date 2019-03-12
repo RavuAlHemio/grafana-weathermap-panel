@@ -10,7 +10,7 @@ exports.midpoint = midpoint;
 function halveCubicBezier(point1, control1, control2, point2) {
     if (control1 === null) {
         if (control2 === null) {
-            var straightMidpoint = this.midpoint(point1, point2);
+            var straightMidpoint = midpoint(point1, point2);
             return [point1, point1, straightMidpoint, straightMidpoint, straightMidpoint, point2, point2];
         }
         control1 = point1;
@@ -18,12 +18,12 @@ function halveCubicBezier(point1, control1, control2, point2) {
     if (control2 === null) {
         control2 = point2;
     }
-    var m1 = this.midpoint(point1, control1);
-    var m2 = this.midpoint(control1, control2);
-    var m3 = this.midpoint(control2, point2);
-    var q1 = this.midpoint(m1, m2);
-    var q2 = this.midpoint(m2, m3);
-    var o = this.midpoint(q1, q2);
+    var m1 = midpoint(point1, control1);
+    var m2 = midpoint(control1, control2);
+    var m3 = midpoint(control2, point2);
+    var q1 = midpoint(m1, m2);
+    var q2 = midpoint(m2, m3);
+    var o = midpoint(q1, q2);
     return [point1, m1, q1, o, q2, m3, point2];
 }
 exports.halveCubicBezier = halveCubicBezier;

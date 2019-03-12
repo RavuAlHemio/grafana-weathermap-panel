@@ -5,11 +5,13 @@ export function midpoint(point1: Point2D, point2: Point2D): Point2D {
     };
 }
 
-export function halveCubicBezier(point1: Point2D, control1: Point2D|null, control2: Point2D|null, point2: Point2D): [Point2D, Point2D, Point2D, Point2D, Point2D, Point2D, Point2D] {    
+export function halveCubicBezier(
+    point1: Point2D, control1: Point2D|null, control2: Point2D|null, point2: Point2D
+): [Point2D, Point2D, Point2D, Point2D, Point2D, Point2D, Point2D] {
     if (control1 === null) {
         if (control2 === null) {
             // naïveté!
-            let straightMidpoint = this.midpoint(point1, point2);
+            let straightMidpoint: Point2D = midpoint(point1, point2);
             return [point1, point1, straightMidpoint, straightMidpoint, straightMidpoint, point2, point2];
         }
 
@@ -19,14 +21,14 @@ export function halveCubicBezier(point1: Point2D, control1: Point2D|null, contro
         control2 = point2;
     }
 
-    let m1 = this.midpoint(point1, control1);
-    let m2 = this.midpoint(control1, control2);
-    let m3 = this.midpoint(control2, point2);
+    let m1: Point2D = midpoint(point1, control1);
+    let m2: Point2D = midpoint(control1, control2);
+    let m3: Point2D = midpoint(control2, point2);
 
-    let q1 = this.midpoint(m1, m2);
-    let q2 = this.midpoint(m2, m3);
+    let q1: Point2D = midpoint(m1, m2);
+    let q2: Point2D = midpoint(m2, m3);
 
-    let o = this.midpoint(q1, q2);
+    let o: Point2D = midpoint(q1, q2);
 
     return [point1, m1, q1, o, q2, m3, point2];
 }
@@ -55,8 +57,8 @@ export function normalizeAngle(angleRadians: number): number {
     return angleRadians;
 }
 
-export function unitVector(vector: Point2D) {
-    let euclidNorm = Math.sqrt(vector.x*vector.x + vector.y*vector.y);
+export function unitVector(vector: Point2D): Point2D {
+    let euclidNorm: number = Math.sqrt(vector.x*vector.x + vector.y*vector.y);
     return {
         x: vector.x / euclidNorm,
         y: vector.y / euclidNorm

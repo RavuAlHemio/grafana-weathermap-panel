@@ -6,7 +6,7 @@ System.register(["app/plugins/sdk", "./properties", "./svg-weathermap/weathermap
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
                 function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
             return extendStatics(d, b);
-        }
+        };
         return function (d, b) {
             extendStatics(d, b);
             function __() { this.constructor = d; }
@@ -17,16 +17,16 @@ System.register(["app/plugins/sdk", "./properties", "./svg-weathermap/weathermap
     var __moduleName = context_1 && context_1.id;
     function getSearchParams(url) {
         var search = url.search;
-        while (search.startsWith('?')) {
+        while (search.startsWith("?")) {
             search = search.substr(1);
         }
         var params = {};
         if (search.length > 0) {
-            var pairs = search.split('&');
+            var pairs = search.split("&");
             for (var _i = 0, pairs_1 = pairs; _i < pairs_1.length; _i++) {
                 var pair = pairs_1[_i];
                 var keyValueMatch = pair.match(/^([^=]*)(?:=(.*))?$/);
-                if (keyValueMatch == null) {
+                if (keyValueMatch === null) {
                     continue;
                 }
                 var key = keyValueMatch[1];
@@ -71,15 +71,15 @@ System.register(["app/plugins/sdk", "./properties", "./svg-weathermap/weathermap
                     bottom: 5
                 },
                 showNumbers: false,
-                valueName: 'max',
-                nullPointMode: 'connected',
+                valueName: "max",
+                nullPointMode: "connected",
                 strokeWidth: 1,
                 gradient: {
-                    type: 'steps',
+                    type: "steps",
                     stops: []
                 },
                 legend: {
-                    type: '',
+                    type: "",
                     x: 0,
                     y: 0,
                     length: 100,
@@ -87,20 +87,20 @@ System.register(["app/plugins/sdk", "./properties", "./svg-weathermap/weathermap
                 },
                 link: {
                     node: {
-                        type: 'none',
+                        type: "none",
                         absoluteUri: null,
                         dashboard: null,
                         dashUri: null
                     },
                     edge: {
-                        type: 'none',
+                        type: "none",
                         absoluteUri: null,
                         dashboard: null,
                         dashUri: null
                     }
                 },
-                noValueDashArray: '4 4',
-                unmeasuredDashArray: '4 2',
+                noValueDashArray: "4 4",
+                unmeasuredDashArray: "4 2",
             };
             WeathermapCtrl = (function (_super) {
                 __extends(WeathermapCtrl, _super);
@@ -109,9 +109,9 @@ System.register(["app/plugins/sdk", "./properties", "./svg-weathermap/weathermap
                     _this.backendSrv = backendSrv;
                     lodash_1.default.defaultsDeep(_this.panel, panelDefaults);
                     _this.currentValues = {};
-                    _this.events.on('init-edit-mode', _this.onInitEditMode.bind(_this));
-                    _this.events.on('data-received', _this.onDataReceived.bind(_this));
-                    _this.events.on('data-snapshot-load', _this.onDataSnapshotLoad.bind(_this));
+                    _this.events.on("init-edit-mode", _this.onInitEditMode.bind(_this));
+                    _this.events.on("data-received", _this.onDataReceived.bind(_this));
+                    _this.events.on("data-snapshot-load", _this.onDataSnapshotLoad.bind(_this));
                     _this.searchDashboards = function (queryStr, callback) {
                         backendSrv.search({ query: queryStr }).then(function (hits) {
                             var dashboards = lodash_1.default.map(hits, function (dash) { return dash.title; });
@@ -121,11 +121,11 @@ System.register(["app/plugins/sdk", "./properties", "./svg-weathermap/weathermap
                     return _this;
                 }
                 WeathermapCtrl.prototype.onInitEditMode = function () {
-                    this.addEditorTab('Options', properties_1.editorPath, 2);
-                    this.addEditorTab('Nodes', properties_1.nodeEditorPath, 3);
-                    this.addEditorTab('Edges', properties_1.edgeEditorPath, 4);
-                    this.addEditorTab('Labels', properties_1.labelEditorPath, 5);
-                    this.addEditorTab('Styles', properties_1.styleEditorPath, 6);
+                    this.addEditorTab("Options", properties_1.editorPath, 2);
+                    this.addEditorTab("Nodes", properties_1.nodeEditorPath, 3);
+                    this.addEditorTab("Edges", properties_1.edgeEditorPath, 4);
+                    this.addEditorTab("Labels", properties_1.labelEditorPath, 5);
+                    this.addEditorTab("Styles", properties_1.styleEditorPath, 6);
                 };
                 WeathermapCtrl.prototype.onDataReceived = function (dataList) {
                     this.currentSeries = dataList.map(this.seriesHandler.bind(this));
@@ -208,14 +208,13 @@ System.register(["app/plugins/sdk", "./properties", "./svg-weathermap/weathermap
                         }
                     });
                 };
-                ;
-                WeathermapCtrl.prototype.link = function (scope, elems, attrs, ctrl) {
+                WeathermapCtrl.prototype.link = function (_scope, elems, _attrs, ctrl) {
                     var _this = this;
-                    this.events.on('render', function () { return _this.renderThat(elems[0], ctrl); });
+                    this.events.on("render", function () { return _this.renderThat(elems[0], ctrl); });
                 };
-                WeathermapCtrl.prototype.renderThat = function (topElem, ctrl) {
-                    var elem = topElem.querySelector('div.weathermap');
-                    if (elem == null) {
+                WeathermapCtrl.prototype.renderThat = function (topElem, _ctrl) {
+                    var elem = topElem.querySelector("div.weathermap");
+                    if (elem === null) {
                         return;
                     }
                     while (elem.lastChild) {
@@ -224,22 +223,22 @@ System.register(["app/plugins/sdk", "./properties", "./svg-weathermap/weathermap
                     weathermap_1.renderWeathermapInto(document, elem, this.panel, this.currentValues, WeathermapCtrl.resolveLink);
                 };
                 WeathermapCtrl.resolveLink = function (objLink) {
-                    if (objLink.type == 'absolute' && objLink.absoluteUri) {
+                    if (objLink.type === "absolute" && objLink.absoluteUri) {
                         return objLink.absoluteUri;
                     }
-                    else if (objLink.type == 'dashboard' && objLink.dashUri) {
+                    else if (objLink.type === "dashboard" && objLink.dashUri) {
                         var url = new URL(window.location.href);
                         var oldParams = getSearchParams(url);
                         var params = [];
-                        if (oldParams['from']) {
-                            params.push("from=" + encodeURIComponent(oldParams['from']));
+                        if (oldParams.from) {
+                            params.push("from=" + encodeURIComponent(oldParams.from));
                         }
-                        if (oldParams['to']) {
-                            params.push("to=" + encodeURIComponent(oldParams['to']));
+                        if (oldParams.to) {
+                            params.push("to=" + encodeURIComponent(oldParams.to));
                         }
-                        var paramSuffix = '';
+                        var paramSuffix = "";
                         if (params.length > 0) {
-                            paramSuffix = '?' + params.join('&');
+                            paramSuffix = "?" + params.join("&");
                         }
                         return "/dashboard/" + objLink.dashUri + paramSuffix;
                     }
@@ -248,7 +247,7 @@ System.register(["app/plugins/sdk", "./properties", "./svg-weathermap/weathermap
                 return WeathermapCtrl;
             }(sdk_1.MetricsPanelCtrl));
             exports_1("WeathermapCtrl", WeathermapCtrl);
-            WeathermapCtrl.templateUrl = 'module.html';
+            WeathermapCtrl.templateUrl = "module.html";
         }
     };
 });

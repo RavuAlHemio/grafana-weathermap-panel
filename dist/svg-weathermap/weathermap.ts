@@ -1,14 +1,14 @@
-import { svgNamespace, xlinkNamespace } from './constants';
-import { deg2rad, halveCubicBezier, normalizeAngle, Point2D, polarToCartesian, unitVector } from './geometry';
-import { Gradient, gradientColorForValue } from './gradients';
-import { LegendSettings, placeLegend } from './legend';
+import { svgNamespace, xlinkNamespace } from "./constants";
+import { deg2rad, halveCubicBezier, normalizeAngle, Point2D, polarToCartesian, unitVector } from "./geometry";
+import { Gradient, GradientStop, gradientColorForValue } from "./gradients";
+import { LegendSettings, placeLegend } from "./legend";
 
 export function renderWeathermapInto(
     elementCreator: SVGElementCreatorDOM, container: Node, config: WeathermapConfig, currentValues: MetricValueMap,
-    linkResolver: ((ObjectLinkSettings) => string|null)|null|undefined, addViewBox: boolean = false
+    linkResolver: ((linkSettings: ObjectLinkSettings) => string|null)|null|undefined, addViewBox: boolean = false
 ): SVGSVGElement {
     // sort gradient stops
-    let sortedStops = config.gradient.stops
+    let sortedStops: GradientStop[] = config.gradient.stops
         .slice()
         .sort((l, r) => l.position - r.position);
     let sortedGradient: Gradient = {
@@ -39,11 +39,11 @@ function initializeSVG(state: WeathermapRendererState, container: Node, addViewB
     // add SVG
     state.svg = state.make.svg();
     modifyStyle(state.svg, {
-        'width': `${state.config.canvasSize.width}px`,
-        'height': `${state.config.canvasSize.height}px`,
+        "width": `${state.config.canvasSize.width}px`,
+        "height": `${state.config.canvasSize.height}px`,
     });
     if (addViewBox) {
-        state.svg.setAttribute('viewBox', `0 0 ${state.config.canvasSize.width} ${state.config.canvasSize.height}`);
+        state.svg.setAttribute("viewBox", `0 0 ${state.config.canvasSize.width} ${state.config.canvasSize.height}`);
     }
     container.appendChild(state.svg);
 
@@ -51,19 +51,19 @@ function initializeSVG(state: WeathermapRendererState, container: Node, addViewB
     state.svg.appendChild(state.defs);
 
     state.legendGroup = state.make.g();
-    state.legendGroup.setAttribute('class', 'legend');
+    state.legendGroup.setAttribute("class", "legend");
     state.svg.appendChild(state.legendGroup);
 
     state.edgeGroup = state.make.g();
-    state.edgeGroup.setAttribute('class', 'edges');
+    state.edgeGroup.setAttribute("class", "edges");
     state.svg.appendChild(state.edgeGroup);
 
     state.nodeGroup = state.make.g();
-    state.nodeGroup.setAttribute('class', 'nodes');
+    state.nodeGroup.setAttribute("class", "nodes");
     state.svg.appendChild(state.nodeGroup);
 
     state.labelGroup = state.make.g();
-    state.labelGroup.setAttribute('class', 'labels');
+    state.labelGroup.setAttribute("class", "labels");
     state.svg.appendChild(state.labelGroup);
 }
 
@@ -79,19 +79,19 @@ function placeNodes(state: WeathermapRendererState): void {
 
         setRectangleDimensions(rect, node.x, node.y, node.width, node.height);
         modifyStyle(rect, {
-            'stroke': 'gray',
-            'stroke-width': '1px',
+            "stroke": "gray",
+            "stroke-width": "1px",
         });
 
         let text: SVGTextElement = state.make.text();
         singleNodeGroup.appendChild(text);
 
-        text.setAttribute('x', `${(+node.x) + (+state.config.textOffsets.left)}`);
-        text.setAttribute('y', `${(+node.y) + (+node.height) - state.config.textOffsets.bottom}`);
+        text.setAttribute("x", `${(+node.x) + (+state.config.textOffsets.left)}`);
+        text.setAttribute("y", `${(+node.y) + (+node.height) - state.config.textOffsets.bottom}`);
         if (state.config.showNumbers && node.metricName != null) {
-            let value = (node.metricName in state.currentValues)
-                ? state.currentValues[node.metricName]
-                : '?'
+            let value: string = (node.metricName in state.currentValues)
+                ? `${state.currentValues[node.metricName]}`
+                : "?"
             ;
             text.textContent = `${node.label} (${value})`;
         } else {
@@ -100,23 +100,23 @@ function placeNodes(state: WeathermapRendererState): void {
 
         if (!node.metricName) {
             modifyStyle(rect, {
-                'fill': 'silver',
-                'stroke-dasharray': state.config.unmeasuredDashArray,
+                "fill": "silver",
+                "stroke-dasharray": state.config.unmeasuredDashArray,
             });
         } else if (node.metricName in state.currentValues) {
             // color node by metric
-            let currentValue = state.currentValues[node.metricName];
+            let currentValue: number = state.currentValues[node.metricName];
             modifyStyle(rect, {
-                'fill': gradientColorForValue(state.sortedGradient, 'fillColor', currentValue),
+                "fill": gradientColorForValue(state.sortedGradient, "fillColor", currentValue),
             });
         } else {
             // no data
             modifyStyle(text, {
-                'fill': 'white',
+                "fill": "white",
             });
             modifyStyle(rect, {
-                'fill': 'black',
-                'stroke-dasharray': state.config.noValueDashArray,
+                "fill": "black",
+                "stroke-dasharray": state.config.noValueDashArray,
             });
         }
     }
@@ -125,8 +125,8 @@ function placeNodes(state: WeathermapRendererState): void {
 function placeEdges(state: WeathermapRendererState): void {
     // place edges
     for (let edge of state.config.weathermapEdges) {
-        let node1 = state.nodeLabelToNode[edge.node1];
-        let node2 = state.nodeLabelToNode[edge.node2];
+        let node1: WeathermapNode = state.nodeLabelToNode[edge.node1];
+        let node2: WeathermapNode = state.nodeLabelToNode[edge.node2];
         if (!node1 || !node2) {
             // TODO: output error
             continue;
@@ -149,11 +149,11 @@ function placeEdges(state: WeathermapRendererState): void {
         let control2: Point2D|null = null;
         if (edge.bendDirection && edge.bendMagnitude) {
             // warning: screen coordinates (flipped Y axis)!
-            let n1N2Angle = Math.atan2(n1Center.y - n2Center.y, n2Center.x - n1Center.x);
-            let n2N1Angle = Math.atan2(n2Center.y - n1Center.y, n1Center.x - n2Center.x);
+            let n1N2Angle: number = Math.atan2(n1Center.y - n2Center.y, n2Center.x - n1Center.x);
+            let n2N1Angle: number = Math.atan2(n2Center.y - n1Center.y, n1Center.x - n2Center.x);
 
-            let n1N2BendAngle = normalizeAngle(n1N2Angle + deg2rad(edge.bendDirection));
-            let n2N1BendAngle = normalizeAngle(n2N1Angle - deg2rad(edge.bendDirection));
+            let n1N2BendAngle: number = normalizeAngle(n1N2Angle + deg2rad(edge.bendDirection));
+            let n2N1BendAngle: number = normalizeAngle(n2N1Angle - deg2rad(edge.bendDirection));
 
             let control1Offset: Point2D = polarToCartesian(n1N2BendAngle, edge.bendMagnitude);
             let control2Offset: Point2D = polarToCartesian(n2N1BendAngle, edge.bendMagnitude);
@@ -170,7 +170,11 @@ function placeEdges(state: WeathermapRendererState): void {
 
         if (edge.metric2Name) {
             // two metrics are twice the fun
-            let [_point1, point1COut, point2CIn, point2, point2COut, point3CIn, _point2] = halveCubicBezier(n1Center, control1, control2, n2Center);
+            let
+                [_point1, point1COut, point2CIn, point2, point2COut, point3CIn, _point2]
+            =
+                halveCubicBezier(n1Center, control1, control2, n2Center)
+            ;
 
             makeAndPlaceEdge(
                 state, singleEdgeGroup,
@@ -204,8 +208,8 @@ function placeLabels(state: WeathermapRendererState): void {
         let text: SVGTextElement = state.make.text();
         singleLabelGroup.appendChild(text);
 
-        text.setAttribute('x', `${+label.x}`);
-        text.setAttribute('y', `${+label.y}`);
+        text.setAttribute("x", `${+label.x}`);
+        text.setAttribute("y", `${+label.y}`);
         text.textContent = label.label;
     }
 }
@@ -218,11 +222,11 @@ function makeAndPlaceEdge(
     let strokeWidths: number[] = [state.config.strokeWidth];
     let edgeStyle: WeathermapStyle|null = getWeathermapStyle(state, edgeStyleName);
     if (edgeStyle && edgeStyle.strokeWidthArray) {
-        let pieces = edgeStyle.strokeWidthArray.split(/[ ,]+/);
+        let pieces: string[] = edgeStyle.strokeWidthArray.split(/[ ,]+/);
         strokeWidths = pieces.map(p => Number.parseFloat(p));
     }
 
-    if (strokeWidths.length % 2 != 1) {
+    if (strokeWidths.length % 2 !== 1) {
         // like stroke-dasharray, double the elements
         strokeWidths.push(...strokeWidths);
     }
@@ -247,28 +251,28 @@ function makeAndPlaceEdge(
         offsetUnitVector = unitVector(offsetVector);
     }
 
-    let multistrokeGroup = state.make.g();
+    let multistrokeGroup: SVGGElement = state.make.g();
     singleEdgeGroup.appendChild(multistrokeGroup);
     modifyStyle(multistrokeGroup, {
-        'fill': 'none',
+        "fill": "none",
     });
 
     if (title) {
-        let titleElem = state.make.title();
+        let titleElem: SVGTitleElement = state.make.title();
         multistrokeGroup.appendChild(titleElem);
         titleElem.textContent = title;
     }
 
     if (metricName != null && metricName in state.currentValues) {
-        let currentValue = state.currentValues[metricName];
+        let currentValue: number = state.currentValues[metricName];
         modifyStyle(multistrokeGroup, {
-            'stroke': gradientColorForValue(state.sortedGradient, 'strokeColor', currentValue)
+            "stroke": gradientColorForValue(state.sortedGradient, "strokeColor", currentValue)
         });
         modifyApplyingWeathermapStyle(state, multistrokeGroup, edgeStyle);
     } else {
         modifyStyle(multistrokeGroup, {
-            'stroke': 'black',
-            'stroke-dasharray': state.config.noValueDashArray
+            "stroke": "black",
+            "stroke-dasharray": state.config.noValueDashArray
         });
     }
 
@@ -283,8 +287,8 @@ function makeAndPlaceEdge(
         }
 
         // calculate offset
-        let xOffset = offsetUnitVector.x * (currentOffset + strokeWidth/2.0);
-        let yOffset = offsetUnitVector.y * (currentOffset + strokeWidth/2.0);
+        let xOffset: number = offsetUnitVector.x * (currentOffset + strokeWidth/2.0);
+        let yOffset: number = offsetUnitVector.y * (currentOffset + strokeWidth/2.0);
 
         let strokeStart: Point2D = {
             x: start.x + xOffset,
@@ -307,12 +311,12 @@ function makeAndPlaceEdge(
         let path: SVGPathElement = state.make.path();
         multistrokeGroup.appendChild(path);
         if (strokeControl1 == null || strokeControl2 == null) {
-            path.setAttribute('d',
+            path.setAttribute("d",
                 `M ${strokeStart.x},${strokeStart.y} ` +
                 `L ${strokeEnd.x},${strokeEnd.y}`
             );
         } else {
-            path.setAttribute('d',
+            path.setAttribute("d",
                 `M ${strokeStart.x},${strokeStart.y} ` +
                 `C ${strokeControl1.x},${strokeControl1.y},${strokeControl2.x},${strokeControl2.y},${strokeEnd.x},${strokeEnd.y}`
             );
@@ -320,22 +324,22 @@ function makeAndPlaceEdge(
 
         // apply the specific stroke width
         modifyStyle(path, {
-            'stroke-width': `${strokeWidth}`,
+            "stroke-width": `${strokeWidth}`,
         });
 
         currentOffset += strokeWidth;
     }
 
     if (state.config.showNumbers) {
-        let midpoint = halveCubicBezier(start, control1, control2, end)[3];
-        let valueString = (metricName != null && metricName in state.currentValues)
+        let midpoint: Point2D = halveCubicBezier(start, control1, control2, end)[3];
+        let valueString: string = (metricName != null && metricName in state.currentValues)
             ? state.currentValues[metricName].toFixed(2)
-            : '?'
+            : "?"
         ;
-        let text = state.make.text();
+        let text: SVGTextElement = state.make.text();
         singleEdgeGroup.appendChild(text);
-        text.setAttribute('x', `${midpoint.x}`);
-        text.setAttribute('y', `${midpoint.y}`);
+        text.setAttribute("x", `${midpoint.x}`);
+        text.setAttribute("y", `${midpoint.y}`);
         text.textContent = valueString;
     }
 }
@@ -345,18 +349,18 @@ function maybeWrapIntoLink(
     linkUriBase: string|null|undefined, objLinkParams: string|null|undefined
 ): void {
     if (linkUriBase != null) {
-        let objLinkUri = linkUriBase;
+        let objLinkUri: string = linkUriBase;
         if (objLinkParams != null) {
-            objLinkUri += (objLinkUri.indexOf('?') === -1)
-                ? '?'
-                : '&';
-            
+            objLinkUri += (objLinkUri.indexOf("?") === -1)
+                ? "?"
+                : "&";
+
             objLinkUri += objLinkParams;
         }
 
         let aElement: SVGAElement = svgMake.a();
         upperGroup.appendChild(aElement);
-        aElement.setAttributeNS(xlinkNamespace, 'href', objLinkUri);
+        aElement.setAttributeNS(xlinkNamespace, "href", objLinkUri);
 
         aElement.appendChild(singleObjectGroup);
     } else {
@@ -367,25 +371,25 @@ function maybeWrapIntoLink(
 export function setRectangleDimensions(
     element: SVGRectElement, x: number|string, y: number|string, width: number|string, height: number|string
 ): void {
-    element.setAttribute('x', `${x}`);
-    element.setAttribute('y', `${y}`);
-    element.setAttribute('width', `${width}`);
-    element.setAttribute('height', `${height}`);
+    element.setAttribute("x", `${x}`);
+    element.setAttribute("y", `${y}`);
+    element.setAttribute("width", `${width}`);
+    element.setAttribute("height", `${height}`);
 }
 
 function modifyStyle(element: Element, newValues: object): void {
     // parse style
-    let assembledStyle = {};
-    if (element.hasAttribute('style')) {
-        let styleVal = element.getAttribute('style');
+    let assembledStyle: StringMapping<string> = {};
+    if (element.hasAttribute("style")) {
+        let styleVal: string|null = element.getAttribute("style");
         if (styleVal != null) {
-            for (let chunk of styleVal.split(';')) {
-                let index = chunk.indexOf(':');
-                if (index == -1) {
+            for (let chunk of styleVal.split(";")) {
+                let index: number = chunk.indexOf(":");
+                if (index === -1) {
                     continue;
                 }
-                let key = chunk.substr(0, index);
-                let value = chunk.substr(index + 1);
+                let key: string = chunk.substr(0, index);
+                let value: string = chunk.substr(index + 1);
                 assembledStyle[key] = value;
             }
         }
@@ -408,8 +412,8 @@ function modifyStyle(element: Element, newValues: object): void {
         }
     }
 
-    let keyValueString = keyValuePairs.join(';');
-    element.setAttribute('style', keyValueString);
+    let keyValueString: string = keyValuePairs.join(";");
+    element.setAttribute("style", keyValueString);
 }
 
 function getWeathermapStyle(
@@ -419,7 +423,7 @@ function getWeathermapStyle(
         return null;
     }
 
-    let style = state.styleMap[styleName];
+    let style: WeathermapStyle|undefined = state.styleMap[styleName];
     if (!style) {
         return null;
     }
@@ -433,9 +437,9 @@ function modifyApplyingWeathermapStyle(
         return;
     }
 
-    let styleProps = {};
+    let styleProps: StringMapping<string> = {};
     if (style.dashArray) {
-        styleProps['stroke-dasharray'] = style.dashArray;
+        styleProps["stroke-dasharray"] = style.dashArray;
     }
     // style.strokeWidthArray is handled beforehand
 
@@ -490,16 +494,16 @@ export class SVGElementCreator {
 
     constructor(maker: SVGElementCreatorDOM) { this.maker = maker; }
 
-    a() { return <SVGAElement>this.maker.createElementNS(svgNamespace, 'a'); }
-    defs() { return <SVGDefsElement>this.maker.createElementNS(svgNamespace, 'defs'); }
-    g() { return <SVGGElement>this.maker.createElementNS(svgNamespace, 'g'); }
-    linearGradient() { return <SVGLinearGradientElement>this.maker.createElementNS(svgNamespace, 'linearGradient'); }
-    path() { return <SVGPathElement>this.maker.createElementNS(svgNamespace, 'path'); }
-    rect() { return <SVGRectElement>this.maker.createElementNS(svgNamespace, 'rect'); }
-    stop() { return <SVGStopElement>this.maker.createElementNS(svgNamespace, 'stop'); }
-    svg() { return <SVGSVGElement>this.maker.createElementNS(svgNamespace, 'svg'); }
-    text() { return <SVGTextElement>this.maker.createElementNS(svgNamespace, 'text'); }
-    title() { return <SVGTitleElement>this.maker.createElementNS(svgNamespace, 'title'); }
+    a() { return <SVGAElement>this.maker.createElementNS(svgNamespace, "a"); }
+    defs() { return <SVGDefsElement>this.maker.createElementNS(svgNamespace, "defs"); }
+    g() { return <SVGGElement>this.maker.createElementNS(svgNamespace, "g"); }
+    linearGradient() { return <SVGLinearGradientElement>this.maker.createElementNS(svgNamespace, "linearGradient"); }
+    path() { return <SVGPathElement>this.maker.createElementNS(svgNamespace, "path"); }
+    rect() { return <SVGRectElement>this.maker.createElementNS(svgNamespace, "rect"); }
+    stop() { return <SVGStopElement>this.maker.createElementNS(svgNamespace, "stop"); }
+    svg() { return <SVGSVGElement>this.maker.createElementNS(svgNamespace, "svg"); }
+    text() { return <SVGTextElement>this.maker.createElementNS(svgNamespace, "text"); }
+    title() { return <SVGTitleElement>this.maker.createElementNS(svgNamespace, "title"); }
 }
 
 export interface SVGElementCreatorDOM {
@@ -512,14 +516,14 @@ interface PositionableTextElement {
     y: number;
 }
 
-interface WeathermapNode extends PositionableTextElement {
+export interface WeathermapNode extends PositionableTextElement {
     width: number;
     height: number;
     metricName?: string|null;
     linkParams?: string;
 }
 
-interface WeathermapEdge {
+export interface WeathermapEdge {
     node1: string;
     node2: string;
     bendDirection?: number;
@@ -530,10 +534,10 @@ interface WeathermapEdge {
     styleName?: string;
 }
 
-interface WeathermapLabel extends PositionableTextElement {
+export interface WeathermapLabel extends PositionableTextElement {
 }
 
-interface WeathermapStyle {
+export interface WeathermapStyle {
     name: string;
     strokeWidthArray?: string;
     dashArray?: string;
@@ -553,7 +557,7 @@ export type MetricValueMap = StringMapping<number>;
 export type NameToStyleMap = StringMapping<WeathermapStyle>;
 
 export interface ObjectLinkSettings {
-    type: 'none'|'dashboard'|'absolute';
+    type: "none"|"dashboard"|"absolute";
     dashboard: string|null;
     dashUri: string|null;
     absoluteUri: string|null;
@@ -567,8 +571,8 @@ export interface WeathermapDefaultConfig {
     canvasSize: { width: number; height: number; };
     textOffsets: { left: number; bottom: number; };
     showNumbers: boolean;
-    valueName: 'max'|'min'|'avg'|'current'|'total';
-    nullPointMode: 'connected'|'null'|'null as zero';
+    valueName: "max"|"min"|"avg"|"current"|"total";
+    nullPointMode: "connected"|"null"|"null as zero";
     strokeWidth: number;
     gradient: Gradient;
     legend: LegendSettings;

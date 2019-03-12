@@ -2,21 +2,21 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 var emergencyColor = "pink";
 function gradientColorForValue(gradient, colorType, value) {
-    if (gradient.type == 'linear') {
+    if (gradient.type === "linear") {
         return linearColorForValue(gradient.stops, colorType, value);
     }
-    else if (gradient.type == 'steps') {
+    else if (gradient.type === "steps") {
         return stepColorForValue(gradient.stops, colorType, value);
     }
     return emergencyColor;
 }
 exports.gradientColorForValue = gradientColorForValue;
 function linearColorForValue(stops, colorType, value) {
-    if (stops.length == 0) {
+    if (stops.length === 0) {
         return emergencyColor;
     }
     var lastStop = stops[stops.length - 1];
-    var r, g, b;
+    var r = 0.0, g = 0.0, b = 0.0;
     if (value < stops[0].position) {
         return "" + stops[0][colorType];
     }
@@ -24,6 +24,7 @@ function linearColorForValue(stops, colorType, value) {
         return "" + lastStop[colorType];
     }
     else {
+        var foundMatch = false;
         for (var i = 0; i < stops.length - 1; ++i) {
             if (value >= stops[i].position && value < stops[i + 1].position) {
                 var posFrom = stops[i].position;
@@ -37,14 +38,18 @@ function linearColorForValue(stops, colorType, value) {
                 r = lerp(value, posFrom, posTo, rFrom, rTo);
                 g = lerp(value, posFrom, posTo, gFrom, gTo);
                 b = lerp(value, posFrom, posTo, bFrom, bTo);
+                foundMatch = true;
                 break;
             }
+        }
+        if (!foundMatch) {
+            return emergencyColor;
         }
     }
     return "rgb(" + Math.floor(r) + ", " + Math.floor(g) + ", " + Math.floor(b) + ")";
 }
 function stepColorForValue(stops, colorType, value) {
-    if (stops.length == 0) {
+    if (stops.length === 0) {
         return emergencyColor;
     }
     var lastStop = stops[stops.length - 1];
@@ -64,7 +69,7 @@ function stepColorForValue(stops, colorType, value) {
     return emergencyColor;
 }
 function lerp(value, sourceMin, sourceMax, targetMin, targetMax) {
-    if (targetMin == targetMax) {
+    if (targetMin === targetMax) {
         return targetMin;
     }
     if (value < sourceMin) {

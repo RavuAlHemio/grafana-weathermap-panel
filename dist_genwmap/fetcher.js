@@ -49,7 +49,7 @@ function fetchMetrics(baseUrl, metrics, lookback_interval) {
                 case 1:
                     if (!(_i < metrics_1.length)) return [3, 4];
                     metric = metrics_1[_i];
-                    metricQueryEscaped = encodeURIComponent(metric.expr.replace('$lookback_interval', lookback_interval));
+                    metricQueryEscaped = encodeURIComponent(metric.expr.replace("$lookback_interval", lookback_interval));
                     metricUrl = new URL("api/v1/query?query=" + metricQueryEscaped, baseUrl);
                     return [4, httpGetAsync(metricUrl.protocol, metricUrl.hostname, +metricUrl.port, metricUrl.pathname + metricUrl.search, agent)];
                 case 2:
@@ -78,18 +78,18 @@ exports.fetchMetrics = fetchMetrics;
 function interpolateLabels(template, labels) {
     var output = template;
     for (;;) {
-        var nextBracesIndex = output.indexOf('{{');
-        if (nextBracesIndex == -1) {
+        var nextBracesIndex = output.indexOf("{{");
+        if (nextBracesIndex === -1) {
             return output;
         }
-        var endBracesIndex = output.indexOf('}}', nextBracesIndex);
-        if (endBracesIndex == -1) {
+        var endBracesIndex = output.indexOf("}}", nextBracesIndex);
+        if (endBracesIndex === -1) {
             return output;
         }
         var variableName = output.substr(nextBracesIndex + 2, endBracesIndex - nextBracesIndex - 2);
         var variableValue = variableName in labels
             ? labels[variableName]
-            : '';
+            : "";
         output = output.substr(0, nextBracesIndex) + variableValue + output.substr(endBracesIndex + 2);
     }
 }
@@ -103,15 +103,15 @@ function httpGetAsync(protocol, hostname, port, path, agent) {
             agent: agent
         };
         var req = http.request(options, function (res) {
-            var body = '';
-            res.on('data', function (chunk) {
+            var body = "";
+            res.on("data", function (chunk) {
                 body += chunk;
             });
-            res.on('end', function () {
+            res.on("end", function () {
                 resolve([res, body]);
             });
         });
-        req.on('error', function (err) {
+        req.on("error", function (err) {
             reject(err);
         });
         req.end();

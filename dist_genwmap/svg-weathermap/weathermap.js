@@ -30,26 +30,26 @@ function initializeSVG(state, container, addViewBox) {
     if (addViewBox === void 0) { addViewBox = false; }
     state.svg = state.make.svg();
     modifyStyle(state.svg, {
-        'width': state.config.canvasSize.width + "px",
-        'height': state.config.canvasSize.height + "px",
+        "width": state.config.canvasSize.width + "px",
+        "height": state.config.canvasSize.height + "px",
     });
     if (addViewBox) {
-        state.svg.setAttribute('viewBox', "0 0 " + state.config.canvasSize.width + " " + state.config.canvasSize.height);
+        state.svg.setAttribute("viewBox", "0 0 " + state.config.canvasSize.width + " " + state.config.canvasSize.height);
     }
     container.appendChild(state.svg);
     state.defs = state.make.defs();
     state.svg.appendChild(state.defs);
     state.legendGroup = state.make.g();
-    state.legendGroup.setAttribute('class', 'legend');
+    state.legendGroup.setAttribute("class", "legend");
     state.svg.appendChild(state.legendGroup);
     state.edgeGroup = state.make.g();
-    state.edgeGroup.setAttribute('class', 'edges');
+    state.edgeGroup.setAttribute("class", "edges");
     state.svg.appendChild(state.edgeGroup);
     state.nodeGroup = state.make.g();
-    state.nodeGroup.setAttribute('class', 'nodes');
+    state.nodeGroup.setAttribute("class", "nodes");
     state.svg.appendChild(state.nodeGroup);
     state.labelGroup = state.make.g();
-    state.labelGroup.setAttribute('class', 'labels');
+    state.labelGroup.setAttribute("class", "labels");
     state.svg.appendChild(state.labelGroup);
 }
 function placeNodes(state) {
@@ -62,17 +62,17 @@ function placeNodes(state) {
         singleNodeGroup.appendChild(rect);
         setRectangleDimensions(rect, node.x, node.y, node.width, node.height);
         modifyStyle(rect, {
-            'stroke': 'gray',
-            'stroke-width': '1px',
+            "stroke": "gray",
+            "stroke-width": "1px",
         });
         var text = state.make.text();
         singleNodeGroup.appendChild(text);
-        text.setAttribute('x', "" + ((+node.x) + (+state.config.textOffsets.left)));
-        text.setAttribute('y', "" + ((+node.y) + (+node.height) - state.config.textOffsets.bottom));
+        text.setAttribute("x", "" + ((+node.x) + (+state.config.textOffsets.left)));
+        text.setAttribute("y", "" + ((+node.y) + (+node.height) - state.config.textOffsets.bottom));
         if (state.config.showNumbers && node.metricName != null) {
             var value = (node.metricName in state.currentValues)
-                ? state.currentValues[node.metricName]
-                : '?';
+                ? "" + state.currentValues[node.metricName]
+                : "?";
             text.textContent = node.label + " (" + value + ")";
         }
         else {
@@ -80,23 +80,23 @@ function placeNodes(state) {
         }
         if (!node.metricName) {
             modifyStyle(rect, {
-                'fill': 'silver',
-                'stroke-dasharray': state.config.unmeasuredDashArray,
+                "fill": "silver",
+                "stroke-dasharray": state.config.unmeasuredDashArray,
             });
         }
         else if (node.metricName in state.currentValues) {
             var currentValue = state.currentValues[node.metricName];
             modifyStyle(rect, {
-                'fill': gradients_1.gradientColorForValue(state.sortedGradient, 'fillColor', currentValue),
+                "fill": gradients_1.gradientColorForValue(state.sortedGradient, "fillColor", currentValue),
             });
         }
         else {
             modifyStyle(text, {
-                'fill': 'white',
+                "fill": "white",
             });
             modifyStyle(rect, {
-                'fill': 'black',
-                'stroke-dasharray': state.config.noValueDashArray,
+                "fill": "black",
+                "stroke-dasharray": state.config.noValueDashArray,
             });
         }
     }
@@ -154,8 +154,8 @@ function placeLabels(state) {
         state.labelGroup.appendChild(singleLabelGroup);
         var text = state.make.text();
         singleLabelGroup.appendChild(text);
-        text.setAttribute('x', "" + +label.x);
-        text.setAttribute('y', "" + +label.y);
+        text.setAttribute("x", "" + +label.x);
+        text.setAttribute("y", "" + +label.y);
         text.textContent = label.label;
     }
 }
@@ -166,7 +166,7 @@ function makeAndPlaceEdge(state, singleEdgeGroup, start, control1, control2, end
         var pieces = edgeStyle.strokeWidthArray.split(/[ ,]+/);
         strokeWidths = pieces.map(function (p) { return Number.parseFloat(p); });
     }
-    if (strokeWidths.length % 2 != 1) {
+    if (strokeWidths.length % 2 !== 1) {
         strokeWidths.push.apply(strokeWidths, strokeWidths);
     }
     var offsetUnitVector = { x: 0, y: 0 };
@@ -184,7 +184,7 @@ function makeAndPlaceEdge(state, singleEdgeGroup, start, control1, control2, end
     var multistrokeGroup = state.make.g();
     singleEdgeGroup.appendChild(multistrokeGroup);
     modifyStyle(multistrokeGroup, {
-        'fill': 'none',
+        "fill": "none",
     });
     if (title) {
         var titleElem = state.make.title();
@@ -194,14 +194,14 @@ function makeAndPlaceEdge(state, singleEdgeGroup, start, control1, control2, end
     if (metricName != null && metricName in state.currentValues) {
         var currentValue = state.currentValues[metricName];
         modifyStyle(multistrokeGroup, {
-            'stroke': gradients_1.gradientColorForValue(state.sortedGradient, 'strokeColor', currentValue)
+            "stroke": gradients_1.gradientColorForValue(state.sortedGradient, "strokeColor", currentValue)
         });
         modifyApplyingWeathermapStyle(state, multistrokeGroup, edgeStyle);
     }
     else {
         modifyStyle(multistrokeGroup, {
-            'stroke': 'black',
-            'stroke-dasharray': state.config.noValueDashArray
+            "stroke": "black",
+            "stroke-dasharray": state.config.noValueDashArray
         });
     }
     var totalStrokeWidth = strokeWidths.reduce(function (acc, cur) { return acc + cur; }, 0);
@@ -235,15 +235,15 @@ function makeAndPlaceEdge(state, singleEdgeGroup, start, control1, control2, end
         var path = state.make.path();
         multistrokeGroup.appendChild(path);
         if (strokeControl1 == null || strokeControl2 == null) {
-            path.setAttribute('d', "M " + strokeStart.x + "," + strokeStart.y + " " +
+            path.setAttribute("d", "M " + strokeStart.x + "," + strokeStart.y + " " +
                 ("L " + strokeEnd.x + "," + strokeEnd.y));
         }
         else {
-            path.setAttribute('d', "M " + strokeStart.x + "," + strokeStart.y + " " +
+            path.setAttribute("d", "M " + strokeStart.x + "," + strokeStart.y + " " +
                 ("C " + strokeControl1.x + "," + strokeControl1.y + "," + strokeControl2.x + "," + strokeControl2.y + "," + strokeEnd.x + "," + strokeEnd.y));
         }
         modifyStyle(path, {
-            'stroke-width': "" + strokeWidth,
+            "stroke-width": "" + strokeWidth,
         });
         currentOffset += strokeWidth;
     }
@@ -251,11 +251,11 @@ function makeAndPlaceEdge(state, singleEdgeGroup, start, control1, control2, end
         var midpoint = geometry_1.halveCubicBezier(start, control1, control2, end)[3];
         var valueString = (metricName != null && metricName in state.currentValues)
             ? state.currentValues[metricName].toFixed(2)
-            : '?';
+            : "?";
         var text = state.make.text();
         singleEdgeGroup.appendChild(text);
-        text.setAttribute('x', "" + midpoint.x);
-        text.setAttribute('y', "" + midpoint.y);
+        text.setAttribute("x", "" + midpoint.x);
+        text.setAttribute("y", "" + midpoint.y);
         text.textContent = valueString;
     }
 }
@@ -263,14 +263,14 @@ function maybeWrapIntoLink(svgMake, upperGroup, singleObjectGroup, linkUriBase, 
     if (linkUriBase != null) {
         var objLinkUri = linkUriBase;
         if (objLinkParams != null) {
-            objLinkUri += (objLinkUri.indexOf('?') === -1)
-                ? '?'
-                : '&';
+            objLinkUri += (objLinkUri.indexOf("?") === -1)
+                ? "?"
+                : "&";
             objLinkUri += objLinkParams;
         }
         var aElement = svgMake.a();
         upperGroup.appendChild(aElement);
-        aElement.setAttributeNS(constants_1.xlinkNamespace, 'href', objLinkUri);
+        aElement.setAttributeNS(constants_1.xlinkNamespace, "href", objLinkUri);
         aElement.appendChild(singleObjectGroup);
     }
     else {
@@ -278,21 +278,21 @@ function maybeWrapIntoLink(svgMake, upperGroup, singleObjectGroup, linkUriBase, 
     }
 }
 function setRectangleDimensions(element, x, y, width, height) {
-    element.setAttribute('x', "" + x);
-    element.setAttribute('y', "" + y);
-    element.setAttribute('width', "" + width);
-    element.setAttribute('height', "" + height);
+    element.setAttribute("x", "" + x);
+    element.setAttribute("y", "" + y);
+    element.setAttribute("width", "" + width);
+    element.setAttribute("height", "" + height);
 }
 exports.setRectangleDimensions = setRectangleDimensions;
 function modifyStyle(element, newValues) {
     var assembledStyle = {};
-    if (element.hasAttribute('style')) {
-        var styleVal = element.getAttribute('style');
+    if (element.hasAttribute("style")) {
+        var styleVal = element.getAttribute("style");
         if (styleVal != null) {
-            for (var _i = 0, _a = styleVal.split(';'); _i < _a.length; _i++) {
+            for (var _i = 0, _a = styleVal.split(";"); _i < _a.length; _i++) {
                 var chunk = _a[_i];
-                var index = chunk.indexOf(':');
-                if (index == -1) {
+                var index = chunk.indexOf(":");
+                if (index === -1) {
                     continue;
                 }
                 var key = chunk.substr(0, index);
@@ -317,8 +317,8 @@ function modifyStyle(element, newValues) {
             keyValuePairs.push(key + ":" + assembledStyle[key]);
         }
     }
-    var keyValueString = keyValuePairs.join(';');
-    element.setAttribute('style', keyValueString);
+    var keyValueString = keyValuePairs.join(";");
+    element.setAttribute("style", keyValueString);
 }
 function getWeathermapStyle(state, styleName) {
     if (!styleName) {
@@ -336,7 +336,7 @@ function modifyApplyingWeathermapStyle(state, element, style) {
     }
     var styleProps = {};
     if (style.dashArray) {
-        styleProps['stroke-dasharray'] = style.dashArray;
+        styleProps["stroke-dasharray"] = style.dashArray;
     }
     modifyStyle(element, styleProps);
 }
@@ -370,16 +370,16 @@ var SVGElementCreator = (function () {
     function SVGElementCreator(maker) {
         this.maker = maker;
     }
-    SVGElementCreator.prototype.a = function () { return this.maker.createElementNS(constants_1.svgNamespace, 'a'); };
-    SVGElementCreator.prototype.defs = function () { return this.maker.createElementNS(constants_1.svgNamespace, 'defs'); };
-    SVGElementCreator.prototype.g = function () { return this.maker.createElementNS(constants_1.svgNamespace, 'g'); };
-    SVGElementCreator.prototype.linearGradient = function () { return this.maker.createElementNS(constants_1.svgNamespace, 'linearGradient'); };
-    SVGElementCreator.prototype.path = function () { return this.maker.createElementNS(constants_1.svgNamespace, 'path'); };
-    SVGElementCreator.prototype.rect = function () { return this.maker.createElementNS(constants_1.svgNamespace, 'rect'); };
-    SVGElementCreator.prototype.stop = function () { return this.maker.createElementNS(constants_1.svgNamespace, 'stop'); };
-    SVGElementCreator.prototype.svg = function () { return this.maker.createElementNS(constants_1.svgNamespace, 'svg'); };
-    SVGElementCreator.prototype.text = function () { return this.maker.createElementNS(constants_1.svgNamespace, 'text'); };
-    SVGElementCreator.prototype.title = function () { return this.maker.createElementNS(constants_1.svgNamespace, 'title'); };
+    SVGElementCreator.prototype.a = function () { return this.maker.createElementNS(constants_1.svgNamespace, "a"); };
+    SVGElementCreator.prototype.defs = function () { return this.maker.createElementNS(constants_1.svgNamespace, "defs"); };
+    SVGElementCreator.prototype.g = function () { return this.maker.createElementNS(constants_1.svgNamespace, "g"); };
+    SVGElementCreator.prototype.linearGradient = function () { return this.maker.createElementNS(constants_1.svgNamespace, "linearGradient"); };
+    SVGElementCreator.prototype.path = function () { return this.maker.createElementNS(constants_1.svgNamespace, "path"); };
+    SVGElementCreator.prototype.rect = function () { return this.maker.createElementNS(constants_1.svgNamespace, "rect"); };
+    SVGElementCreator.prototype.stop = function () { return this.maker.createElementNS(constants_1.svgNamespace, "stop"); };
+    SVGElementCreator.prototype.svg = function () { return this.maker.createElementNS(constants_1.svgNamespace, "svg"); };
+    SVGElementCreator.prototype.text = function () { return this.maker.createElementNS(constants_1.svgNamespace, "text"); };
+    SVGElementCreator.prototype.title = function () { return this.maker.createElementNS(constants_1.svgNamespace, "title"); };
     return SVGElementCreator;
 }());
 exports.SVGElementCreator = SVGElementCreator;

@@ -41,8 +41,8 @@ var xmldom_1 = require("xmldom");
 var fetcher_1 = require("./fetcher");
 var fs = require("fs");
 var options = {
-    configFile: 'genwmap.json',
-    outputFile: 'weathermap.svg'
+    configFile: "genwmap.json",
+    outputFile: "weathermap.svg"
 };
 function printUsage() {
     console.error("Usage: genwmap [-c CONFIG.json] [-o OUTPUT.svg]");
@@ -52,7 +52,7 @@ function processOptions() {
     for (var i = 2; i < process.argv.length; ++i) {
         var arg = process.argv[i];
         if (awaiting === null) {
-            if (arg == "-c" || arg == "-o") {
+            if (arg === "-c" || arg === "-o") {
                 awaiting = arg;
             }
             else {
@@ -62,10 +62,10 @@ function processOptions() {
             }
         }
         else {
-            if (awaiting == "-c") {
+            if (awaiting === "-c") {
                 options.configFile = arg;
             }
-            else if (awaiting == "-o") {
+            else if (awaiting === "-o") {
                 options.outputFile = arg;
             }
             awaiting = null;
@@ -106,9 +106,9 @@ function main() {
                     addViewBox = true;
                     svg = weathermap_1.renderWeathermapInto(doc, doc, weathermap, metricValues, nullLinkResolver, addViewBox);
                     if (styleDefinition) {
-                        svgStyle = doc.createElementNS(constants_1.svgNamespace, 'style');
+                        svgStyle = doc.createElementNS(constants_1.svgNamespace, "style");
                         svg.insertBefore(svgStyle, svg.firstElementChild);
-                        svgStyle.setAttribute('type', 'text/css');
+                        svgStyle.setAttribute("type", "text/css");
                         svgStyle.textContent = styleDefinition;
                     }
                     outputter = new xmldom_1.XMLSerializer();
@@ -124,7 +124,7 @@ function main() {
 exports.main = main;
 function readFileAsync(path) {
     return new Promise(function (resolve, reject) {
-        fs.readFile(path, { encoding: 'utf8' }, function (err, data) {
+        fs.readFile(path, { encoding: "utf8" }, function (err, data) {
             if (err) {
                 reject(err);
             }
