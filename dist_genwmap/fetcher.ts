@@ -8,7 +8,11 @@ export async function fetchMetrics(baseUrl: URL, metrics: PrometheusMetric[], lo
     let metricValueMap = {};
 
     for (let metric of metrics) {
-        let metricQueryEscaped: string = encodeURIComponent(metric.expr.replace("$lookback_interval", lookback_interval));
+        let metricQueryEscaped: string = encodeURIComponent(
+            metric.expr
+                .replace("$lookback_interval", lookback_interval)
+                .replace("$__range", lookback_interval)
+        );
         let metricUrl = new URL(`api/v1/query?query=${metricQueryEscaped}`, baseUrl);
 
         let [response, body] = await httpGetAsync(

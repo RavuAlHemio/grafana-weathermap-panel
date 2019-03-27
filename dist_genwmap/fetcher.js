@@ -49,7 +49,9 @@ function fetchMetrics(baseUrl, metrics, lookback_interval) {
                 case 1:
                     if (!(_i < metrics_1.length)) return [3, 4];
                     metric = metrics_1[_i];
-                    metricQueryEscaped = encodeURIComponent(metric.expr.replace("$lookback_interval", lookback_interval));
+                    metricQueryEscaped = encodeURIComponent(metric.expr
+                        .replace("$lookback_interval", lookback_interval)
+                        .replace("$__range", lookback_interval));
                     metricUrl = new URL("api/v1/query?query=" + metricQueryEscaped, baseUrl);
                     return [4, httpGetAsync(metricUrl.protocol, metricUrl.hostname, +metricUrl.port, metricUrl.pathname + metricUrl.search, agent)];
                 case 2:
