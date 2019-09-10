@@ -20,7 +20,7 @@
     "url": "https://github.com/RavuAlHemio/grafana-weathermap-panel/issues"
   },
   "devDependencies": {
-    "@types/node": "^10.14.8",
+    "@types/node": "^10.14.17",
     "@types/xmldom": "^0.1.29",
     "grafana-sdk-mocks": "github:grafana/grafana-sdk-mocks",
     "grunt": "^1.0.4",
