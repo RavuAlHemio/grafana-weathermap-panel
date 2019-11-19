@@ -15,11 +15,11 @@
       }
     ],
     "logos": {
-      "small": "weathermap-icon.svg",
-      "large": "weathermap-icon.svg"
+      "small": "img/weathermap-icon.svg",
+      "large": "img/weathermap-icon.svg"
     },
     "dependencies": {
-      "grafanaVersion": "4.x.x",
+      "grafanaVersion": "5.x.x",
       "plugins": []
     }
   }

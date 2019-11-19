@@ -1,6 +1,4 @@
-///<reference path="../node_modules/grafana-sdk-mocks/app/headers/common.d.ts" />
-
-import { MetricsPanelCtrl } from "app/plugins/sdk";
+import { MetricsPanelCtrl } from 'grafana/app/plugins/sdk';
 import { editorPath, nodeEditorPath, edgeEditorPath, labelEditorPath, styleEditorPath } from "./properties";
 import {
     renderWeathermapInto,
@@ -17,7 +15,7 @@ import {
     GradientStop
 } from "./svg-weathermap/gradients";
 import _ from "lodash";
-import TimeSeries from "app/core/time_series2";
+import TimeSeries from "grafana/app/core/time_series2";
 
 const panelDefaults: WeathermapDefaultConfig = {
     // data
@@ -109,7 +107,7 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
         this.render();
     }
 
-    seriesHandler(seriesData: any): void {
+    seriesHandler(seriesData: any): TimeSeries {
         let series = new TimeSeries({
             datapoints: seriesData.datapoints,
             alias: seriesData.target
@@ -238,7 +236,7 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
     }
 }
 
-WeathermapCtrl.templateUrl = "module.html";
+WeathermapCtrl.templateUrl = "partials/module.html";
 
 function getSearchParams(url: URL): StringMapping<string> {
     let search: string = url.search;

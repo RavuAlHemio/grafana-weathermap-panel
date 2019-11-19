@@ -171,7 +171,7 @@ function placeEdges(state: WeathermapRendererState): void {
         if (edge.metric2Name) {
             // two metrics are twice the fun
             let
-                [_point1, point1COut, point2CIn, point2, point2COut, point3CIn, _point2]
+                [, point1COut, point2CIn, point2, point2COut, point3CIn,]
             =
                 halveCubicBezier(n1Center, control1, control2, n2Center)
             ;
