@@ -257,14 +257,9 @@ function makeAndPlaceEdge(
         "fill": "none",
     });
 
-    if (title) {
-        let titleElem: SVGTitleElement = state.make.title();
-        multistrokeGroup.appendChild(titleElem);
-        titleElem.textContent = title;
-    }
-
+    let currentValue: number|null = null;
     if (metricName != null && metricName in state.currentValues) {
-        let currentValue: number = state.currentValues[metricName];
+        currentValue = state.currentValues[metricName];
         modifyStyle(multistrokeGroup, {
             "stroke": gradientColorForValue(state.sortedGradient, "strokeColor", currentValue)
         });
@@ -274,6 +269,15 @@ function makeAndPlaceEdge(
             "stroke": "black",
             "stroke-dasharray": state.config.noValueDashArray
         });
+    }
+
+    if (title) {
+        let titleElem: SVGTitleElement = state.make.title();
+        multistrokeGroup.appendChild(titleElem);
+        titleElem.textContent = (currentValue === null)
+            ? title
+            : `${title}: ${currentValue.toFixed(2)}`
+        ;
     }
 
     let totalStrokeWidth: number = strokeWidths.reduce((acc, cur) => acc + cur, 0);
