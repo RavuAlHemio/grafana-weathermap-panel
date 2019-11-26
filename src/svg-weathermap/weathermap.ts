@@ -98,6 +98,7 @@ function placeNodes(state: WeathermapRendererState): void {
             text.textContent = node.label;
         }
 
+        let currentValue: number|null = null;
         if (!node.metricName) {
             modifyStyle(rect, {
                 "fill": "silver",
@@ -105,7 +106,7 @@ function placeNodes(state: WeathermapRendererState): void {
             });
         } else if (node.metricName in state.currentValues) {
             // color node by metric
-            let currentValue: number = state.currentValues[node.metricName];
+            currentValue = state.currentValues[node.metricName];
             modifyStyle(rect, {
                 "fill": gradientColorForValue(state.sortedGradient, "fillColor", currentValue),
             });
@@ -118,6 +119,12 @@ function placeNodes(state: WeathermapRendererState): void {
                 "fill": "black",
                 "stroke-dasharray": state.config.noValueDashArray,
             });
+        }
+
+        if (currentValue !== null) {
+            let titleElem: SVGTitleElement = state.make.title();
+            singleNodeGroup.insertBefore(titleElem, titleElem.firstChild);
+            titleElem.textContent = `${node.label} (${currentValue.toFixed(2)})`;
         }
     }
 }
@@ -276,7 +283,7 @@ function makeAndPlaceEdge(
         multistrokeGroup.appendChild(titleElem);
         titleElem.textContent = (currentValue === null)
             ? title
-            : `${title}: ${currentValue.toFixed(2)}`
+            : `${title} (${currentValue.toFixed(2)})`
         ;
     }
 
