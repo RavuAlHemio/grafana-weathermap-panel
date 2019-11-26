@@ -22,7 +22,7 @@ export async function fetchMetrics(baseUrl: URL, metrics: PrometheusMetric[], lo
 
         for (let result of metricData.data.result) {
             let labels: any = result.metric;
-            let value: number = result.value[1];
+            let value: number = +result.value[1];
 
             let key: string = interpolateLabels(metric.legendFormat, labels);
             metricValueMap[key] = value;
