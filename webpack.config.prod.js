@@ -1,18 +1,19 @@
 const baseWebpackConfigs = require('./webpack.config');
-const ngAnnotatePlugin = require('ng-annotate-webpack-plugin');
-const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
 
 var confs = baseWebpackConfigs;
 
 for (let conf of confs) {
   conf.mode = 'production';
 
-  conf.plugins.push(new ngAnnotatePlugin());
-  conf.plugins.push(
-    new UglifyJSPlugin({
-      sourceMap: true,
-    })
-  );
+  conf.optimization = {
+    minimize: true,
+    minimizer: [
+      new TerserPlugin({
+        sourceMap: true,
+      }),
+    ],
+  };
 }
 
 module.exports = confs;

@@ -1,7 +1,7 @@
 const path = require('path');
 const webpack = require('webpack');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
-const CleanWebpackPlugin = require('clean-webpack-plugin');
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 
 module.exports = [
   // Grafana plugin
@@ -31,7 +31,11 @@ module.exports = [
       },
     ],
     plugins: [
-      new CleanWebpackPlugin('dist', { allowExternal: true }),
+      new CleanWebpackPlugin({
+        cleanOnceBeforeBuildPatterns: [
+          "dist",
+        ],
+      }),
       new CopyWebpackPlugin([
         { from: 'plugin.json', to: '.' },
         { from: '../README.md', to: '.' },
@@ -49,7 +53,10 @@ module.exports = [
           loaders: [
             {
               loader: 'babel-loader',
-              options: { presets: ['env'] },
+              options: {
+                presets: ['@babel/preset-env'],
+                plugins: ["angularjs-annotate"],
+              },
             },
             'ts-loader',
           ],
