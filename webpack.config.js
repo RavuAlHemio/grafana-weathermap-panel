@@ -36,12 +36,14 @@ module.exports = [
           "dist",
         ],
       }),
-      new CopyWebpackPlugin([
-        { from: 'plugin.json', to: '.' },
-        { from: '../README.md', to: '.' },
-        { from: 'partials/*', to: '.' },
-        { from: 'img/*', to: '.' },
-      ]),
+      new CopyWebpackPlugin({
+        patterns: [
+          { from: 'plugin.json', to: '.' },
+          { from: '../README.md', to: '.' },
+          { from: 'partials/*', to: '.' },
+          { from: 'img/*', to: '.' },
+        ]
+      }),
     ],
     resolve: {
       extensions: ['.ts', '.js'],
