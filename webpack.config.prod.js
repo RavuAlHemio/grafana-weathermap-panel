@@ -9,9 +9,7 @@ for (let conf of confs) {
   conf.optimization = {
     minimize: true,
     minimizer: [
-      new TerserPlugin({
-        sourceMap: true,
-      }),
+      new TerserPlugin(),
     ],
   };
 }

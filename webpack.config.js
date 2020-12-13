@@ -6,9 +6,6 @@ const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 module.exports = [
   // Grafana plugin
   {
-    node: {
-      fs: 'empty',
-    },
     context: path.join(__dirname, 'src'),
     entry: {
       module: './module.ts',
@@ -22,7 +19,7 @@ module.exports = [
     externals: [
       'lodash',
       'moment',
-      function (context, request, callback) {
+      ({context, request}, callback) => {
         var prefix = 'grafana/';
         if (request.indexOf(prefix) === 0) {
           return callback(null, request.substr(prefix.length));
@@ -52,7 +49,7 @@ module.exports = [
       rules: [
         {
           test: /\.tsx?$/,
-          loaders: [
+          use: [
             {
               loader: 'babel-loader',
               options: {
@@ -85,9 +82,6 @@ module.exports = [
 
   // genwmap standalone tool
   {
-    node: {
-      fs: false,
-    },
     context: path.join(__dirname, 'src'),
     entry: {
       genwmap: './genwmap/index.js',
@@ -106,7 +100,7 @@ module.exports = [
       rules: [
         {
           test: /\.tsx?$/,
-          loaders: [
+          use: [
             'ts-loader',
           ],
           exclude: /(node_modules)/,
