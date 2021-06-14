@@ -1,4 +1,5 @@
 {
+  "$schema": "https://raw.githubusercontent.com/grafana/grafana/master/docs/sources/developers/plugins/plugin.schema.json",
   "name": "Weathermap",
   "id": "ravualhemio-weathermap-panel",
   "type": "panel",
@@ -18,9 +19,11 @@
       "small": "img/weathermap-icon.svg",
       "large": "img/weathermap-icon.svg"
     },
-    "dependencies": {
-      "grafanaVersion": "5.x.x",
-      "plugins": []
-    }
+    "keywords": ["panel", "weathermap"],
+    "updated": "2021-06-14"
+  },
+  "dependencies": {
+    "grafanaDependency": ">=5.x.x",
+    "plugins": []
   }
 }
