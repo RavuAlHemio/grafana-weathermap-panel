@@ -184,7 +184,7 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
         this.backendSrv.search({query: link.dashboard}).then((hits) => {
             let dashboard: any = _.find(hits, {title: link.dashboard});
             if (dashboard) {
-                link.dashUri = dashboard.uri;
+                link.dashUri = dashboard.url;
             }
         });
     }
