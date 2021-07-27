@@ -230,7 +230,7 @@ export class WeathermapCtrl extends MetricsPanelCtrl {
             if (params.length > 0) {
                 paramSuffix = "?" + params.join("&");
             }
-            return `/dashboard/${objLink.dashUri}${paramSuffix}`;
+            return `${objLink.dashUri}${paramSuffix}`;
         }
         return null;
     }
