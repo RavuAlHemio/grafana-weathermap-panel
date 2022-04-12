@@ -1,6 +1,6 @@
 import { svgNamespace } from "../svg-weathermap/constants";
 import { WeathermapConfig, renderWeathermapInto } from "../svg-weathermap/weathermap";
-import { DOMImplementation, XMLSerializer } from "xmldom";
+import { DOMImplementation, XMLSerializer } from "@xmldom/xmldom";
 import { PrometheusMetric, fetchMetrics } from "./fetcher";
 import * as fs from "fs";
 
