@@ -17,7 +17,7 @@
         </div>
     </div>
 
-    <div class="gf-form-inline" ng-repeat="wmEdge in ctrl.panel.weathermapEdges">
+    <div class="gf-form-inline" style="margin-top:1em;margin-bottom:1em" ng-repeat="wmEdge in ctrl.panel.weathermapEdges">
         <div class="gf-form width-15">
             <label class="gf-form-label">Node 1<tip>Node label of the first node of the edge</tip></label>
             <input type="text" ng-model="wmEdge.node1" ng-blur="ctrl.refresh()" class="gf-form-input">

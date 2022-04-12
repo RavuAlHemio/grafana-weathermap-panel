@@ -17,7 +17,7 @@
         </div>
     </div>
 
-    <div class="gf-form-inline" ng-repeat="wmNode in ctrl.panel.weathermapNodes">
+    <div class="gf-form-inline" style="margin-top:1em;margin-bottom:1em" ng-repeat="wmNode in ctrl.panel.weathermapNodes">
         <div class="gf-form width-15">
             <label class="gf-form-label">Label<tip>Node label to display on the weathermap</tip></label>
             <input type="text" ng-model="wmNode.label" ng-blur="ctrl.refresh()" class="gf-form-input">
