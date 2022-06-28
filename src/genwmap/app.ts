@@ -64,17 +64,7 @@ export async function main(): Promise<void> {
     let lookbackInterval: string = config.lookbackInterval;
     let styleDefinition: string|null = config.styleDefinition;
 
-    let dataSource = config.weathermap.datasource;
-    if (dataSource !== null && typeof dataSource === 'object' && !Array.isArray(dataSource)) {
-        // newer versions of Grafana store data source as {"type":"prometheus", "uid":"00000001"}
-        // take the UID as it is probably unique
-        dataSource = dataSource.uid;
-    }
-    if (options.debug) {
-        console.error(`DEBUG: data source: ${dataSource}`);
-        console.error(`DEBUG: data source URL: ${dataSources[dataSource]}`);
-    }
-    let metricValues: any = await fetchMetrics(new URL(dataSources[dataSource]), metrics, lookbackInterval);
+    let metricValues: any = await fetchMetrics(dataSources, metrics, lookbackInterval);
     let impl = new DOMImplementation();
     let doc: Document = impl.createDocument(null, null, null);
 
