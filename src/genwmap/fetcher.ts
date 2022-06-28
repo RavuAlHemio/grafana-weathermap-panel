@@ -1,7 +1,7 @@
 import { MetricValueMap } from "../svg-weathermap/weathermap";
 import * as http from "http";
 
-export async function fetchMetrics(dataSources: { [index: string]: string; }, metrics: PrometheusMetric[], lookback_interval: string): Promise<MetricValueMap> {
+export async function fetchMetrics(dataSources: { [index: string]: string; }, globalDataSourceName: string|GrafanaDataSource, metrics: PrometheusMetric[], lookback_interval: string): Promise<MetricValueMap> {
     // query
     let agent = new http.Agent();
 
@@ -14,6 +14,9 @@ export async function fetchMetrics(dataSources: { [index: string]: string; }, me
                 .replace("$__range", lookback_interval)
         );
         let dataSourceName = metric.datasource;
+        if (dataSourceName === undefined) {
+            dataSourceName = globalDataSourceName;
+        }
         if (dataSourceName !== null && typeof dataSourceName === 'object' && !Array.isArray(dataSourceName)) {
             // newer Prometheus versions store datasource as {"type":"prometheus","uid":"000000001"}
             // take the UID because it's more likely to be unique

@@ -64,7 +64,8 @@ export async function main(): Promise<void> {
     let lookbackInterval: string = config.lookbackInterval;
     let styleDefinition: string|null = config.styleDefinition;
 
-    let metricValues: any = await fetchMetrics(dataSources, metrics, lookbackInterval);
+    let globalDataSourceName = config.weathermap.datasource;
+    let metricValues: any = await fetchMetrics(dataSources, globalDataSourceName, metrics, lookbackInterval);
     let impl = new DOMImplementation();
     let doc: Document = impl.createDocument(null, null, null);
 
