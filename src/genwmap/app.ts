@@ -6,11 +6,12 @@ import * as fs from "fs";
 
 let options = {
     configFile: "genwmap.json",
-    outputFile: "weathermap.svg"
+    outputFile: "weathermap.svg",
+    debug: false,
 };
 
 function printUsage(): void {
-    console.error("Usage: genwmap [-c CONFIG.json] [-o OUTPUT.svg]");
+    console.error("Usage: genwmap [-d] [-c CONFIG.json] [-o OUTPUT.svg]");
 }
 
 function processOptions(): boolean {
@@ -22,6 +23,8 @@ function processOptions(): boolean {
         if (awaiting === null) {
             if (arg === "-c" || arg === "-o") {
                 awaiting = arg;
+            } else if (arg === "-d") {
+                options.debug = true;
             } else {
                 console.error(`Unknown option '${arg}'`);
                 printUsage();
@@ -66,6 +69,10 @@ export async function main(): Promise<void> {
         // newer versions of Grafana store data source as {"type":"prometheus", "uid":"00000001"}
         // take the UID as it is probably unique
         dataSource = dataSource.uid;
+    }
+    if (options.debug) {
+        console.error(`DEBUG: data source: ${dataSource}`);
+        console.error(`DEBUG: data source URL: ${dataSources[dataSource]}`);
     }
     let metricValues: any = await fetchMetrics(new URL(dataSources[dataSource]), metrics, lookbackInterval);
     let impl = new DOMImplementation();
