@@ -25,7 +25,7 @@
     "@types/grafana": "github:CorpGlory/types-grafana",
     "@types/lodash": "^4.14.181",
     "@types/node": "^17.0.23",
-    "@xmldom/xmldom": "^0.8.2",
+    "@xmldom/xmldom": "^0.8.3",
     "babel-loader": "^8.2.4",
     "babel-plugin-angularjs-annotate": "^0.10.0",
     "clean-webpack-plugin": "^4.0.0",
