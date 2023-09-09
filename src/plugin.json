@@ -1,0 +1,25 @@
+{
+  "$schema": "https://raw.githubusercontent.com/grafana/grafana/master/docs/sources/developers/plugins/plugin.schema.json",
+  "type": "panel",
+  "name": "Weathermap",
+  "id": "ravualhemio-weathermap-panel",
+  "info": {
+    "keywords": ["panel"],
+    "description": "Weathermap",
+    "author": {
+      "name": "Ondřej Hošek"
+    },
+    "logos": {
+      "small": "img/logo.svg",
+      "large": "img/logo.svg"
+    },
+    "links": [],
+    "screenshots": [],
+    "version": "%VERSION%",
+    "updated": "%TODAY%"
+  },
+  "dependencies": {
+    "grafanaDependency": ">=10.0.3",
+    "plugins": []
+  }
+}
